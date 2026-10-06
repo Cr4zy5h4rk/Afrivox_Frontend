@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/auth/auth.guard';
+import { authGuard, guestGuard, roleGuard } from './core/auth/auth.guard';
 
 // Pages chargées à la demande : le premier chargement ne contient que la coquille.
 export const routes: Routes = [
@@ -18,6 +18,11 @@ export const routes: Routes = [
     path: 'register',
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/register/register').then((m) => m.RegisterPage),
+  },
+  {
+    path: 'record',
+    canActivate: [authGuard, roleGuard('ROLE_CONTRIBUTOR', 'ROLE_ADMIN')],
+    loadComponent: () => import('./features/record/record').then((m) => m.RecordPage),
   },
   { path: '**', redirectTo: '' },
 ];

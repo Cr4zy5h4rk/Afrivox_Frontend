@@ -1,5 +1,20 @@
 <main class="page">
-  <h1>{{ i18n.t('home.welcome', { name: name() }) }}</h1>
+  <section class="hero afv-card">
+    <div class="afv-band" aria-hidden="true"></div>
+    <div class="hero-body">
+      <p class="greeting">{{ i18n.t('home.welcome', { name: name() }) }}</p>
+      <h1>{{ i18n.t('home.hero.title') }}</h1>
+      <p class="lead">{{ i18n.t('home.hero.body') }}</p>
+      @if (canRecord()) {
+        <a mat-flat-button class="cta" routerLink="/record">{{ i18n.t('home.cta.record') }}</a>
+        @if (outbox.pending() > 0) {
+          <p class="pending" role="status">
+            {{ i18n.t('home.cta.pending', { count: outbox.pending() }) }}
+          </p>
+        }
+      }
+    </div>
+  </section>
 
   <h2>{{ i18n.t('home.roles') }}</h2>
   <mat-chip-set [attr.aria-label]="i18n.t('home.roles')">
@@ -10,12 +25,10 @@
 
   <section class="cards">
     @for (card of cards(); track card) {
-      <mat-card appearance="outlined">
-        <mat-card-header>
-          <mat-card-title>{{ i18n.t(card) }}</mat-card-title>
-          <mat-card-subtitle>{{ i18n.t('home.soon') }}</mat-card-subtitle>
-        </mat-card-header>
-      </mat-card>
+      <article class="afv-card tile">
+        <h3>{{ i18n.t(card) }}</h3>
+        <p class="soon">{{ i18n.t('home.soon') }}</p>
+      </article>
     }
   </section>
 </main>

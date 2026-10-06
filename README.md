@@ -22,10 +22,34 @@ src/app/
     i18n/            traduction à l'exécution (fr, en) et sens de lecture
     api-error.ts     erreurs HTTP -> clés de traduction
     consent.service.ts
+    api/             appels de l'espace contributeur (campagnes, phrases, envoi, consentements)
+    audio/           enregistreur du micro, file d'envoi hors ligne (IndexedDB)
+    ui/              logo (barres d'onde)
   features/
     auth/login, auth/register
-    home/            accueil selon les rôles
+    home/            accueil : accroche, bouton d'enregistrement selon le rôle
+    record/          écran d'enregistrement (/record)
 ```
+
+### Identité visuelle
+
+Définie dans `src/styles.scss` (Material fournit la base, les couleurs de marque la remplacent, en clair et en sombre) :
+
+- **Terracotta** `#a8401c` (action, micro), **indigo** `#2b3a78` (repères), **vert** `#2e6b4e` (réussite), **ocre** `#c98a12` (accent), sur un **fond sable** `#fbf5ea`. Variantes sombres : fond `#17110d`, accents éclaircis.
+- Signature : bandeau de triangles (`.afv-band`, inspiré des tissus bogolan), logo en barres d'onde (`app-brand-mark`), titres en police à empattement du système (`--afv-display`).
+- Pas de police ni d'icône externe (hors ligne) ; les icônes sont des SVG intégrés. `prefers-reduced-motion` est respecté.
+
+### Écran d'enregistrement (`/record`, rôles contributeur et admin)
+
+1. **Consentement de collecte** (`GET/POST /api/consents`) s'il n'est pas actif : sans lui le serveur refuse l'envoi (403).
+2. **Campagne** : une seule ouverte, elle est choisie d'office ; sinon liste. Progression `x / y` calculée par le serveur.
+3. **Boucle** : phrase (sens de lecture et langue de la campagne), micro, onde en direct, durée (1 à 30 s, arrêt automatique), réécoute, envoi ou « refaire ».
+4. **Hors ligne** : sans réseau, l'audio est gardé dans IndexedDB (`OutboxService`) et envoyé au retour de la connexion ou à la prochaine ouverture. 400/409 suppriment l'élément en attente ; 401/403 le gardent.
+5. Erreurs micro traduites : refusé, absent, **HTTPS requis**, navigateur non pris en charge.
+
+Choix : suppression du bruit désactivée (signal brut pour l'entraînement, le contrôle qualité mesure le bruit) ; format choisi selon le navigateur (webm, ogg, mp4), vérifié côté serveur par le contenu.
+
+Limites : le micro n'est pas utilisable en HTTP hors `localhost` ; pas encore de retrait de consentement dans l'interface ; non testé avec un vrai micro ni sur iOS Safari.
 
 ### Authentification
 
@@ -64,6 +88,6 @@ Angular, Angular Material, CDK, RxJS : MIT / Apache 2.0 (à reporter dans l'inve
 
 1. Texte du consentement et conditions d'utilisation (page dédiée).
 2. Réinitialisation du mot de passe (le backend l'expose déjà ; nécessite un SMTP).
-3. Écran d'enregistrement audio (hors ligne), campagnes, validation.
+3. ~~Écran d'enregistrement~~ fait (voir ci-dessus). Reste : validation par les pairs, retrait de consentement, historique « mes enregistrements ».
 4. Catalogue de datasets, demandes des organisations.
 5. Déploiement : nginx sert ce build et redirige `/api` vers Spring.

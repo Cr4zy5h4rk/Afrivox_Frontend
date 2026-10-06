@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from './auth.service';
+import { AuthService, RoleName } from './auth.service';
 
 /** Réservé aux utilisateurs connectés ; sinon renvoie vers la connexion en mémorisant la page demandée. */
 export const authGuard: CanActivateFn = (_route, state) => {
@@ -17,3 +17,12 @@ export const guestGuard: CanActivateFn = () => {
   const router = inject(Router);
   return auth.isAuthenticated() ? router.createUrlTree(['/']) : true;
 };
+
+/** Page réservée à certains rôles (le serveur les revérifie de toute façon) ; sinon retour à l'accueil. */
+export const roleGuard =
+  (...roles: RoleName[]): CanActivateFn =>
+  () => {
+    const auth = inject(AuthService);
+    const router = inject(Router);
+    return roles.some((role) => auth.hasRole(role)) ? true : router.createUrlTree(['/']);
+  };

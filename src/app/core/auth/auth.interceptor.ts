@@ -5,7 +5,7 @@ import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 /** Appels qui ne portent pas de jeton d'accès : authentification elle-même, inscription, consentement. */
-const PUBLIC_PREFIXES = ['/api/authenticate', '/api/register', '/api/consent'];
+const PUBLIC_PREFIXES = ['/api/authenticate', '/api/register', '/api/consent/'];
 
 /**
  * Ajoute le jeton d'accès aux appels /api. Sur un 401 (jeton expiré), tente un seul rafraîchissement puis rejoue

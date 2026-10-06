@@ -1,5 +1,58 @@
+.hero {
+  margin-block-end: 1.5rem;
+}
+
+.hero-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1.5rem;
+}
+
+.greeting {
+  margin: 0;
+  color: var(--mat-sys-primary);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.lead {
+  margin: 0;
+  max-inline-size: 34rem;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.6;
+}
+
+.cta {
+  margin-block-start: 0.75rem;
+  --mat-button-filled-container-height: 52px;
+  --mat-button-filled-horizontal-padding: 28px;
+}
+
+.pending {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .cards {
   display: grid;
   gap: 0.75rem;
   margin-block-start: 1.5rem;
+}
+
+.tile {
+  padding: 1rem 1.25rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+}
+
+.soon {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--mat-sys-on-surface-variant);
 }

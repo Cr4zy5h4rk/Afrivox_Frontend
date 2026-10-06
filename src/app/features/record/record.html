@@ -1,0 +1,210 @@
+<main class="page record">
+  @switch (phase()) {
+    @case ('loading') {
+      <p class="state" role="status">{{ i18n.t('record.loading') }}</p>
+    }
+
+    @case ('failed') {
+      <section class="afv-card panel" role="alert">
+        <p>{{ i18n.t('error.generic') }}</p>
+        <button mat-flat-button type="button" (click)="load()">{{ i18n.t('record.reload') }}</button>
+      </section>
+    }
+
+    @case ('consent') {
+      <section class="afv-card panel">
+        <div class="afv-band" aria-hidden="true"></div>
+        <div class="panel-body">
+          <h1>{{ i18n.t('record.consent.title') }}</h1>
+          <p>{{ i18n.t('record.consent.body1') }}</p>
+          <p>{{ i18n.t('record.consent.body2') }}</p>
+          @if (notice(); as n) {
+            <p class="form-error" role="alert">{{ i18n.t(n.key, n.params) }}</p>
+          }
+          <button mat-flat-button type="button" [disabled]="busy()" (click)="acceptConsent()">
+            {{ i18n.t('record.consent.accept') }}
+          </button>
+        </div>
+      </section>
+    }
+
+    @case ('empty') {
+      <section class="afv-card panel">
+        <div class="panel-body center">
+          <h1>{{ i18n.t('record.empty.title') }}</h1>
+          <p>{{ i18n.t('record.empty.body') }}</p>
+          <a mat-stroked-button routerLink="/">{{ i18n.t('record.done.home') }}</a>
+        </div>
+      </section>
+    }
+
+    @case ('pick') {
+      <h1>{{ i18n.t('record.pick') }}</h1>
+      <ul class="campaigns">
+        @for (c of campaigns(); track c.id) {
+          <li>
+            <button type="button" class="afv-card campaign" (click)="selectCampaign(c)">
+              <span class="chip">{{ c.languageName }}</span>
+              <strong class="campaign-title">{{ c.title }}</strong>
+              @if (c.description) {
+                <span class="muted">{{ c.description }}</span>
+              }
+              <span class="muted">
+                {{ i18n.t('record.progress', { done: c.recordedByMe, total: c.totalPrompts }) }}
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    @case ('done') {
+      <section class="afv-card panel">
+        <div class="afv-band" aria-hidden="true"></div>
+        <div class="panel-body center">
+          <div class="check" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="40" height="40">
+              <path
+                d="M5 12.5l4.5 4.5L19 7.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <h1>{{ i18n.t('record.done.title') }}</h1>
+          <p>{{ i18n.t('record.done.body') }}</p>
+          <a mat-flat-button routerLink="/">{{ i18n.t('record.done.home') }}</a>
+        </div>
+      </section>
+    }
+
+    @default {
+      <!-- ready, recording, review, sending : l'écran d'enregistrement -->
+      @if (campaign(); as c) {
+        <header class="campaign-head">
+          <span class="chip">{{ c.languageName }}</span>
+          <span class="muted">{{ i18n.t('record.progress', { done: done(), total: total() }) }}</span>
+        </header>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="progress()"
+          [attr.aria-label]="i18n.t('record.progress', { done: done(), total: total() })"
+        />
+      }
+
+      <section class="afv-card stage" [class.is-recording]="phase() === 'recording'">
+        <div class="afv-band" aria-hidden="true"></div>
+        <div class="stage-body">
+          <p class="eyebrow">{{ i18n.t('record.read') }}</p>
+          @if (prompt(); as p) {
+            <p
+              class="prompt"
+              [attr.dir]="promptDir()"
+              [attr.lang]="campaign()?.languageCode"
+              aria-live="polite"
+            >
+              {{ p.content }}
+            </p>
+          }
+
+          <div class="wave" aria-hidden="true">
+            @for (level of recorder.levels(); track $index) {
+              <span class="bar" [style.--level]="level"></span>
+            }
+          </div>
+
+          @if (phase() === 'recording') {
+            <div class="timer" role="timer" [attr.aria-label]="elapsed()">
+              <span class="rec-dot" aria-hidden="true"></span>
+              <span>{{ elapsed() }}</span>
+              <span class="muted">/ {{ limit() }}</span>
+            </div>
+            <div class="meter" aria-hidden="true">
+              <span [style.inline-size.%]="elapsedRatio()"></span>
+            </div>
+          }
+
+          @switch (phase()) {
+            @case ('review') {
+              <p class="hint">{{ i18n.t('record.listen') }}</p>
+              @if (clipUrl(); as url) {
+                <audio class="player" controls preload="auto" [src]="url"></audio>
+              }
+              <div class="actions">
+                <button mat-stroked-button type="button" (click)="retry()">
+                  {{ i18n.t('record.retry') }}
+                </button>
+                <button mat-flat-button type="button" (click)="send()">
+                  {{ i18n.t('record.send') }}
+                </button>
+              </div>
+            }
+            @case ('sending') {
+              <p class="hint" role="status">{{ i18n.t('record.sending') }}</p>
+              <mat-progress-bar mode="indeterminate" />
+            }
+            @default {
+              <button
+                type="button"
+                class="mic"
+                [class.on]="phase() === 'recording'"
+                [attr.aria-label]="
+                  phase() === 'recording' ? i18n.t('record.stop') : i18n.t('record.start')
+                "
+                (click)="toggleRecording()"
+              >
+                @if (phase() === 'recording') {
+                  <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
+                    <rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor" />
+                  </svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" width="38" height="38" aria-hidden="true">
+                    <rect x="9" y="2.5" width="6" height="12" rx="3" fill="currentColor" />
+                    <path
+                      d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.5M8.5 21.5h7"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                }
+              </button>
+              <p class="hint">
+                {{
+                  phase() === 'recording'
+                    ? i18n.t('record.hint.recording')
+                    : i18n.t('record.hint.idle')
+                }}
+              </p>
+            }
+          }
+
+          @if (notice(); as n) {
+            <p class="notice" [class]="n.kind" [attr.role]="n.kind === 'error' ? 'alert' : 'status'">
+              {{ i18n.t(n.key, n.params) }}
+            </p>
+          }
+        </div>
+      </section>
+
+      @if (outbox.pending() > 0) {
+        <p class="pending" role="status">
+          {{ i18n.t('record.pending', { count: outbox.pending() }) }}
+        </p>
+      }
+
+      <aside class="tips">
+        <h2>{{ i18n.t('record.tips.title') }}</h2>
+        <ul>
+          <li>{{ i18n.t('record.tip.quiet') }}</li>
+          <li>{{ i18n.t('record.tip.distance') }}</li>
+          <li>{{ i18n.t('record.tip.natural') }}</li>
+        </ul>
+      </aside>
+    }
+  }
+</main>

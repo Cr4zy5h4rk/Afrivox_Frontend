@@ -1,21 +1,28 @@
-<mat-toolbar>
-  <a class="brand" routerLink="/">{{ i18n.t('app.name') }}</a>
-  <span class="spacer"></span>
-  <mat-button-toggle-group
-    [value]="i18n.lang()"
-    [hideSingleSelectionIndicator]="true"
-    [attr.aria-label]="i18n.t('nav.language')"
-    (change)="setLang($event.value)"
-  >
-    @for (language of languages; track language.code) {
-      <mat-button-toggle [value]="language.code" [attr.lang]="language.code">{{
-        language.code.toUpperCase()
-      }}</mat-button-toggle>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" routerLink="/">
+      <app-brand-mark [size]="30" />
+      <span class="brand-name">{{ i18n.t('app.name') }}</span>
+    </a>
+    <span class="spacer"></span>
+    <mat-button-toggle-group
+      class="lang"
+      [value]="i18n.lang()"
+      [hideSingleSelectionIndicator]="true"
+      [attr.aria-label]="i18n.t('nav.language')"
+      (change)="setLang($event.value)"
+    >
+      @for (language of languages; track language.code) {
+        <mat-button-toggle [value]="language.code" [attr.lang]="language.code">{{
+          language.code.toUpperCase()
+        }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+    @if (auth.isAuthenticated()) {
+      <button mat-button type="button" (click)="auth.logout()">{{ i18n.t('nav.logout') }}</button>
     }
-  </mat-button-toggle-group>
-  @if (auth.isAuthenticated()) {
-    <button mat-button type="button" (click)="auth.logout()">{{ i18n.t('nav.logout') }}</button>
-  }
-</mat-toolbar>
+  </div>
+  <div class="afv-band" aria-hidden="true"></div>
+</header>
 
 <router-outlet />

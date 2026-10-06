@@ -1,0 +1,332 @@
+:host {
+  display: block;
+}
+
+.record {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-block: 1.25rem 3rem;
+}
+
+.state {
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+  padding-block: 3rem;
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.9rem;
+}
+
+.chip {
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+// Panneaux simples (consentement, vide, terminé)
+.panel-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+
+  &.center {
+    align-items: center;
+    text-align: center;
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  button,
+  a {
+    margin-block-start: 0.75rem;
+  }
+}
+
+.check {
+  display: grid;
+  place-items: center;
+  inline-size: 72px;
+  block-size: 72px;
+  border-radius: 50%;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+// Choix de campagne
+.campaigns {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.campaign {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  inline-size: 100%;
+  padding: 1rem 1.25rem;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--mat-sys-primary);
+    transform: translateY(-2px);
+  }
+}
+
+.campaign-title {
+  font-family: var(--afv-display);
+  font-size: 1.2rem;
+}
+
+// En-tête de progression
+.campaign-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+// Scène d'enregistrement
+.stage {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &.is-recording {
+    border-color: var(--afv-recording);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--afv-recording) 20%, transparent);
+  }
+}
+
+.stage-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1.25rem 1.75rem;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--mat-sys-primary);
+}
+
+.prompt {
+  margin: 0;
+  font-family: var(--afv-display);
+  font-size: clamp(1.75rem, 7vw, 2.6rem);
+  line-height: 1.25;
+  font-weight: 700;
+  min-block-size: 3.5rem;
+  overflow-wrap: anywhere;
+}
+
+// Onde sonore : la hauteur de chaque barre suit le niveau du micro (--level entre 0 et 1)
+.wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  block-size: 64px;
+  inline-size: 100%;
+  max-inline-size: 22rem;
+}
+
+.bar {
+  flex: 1 1 0;
+  max-inline-size: 8px;
+  min-block-size: 4px;
+  block-size: calc(6% + var(--level, 0) * 94%);
+  border-radius: 999px;
+  background: var(--mat-sys-outline-variant);
+  transition: block-size 0.08s linear;
+
+  .is-recording & {
+    background: linear-gradient(to top, var(--mat-sys-primary), var(--afv-gold));
+  }
+}
+
+.timer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.rec-dot {
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 50%;
+  background: var(--afv-recording);
+  animation: blink 1s ease-in-out infinite;
+}
+
+.meter {
+  inline-size: 100%;
+  max-inline-size: 22rem;
+  block-size: 4px;
+  border-radius: 999px;
+  background: var(--mat-sys-outline-variant);
+  overflow: hidden;
+
+  span {
+    display: block;
+    block-size: 100%;
+    background: var(--afv-recording);
+  }
+}
+
+// Gros bouton micro
+.mic {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 88px;
+  block-size: 88px;
+  margin-block: 0.25rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+  cursor: pointer;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--mat-sys-primary) 35%, transparent);
+  transition:
+    transform 0.15s ease,
+    background 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--afv-indigo);
+    outline-offset: 4px;
+  }
+
+  &.on {
+    background: var(--afv-recording);
+    color: #fff;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid var(--afv-recording);
+      animation: ripple 1.4s ease-out infinite;
+    }
+  }
+}
+
+.hint {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.player {
+  inline-size: 100%;
+  max-inline-size: 22rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--mat-sys-corner-medium);
+  font-size: 0.95rem;
+
+  &.error {
+    background: var(--mat-sys-error-container);
+    color: var(--mat-sys-on-error-container);
+  }
+
+  &.success {
+    background: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
+  }
+
+  &.info {
+    background: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+  }
+}
+
+.pending {
+  margin: 0;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.9rem;
+}
+
+.tips {
+  padding-inline: 0.25rem;
+  color: var(--mat-sys-on-surface-variant);
+
+  h2 {
+    font-size: 1rem;
+    color: var(--mat-sys-on-surface);
+  }
+
+  ul {
+    margin: 0;
+    padding-inline-start: 1.1rem;
+    display: grid;
+    gap: 0.25rem;
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes ripple {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}

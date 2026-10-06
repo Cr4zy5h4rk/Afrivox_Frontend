@@ -11,6 +11,11 @@ const SERVER_KEYS: Partial<Record<string, TranslationKey>> = {
   'error.userexists': 'error.userexists',
   'error.rolerequired': 'error.rolerequired',
   'error.consentrequired': 'error.consentrequired',
+  'error.invalidsize': 'error.invalidsize',
+  'error.invalidduration': 'error.invalidduration',
+  'error.invalidformat': 'error.invalidformat',
+  'error.promptnotfound': 'error.promptnotfound',
+  'error.campaigninactive': 'error.campaigninactive',
 };
 
 /**

@@ -1,6 +1,14 @@
 @use '@angular/material' as mat;
 
-// Thème Material (couleurs chaudes, police système : aucune ressource externe, utilisable hors ligne)
+// ---------------------------------------------------------------------------------------------
+// Identité visuelle AfriVox
+//   - sable chaud pour le fond (papier, terre), terracotta pour l'action, indigo (teinture) pour
+//     les repères, vert pour la réussite, ocre pour les accents ;
+//   - motif de triangles (inspiré des tissus bogolan) et ondes sonores comme signature ;
+//   - polices du système uniquement : aucune ressource externe, l'app reste utilisable hors ligne.
+// Material fournit la base (composants, états, accessibilité) ; les couleurs sont ensuite redéfinies
+// ci-dessous pour clair et sombre.
+// ---------------------------------------------------------------------------------------------
 html {
   color-scheme: light dark;
   @include mat.theme(
@@ -14,18 +22,62 @@ html {
           system-ui,
           -apple-system,
           'Segoe UI',
+          Roboto,
           sans-serif,
         ),
         brand-family: (
-          system-ui,
-          -apple-system,
-          'Segoe UI',
-          sans-serif,
+          ui-serif,
+          'Iowan Old Style',
+          'Palatino Linotype',
+          Georgia,
+          serif,
         ),
       ),
       density: 0,
     )
   );
+}
+
+// Couleurs de marque, avec leur variante sombre (light-dark suit color-scheme).
+html {
+  --mat-sys-primary: light-dark(#a8401c, #ffb59a);
+  --mat-sys-on-primary: light-dark(#ffffff, #5b1900);
+  --mat-sys-primary-container: light-dark(#ffdbcb, #812d0a);
+  --mat-sys-on-primary-container: light-dark(#3a0e00, #ffdbcb);
+
+  --mat-sys-secondary: light-dark(#2b3a78, #b8c4ff);
+  --mat-sys-on-secondary: light-dark(#ffffff, #11205c);
+  --mat-sys-secondary-container: light-dark(#dde1ff, #3f4f8e);
+  --mat-sys-on-secondary-container: light-dark(#0a1445, #dde1ff);
+
+  --mat-sys-tertiary: light-dark(#2e6b4e, #98d4b3);
+  --mat-sys-on-tertiary: light-dark(#ffffff, #003822);
+  --mat-sys-tertiary-container: light-dark(#b4f0cf, #135138);
+  --mat-sys-on-tertiary-container: light-dark(#00210f, #b4f0cf);
+
+  --mat-sys-surface: light-dark(#fbf5ea, #17110d);
+  --mat-sys-background: light-dark(#fbf5ea, #17110d);
+  --mat-sys-on-surface: light-dark(#2a1b12, #f0e1d2);
+  --mat-sys-on-background: light-dark(#2a1b12, #f0e1d2);
+  --mat-sys-on-surface-variant: light-dark(#5a4a3f, #d5c3b3);
+  --mat-sys-surface-variant: light-dark(#ecdfc9, #3a302a);
+  --mat-sys-surface-container-lowest: light-dark(#fffdf8, #110b08);
+  --mat-sys-surface-container-low: light-dark(#f7efe1, #1f1814);
+  --mat-sys-surface-container: light-dark(#f2e9d8, #241c17);
+  --mat-sys-surface-container-high: light-dark(#ece1cd, #2f2620);
+  --mat-sys-surface-container-highest: light-dark(#e6dac4, #3a302a);
+  --mat-sys-outline: light-dark(#8a7767, #9e8c7c);
+  --mat-sys-outline-variant: light-dark(#d8c9b5, #50443a);
+
+  // Formes plus généreuses : cartes et boutons plus doux
+  --mat-sys-corner-medium: 16px;
+  --mat-sys-corner-large: 24px;
+
+  // Accents propres à AfriVox (hors Material)
+  --afv-gold: light-dark(#c98a12, #e8b04b);
+  --afv-indigo: light-dark(#2b3a78, #8d9cf0);
+  --afv-recording: light-dark(#c62828, #ff8a80);
+  --afv-display: ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
 }
 
 body {
@@ -34,6 +86,24 @@ body {
   background: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-large);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--afv-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-block: 0 0.5rem;
+}
+
+h1 {
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+  line-height: 1.15;
+}
+
+h2 {
+  font-size: 1.25rem;
 }
 
 // Mise en page commune : mobile d'abord, marges logiques (compatibles droite à gauche)
@@ -58,4 +128,32 @@ body {
 .form-success {
   color: var(--mat-sys-tertiary);
   margin-block: 0.5rem;
+}
+
+// Bandeau de triangles (signature visuelle) : or sur indigo
+.afv-band {
+  block-size: 12px;
+  background:
+    conic-gradient(from -45deg at 50% 100%, var(--afv-gold) 0 90deg, transparent 0) 0 0 / 24px 12px,
+    var(--afv-indigo);
+}
+
+// Cartes de contenu : fond clair, bord discret, légère ombre chaude
+.afv-card {
+  background: var(--mat-sys-surface-container-lowest);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-large);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
+  overflow: hidden;
+}
+
+// Respecte les préférences de l'utilisateur : pas d'animation si elles sont réduites
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
