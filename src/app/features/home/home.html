@@ -1,0 +1,21 @@
+<main class="page">
+  <h1>{{ i18n.t('home.welcome', { name: name() }) }}</h1>
+
+  <h2>{{ i18n.t('home.roles') }}</h2>
+  <mat-chip-set [attr.aria-label]="i18n.t('home.roles')">
+    @for (role of roles(); track role.label) {
+      <mat-chip>{{ i18n.t(role.label) }}</mat-chip>
+    }
+  </mat-chip-set>
+
+  <section class="cards">
+    @for (card of cards(); track card) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ i18n.t(card) }}</mat-card-title>
+          <mat-card-subtitle>{{ i18n.t('home.soon') }}</mat-card-subtitle>
+        </mat-card-header>
+      </mat-card>
+    }
+  </section>
+</main>

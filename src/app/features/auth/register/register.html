@@ -1,0 +1,110 @@
+<main class="page">
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>{{ i18n.t('register.title') }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form class="form-column" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('register.login') }}</mat-label>
+          <input matInput formControlName="login" autocomplete="username" autocapitalize="none" />
+          @let login = form.controls.login;
+          @if (login.touched && login.invalid) {
+            <mat-error>
+              @if (login.hasError('required')) {
+                {{ i18n.t('validation.required') }}
+              } @else if (login.hasError('pattern')) {
+                {{ i18n.t('validation.login') }}
+              } @else {
+                {{ i18n.t('validation.maxlength', { max: 50 }) }}
+              }
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('register.email') }}</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="email" />
+          @let email = form.controls.email;
+          @if (email.touched && email.invalid) {
+            <mat-error>
+              @if (email.hasError('required')) {
+                {{ i18n.t('validation.required') }}
+              } @else {
+                {{ i18n.t('validation.email') }}
+              }
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('register.password') }}</mat-label>
+          <input matInput type="password" formControlName="password" autocomplete="new-password" />
+          @let password = form.controls.password;
+          @if (password.touched && password.invalid) {
+            <mat-error>
+              @if (password.hasError('required')) {
+                {{ i18n.t('validation.required') }}
+              } @else if (password.hasError('minlength')) {
+                {{ i18n.t('validation.minlength', { min: 8 }) }}
+              } @else {
+                {{ i18n.t('validation.maxlength', { max: 100 }) }}
+              }
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('register.passwordConfirm') }}</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="passwordConfirm"
+            autocomplete="new-password"
+          />
+          @if (form.controls.passwordConfirm.touched && form.hasError('mismatch')) {
+            <mat-error>{{ i18n.t('validation.mismatch') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <fieldset class="roles">
+          <legend>{{ i18n.t('register.roleTitle') }}</legend>
+          <mat-radio-group formControlName="role" class="role-list">
+            @for (role of roles; track role.value) {
+              <mat-radio-button [value]="role.value">
+                <span class="role-name">{{ i18n.t(role.name) }}</span>
+                <span class="role-help">{{ i18n.t(role.help) }}</span>
+              </mat-radio-button>
+            }
+          </mat-radio-group>
+          @if (form.controls.role.touched && form.controls.role.invalid) {
+            <p class="form-error" role="alert">{{ i18n.t('error.rolerequired') }}</p>
+          }
+        </fieldset>
+
+        @if (consentVersion(); as version) {
+          <mat-checkbox formControlName="consent">{{
+            i18n.t('register.consent', { version })
+          }}</mat-checkbox>
+          @if (form.controls.consent.touched && form.controls.consent.invalid) {
+            <p class="form-error" role="alert">{{ i18n.t('validation.consent') }}</p>
+          }
+        } @else {
+          <p>{{ i18n.t('register.consentLoading') }}</p>
+        }
+
+        @if (error(); as err) {
+          <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+        }
+
+        <button mat-flat-button type="submit" [disabled]="loading() || !consentVersion()">
+          {{ i18n.t('register.submit') }}
+        </button>
+      </form>
+    </mat-card-content>
+    <mat-card-actions class="alt-link">
+      <span>{{ i18n.t('register.haveAccount') }}</span>
+      <a mat-button routerLink="/login">{{ i18n.t('login.submit') }}</a>
+    </mat-card-actions>
+  </mat-card>
+</main>

@@ -1,0 +1,53 @@
+<main class="page">
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>{{ i18n.t('login.title') }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (justRegistered) {
+        <p class="form-success" role="status">{{ i18n.t('login.registered') }}</p>
+      }
+      <form class="form-column" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('login.username') }}</mat-label>
+          <input
+            matInput
+            formControlName="username"
+            autocomplete="username"
+            autocapitalize="none"
+          />
+          @if (form.controls.username.touched && form.controls.username.hasError('required')) {
+            <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('login.password') }}</mat-label>
+          <input
+            matInput
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+          />
+          @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+            <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-checkbox formControlName="rememberMe">{{ i18n.t('login.remember') }}</mat-checkbox>
+
+        @if (error(); as err) {
+          <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+        }
+
+        <button mat-flat-button type="submit" [disabled]="loading()">
+          {{ i18n.t('login.submit') }}
+        </button>
+      </form>
+    </mat-card-content>
+    <mat-card-actions class="alt-link">
+      <span>{{ i18n.t('login.noAccount') }}</span>
+      <a mat-button routerLink="/register">{{ i18n.t('login.createAccount') }}</a>
+    </mat-card-actions>
+  </mat-card>
+</main>
