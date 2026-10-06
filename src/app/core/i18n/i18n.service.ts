@@ -47,6 +47,16 @@ export class I18nService {
     return text;
   }
 
+  /** Nombre formaté selon la langue (séparateurs), avec au plus `maxFraction` décimales. */
+  n(value: number, maxFraction = 0): string {
+    return new Intl.NumberFormat(this._lang(), { maximumFractionDigits: maxFraction }).format(value);
+  }
+
+  /** Date longue (ex. « 6 octobre 2026 ») selon la langue. */
+  date(iso: string): string {
+    return new Intl.DateTimeFormat(this._lang(), { dateStyle: 'long' }).format(new Date(iso));
+  }
+
   private initialLang(): Lang {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);

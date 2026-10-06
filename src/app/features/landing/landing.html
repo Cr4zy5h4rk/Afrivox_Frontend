@@ -1,0 +1,182 @@
+<!-- Hero -->
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-text">
+      <span class="eyebrow">{{ i18n.t('landing.eyebrow') }}</span>
+      <h1>{{ i18n.t('landing.title') }}</h1>
+      <p class="lead">{{ i18n.t('landing.body') }}</p>
+      <div class="hero-actions">
+        <a mat-flat-button routerLink="/datasets">{{ i18n.t('landing.cta.explore') }}</a>
+        <a mat-stroked-button class="on-dark" [routerLink]="auth.isAuthenticated() ? '/record' : '/register'">
+          {{ i18n.t('landing.cta.contribute') }}
+        </a>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      @for (bar of bars; track $index) {
+        <span class="art-bar" [style.height.%]="bar.height" [style.animation-delay.ms]="bar.delay"></span>
+      }
+    </div>
+  </div>
+  <div class="afv-band" aria-hidden="true"></div>
+</section>
+
+<!-- Chiffres en direct -->
+<section class="container stats-wrap" aria-labelledby="stats-title">
+  <h2 id="stats-title" class="visually-hidden">{{ i18n.t('landing.stats.live') }}</h2>
+  <div class="card stats">
+    @let s = stats();
+    <div class="stat">
+      <strong>{{ s ? i18n.n(s.activeLanguages) : '—' }}</strong>
+      <span>{{ i18n.t('stat.languages') }}</span>
+    </div>
+    <div class="stat">
+      <strong>{{ s ? i18n.n(s.contributors) : '—' }}</strong>
+      <span>{{ i18n.t('stat.contributors') }}</span>
+    </div>
+    <div class="stat">
+      <strong>{{ s ? i18n.n(s.recordingsReceived) : '—' }}</strong>
+      <span>{{ i18n.t('stat.recordings') }}</span>
+    </div>
+    <div class="stat">
+      <strong>{{ s ? i18n.n(s.validatedHours, 1) : '—' }}</strong>
+      <span>{{ i18n.t('stat.hours') }}</span>
+    </div>
+    <div class="stat">
+      <strong>{{ s ? i18n.n(s.models) : '—' }}</strong>
+      <span>{{ i18n.t('stat.models') }}</span>
+    </div>
+  </div>
+  <p class="live muted">{{ i18n.t('landing.stats.live') }}</p>
+</section>
+
+<!-- Trois usages -->
+<section class="section container">
+  <div class="section-head">
+    <h2>{{ i18n.t('landing.usage.title') }}</h2>
+  </div>
+  <div class="usage">
+    <article class="card usage-card">
+      <div class="icon accent" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26">
+          <rect x="9" y="2.5" width="6" height="12" rx="3" fill="currentColor" />
+          <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.5M8.5 21.5h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
+      <h3>{{ i18n.t('landing.usage.contributor.title') }}</h3>
+      <p>{{ i18n.t('landing.usage.contributor.body') }}</p>
+      <a mat-flat-button [routerLink]="auth.isAuthenticated() ? '/record' : '/register'">
+        {{ i18n.t('landing.usage.contributor.cta') }}
+      </a>
+    </article>
+    <article class="card usage-card">
+      <div class="icon indigo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26">
+          <path d="M8 7 3 12l5 5M16 7l5 5-5 5M13.5 5l-3 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+      <h3>{{ i18n.t('landing.usage.developer.title') }}</h3>
+      <p>{{ i18n.t('landing.usage.developer.body') }}</p>
+      <a mat-stroked-button routerLink="/models">{{ i18n.t('landing.usage.developer.cta') }}</a>
+    </article>
+    <article class="card usage-card">
+      <div class="icon green" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26">
+          <path d="M4 20V8l8-4 8 4v12M9 20v-6h6v6M8 10h.01M12 10h.01M16 10h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+      <h3>{{ i18n.t('landing.usage.org.title') }}</h3>
+      <p>{{ i18n.t('landing.usage.org.body') }}</p>
+      <a mat-stroked-button routerLink="/register">{{ i18n.t('landing.usage.org.cta') }}</a>
+    </article>
+  </div>
+</section>
+
+<!-- Comment ça marche -->
+<section class="how">
+  <div class="container section">
+    <div class="section-head">
+      <h2>{{ i18n.t('landing.how.title') }}</h2>
+    </div>
+    <ol class="steps">
+      <li>
+        <span class="num">1</span>
+        <h3>{{ i18n.t('landing.how.1.title') }}</h3>
+        <p>{{ i18n.t('landing.how.1.body') }}</p>
+      </li>
+      <li>
+        <span class="num">2</span>
+        <h3>{{ i18n.t('landing.how.2.title') }}</h3>
+        <p>{{ i18n.t('landing.how.2.body') }}</p>
+      </li>
+      <li>
+        <span class="num">3</span>
+        <h3>{{ i18n.t('landing.how.3.title') }}</h3>
+        <p>{{ i18n.t('landing.how.3.body') }}</p>
+      </li>
+      <li>
+        <span class="num">4</span>
+        <h3>{{ i18n.t('landing.how.4.title') }}</h3>
+        <p>{{ i18n.t('landing.how.4.body') }}</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- Langues -->
+<section class="section container">
+  <div class="section-head">
+    <h2>{{ i18n.t('landing.langs.title') }}</h2>
+  </div>
+  @if (languages(); as langs) {
+    @if (langs.length === 0) {
+      <p class="muted">{{ i18n.t('landing.langs.empty') }}</p>
+    } @else {
+      <div class="langs">
+        @for (l of langs; track l.code) {
+          <div class="card lang">
+            <div class="lang-top">
+              <strong>{{ l.name }}</strong>
+              <span class="badge" [class.green]="l.status === 'ACTIVE'" [class.gold]="l.status !== 'ACTIVE'">
+                {{ i18n.t(l.status === 'ACTIVE' ? 'lang.active' : 'lang.waitlist') }}
+              </span>
+            </div>
+            <span class="muted">{{ i18n.t('lang.validated', { count: i18n.n(l.validatedRecordings) }) }}</span>
+          </div>
+        }
+      </div>
+    }
+  }
+</section>
+
+<!-- Datasets -->
+@if (datasets(); as list) {
+  @if (list.length > 0) {
+    <section class="section container">
+      <div class="section-head">
+        <h2>{{ i18n.t('landing.datasets.title') }}</h2>
+        <a routerLink="/datasets">{{ i18n.t('landing.datasets.all') }} →</a>
+      </div>
+      <div class="grid">
+        @for (d of list; track d.slug) {
+          <app-dataset-card [dataset]="d" />
+        }
+      </div>
+    </section>
+  }
+}
+
+<!-- Appel final -->
+<section class="container final">
+  <div class="final-card">
+    <div>
+      <h2>{{ i18n.t('landing.final.title') }}</h2>
+      <p>{{ i18n.t('landing.final.body') }}</p>
+    </div>
+    @if (auth.isAuthenticated()) {
+      <a mat-flat-button routerLink="/dashboard">{{ i18n.t('nav.dashboard') }}</a>
+    } @else {
+      <a mat-flat-button routerLink="/register">{{ i18n.t('nav.register') }}</a>
+    }
+  </div>
+</section>

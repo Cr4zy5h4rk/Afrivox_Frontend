@@ -18,6 +18,7 @@ import { ApiError, toApiError } from '../../../core/api-error';
 import { AuthService, RegistrableRole } from '../../../core/auth/auth.service';
 import { ConsentService } from '../../../core/consent.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { BrandMark } from '../../../core/ui/brand-mark';
 import { TranslationKey } from '../../../core/i18n/translations';
 
 /** Les mots de passe saisis doivent être identiques. */
@@ -32,6 +33,7 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   imports: [
     ReactiveFormsModule,
     RouterLink,
+    BrandMark,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,

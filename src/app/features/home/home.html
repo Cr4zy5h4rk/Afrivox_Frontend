@@ -1,34 +1,34 @@
-<main class="page">
-  <section class="hero afv-card">
-    <div class="afv-band" aria-hidden="true"></div>
-    <div class="hero-body">
-      <p class="greeting">{{ i18n.t('home.welcome', { name: name() }) }}</p>
-      <h1>{{ i18n.t('home.hero.title') }}</h1>
-      <p class="lead">{{ i18n.t('home.hero.body') }}</p>
-      @if (canRecord()) {
-        <a mat-flat-button class="cta" routerLink="/record">{{ i18n.t('home.cta.record') }}</a>
-        @if (outbox.pending() > 0) {
-          <p class="pending" role="status">
-            {{ i18n.t('home.cta.pending', { count: outbox.pending() }) }}
-          </p>
-        }
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ i18n.t('dash.welcome', { name: name() }) }}</h1>
+    <p>{{ i18n.t('dash.subtitle') }}</p>
+    <ul class="roles" [attr.aria-label]="i18n.t('dash.roles')">
+      @for (role of roles(); track role) {
+        <li class="badge on-dark">{{ i18n.t(role) }}</li>
       }
-    </div>
-  </section>
+    </ul>
+  </div>
+</section>
 
-  <h2>{{ i18n.t('home.roles') }}</h2>
-  <mat-chip-set [attr.aria-label]="i18n.t('home.roles')">
-    @for (role of roles(); track role.label) {
-      <mat-chip>{{ i18n.t(role.label) }}</mat-chip>
+<div class="container body">
+  @if (outbox.pending() > 0) {
+    <p class="notice" role="status">{{ i18n.t('record.pending', { count: outbox.pending() }) }}</p>
+  }
+  <div class="grid">
+    @for (action of actions(); track action.title) {
+      @if (action.link; as link) {
+        <a class="card card-link" [routerLink]="link">
+          <h3>{{ i18n.t(action.title) }}</h3>
+          <p>{{ i18n.t(action.body) }}</p>
+          <span class="go">{{ i18n.t('dash.go') }} →</span>
+        </a>
+      } @else {
+        <div class="card tile soon">
+          <h3>{{ i18n.t(action.title) }}</h3>
+          <p>{{ i18n.t(action.body) }}</p>
+          <span class="badge gold">{{ i18n.t('dash.soon') }}</span>
+        </div>
+      }
     }
-  </mat-chip-set>
-
-  <section class="cards">
-    @for (card of cards(); track card) {
-      <article class="afv-card tile">
-        <h3>{{ i18n.t(card) }}</h3>
-        <p class="soon">{{ i18n.t('home.soon') }}</p>
-      </article>
-    }
-  </section>
-</main>
+  </div>
+</div>

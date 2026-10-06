@@ -16,7 +16,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
     >
       <rect x="3" y="14" width="5" height="12" rx="2.5" fill="var(--afv-gold)" />
       <rect x="11" y="7" width="5" height="26" rx="2.5" fill="var(--mat-sys-primary)" />
-      <rect x="19" y="2" width="5" height="36" rx="2.5" fill="var(--afv-indigo)" />
+      <rect x="19" y="2" width="5" height="36" rx="2.5" fill="var(--brand-bar, var(--afv-brand))" />
       <rect x="27" y="9" width="5" height="22" rx="2.5" fill="var(--mat-sys-primary)" />
       <rect x="35" y="15" width="5" height="10" rx="2.5" fill="var(--afv-gold)" />
     </svg>

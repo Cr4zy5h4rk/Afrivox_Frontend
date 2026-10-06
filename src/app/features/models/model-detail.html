@@ -1,0 +1,136 @@
+@switch (state()) {
+  @case ('loading') {
+    <div class="container section"><p class="muted" role="status">{{ i18n.t('common.loading') }}</p></div>
+  }
+
+  @case ('notfound') {
+    <div class="container section">
+      <div class="empty">
+        <h3>{{ i18n.t('model.notfound') }}</h3>
+        <a mat-flat-button routerLink="/models">{{ i18n.t('model.back') }}</a>
+      </div>
+    </div>
+  }
+
+  @case ('failed') {
+    <div class="container section">
+      <div class="empty" role="alert">
+        <h3>{{ i18n.t('common.error') }}</h3>
+        <a mat-flat-button routerLink="/models">{{ i18n.t('model.back') }}</a>
+      </div>
+    </div>
+  }
+
+  @default {
+    @if (detail(); as dt) {
+      @let m = dt.model;
+      <section class="page-hero">
+        <div class="container">
+          <a class="back" routerLink="/models">← {{ i18n.t('model.back') }}</a>
+          <div class="badges">
+            <span class="badge on-dark">{{ i18n.t(taskKey(m.task)) }}</span>
+            @if (m.languageName) {
+              <span class="badge on-dark">{{ m.languageName }}</span>
+            }
+          </div>
+          <h1>{{ m.name }}</h1>
+          @if (m.ownerName) {
+            <p>{{ i18n.t('model.by', { name: m.ownerName }) }} · {{ i18n.t('model.published', { date: i18n.date(m.createdAt) }) }}</p>
+          }
+        </div>
+      </section>
+
+      <div class="container layout">
+        <div class="main">
+          <section class="card block">
+            <h2>{{ i18n.t('dataset.about') }}</h2>
+            <p class="prose">{{ m.description || i18n.t('dataset.noDescription') }}</p>
+          </section>
+
+          <section class="card block">
+            <h2>{{ i18n.t('model.evaluations') }}</h2>
+            @if (dt.evaluations.length === 0) {
+              <p class="muted">{{ i18n.t('model.evaluations.empty') }}</p>
+            } @else {
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>{{ i18n.t('col.wer') }}</th>
+                      <th>{{ i18n.t('col.cer') }}</th>
+                      <th>{{ i18n.t('col.testset') }}</th>
+                      <th>{{ i18n.t('col.date') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (e of dt.evaluations; track $index) {
+                      <tr>
+                        <td class="num">
+                          <strong>{{ e.wer !== null ? i18n.n(e.wer, 1) + ' %' : i18n.t('common.none') }}</strong>
+                        </td>
+                        <td class="num">{{ e.cer !== null ? i18n.n(e.cer, 1) + ' %' : i18n.t('common.none') }}</td>
+                        <td>
+                          @if (e.testSetDataset) {
+                            <a [routerLink]="['/datasets', e.testSetDataset]">{{ e.testSetDataset }}</a>
+                            {{ e.testSetVersion }}
+                          } @else {
+                            {{ i18n.t('common.none') }}
+                          }
+                        </td>
+                        <td>{{ i18n.date(e.submittedAt) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </section>
+        </div>
+
+        <aside class="side">
+          <section class="card block">
+            <h3>{{ i18n.t('dataset.facts') }}</h3>
+            <dl class="facts">
+              <div>
+                <dt>{{ i18n.t('model.task') }}</dt>
+                <dd>{{ i18n.t(taskKey(m.task)) }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('model.language') }}</dt>
+                <dd>{{ m.languageName || i18n.t('common.none') }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('model.license') }}</dt>
+                <dd>{{ m.license || i18n.t('common.none') }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('model.bestWer') }}</dt>
+                <dd>{{ m.bestWer !== null ? i18n.n(m.bestWer, 1) + ' %' : i18n.t('common.none') }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('model.trainedOn') }}</dt>
+                <dd>
+                  @if (m.trainedOnDataset) {
+                    <a [routerLink]="['/datasets', m.trainedOnDataset]">{{ m.trainedOnDataset }}</a>
+                    {{ m.trainedOnVersion }}
+                  } @else {
+                    {{ i18n.t('common.none') }}
+                  }
+                </dd>
+              </div>
+            </dl>
+          </section>
+
+          @if (m.url) {
+            <section class="card block">
+              <!-- Lien externe saisi par un utilisateur : https uniquement (vérifié par le serveur), sans référent -->
+              <a mat-flat-button [href]="m.url" target="_blank" rel="noopener noreferrer nofollow">
+                {{ i18n.t('model.openLink') }}
+              </a>
+            </section>
+          }
+        </aside>
+      </div>
+    }
+  }
+}

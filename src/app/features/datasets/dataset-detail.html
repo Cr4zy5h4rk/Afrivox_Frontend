@@ -1,0 +1,143 @@
+@switch (state()) {
+  @case ('loading') {
+    <div class="container section"><p class="muted" role="status">{{ i18n.t('common.loading') }}</p></div>
+  }
+
+  @case ('notfound') {
+    <div class="container section">
+      <div class="empty">
+        <h3>{{ i18n.t('dataset.notfound') }}</h3>
+        <a mat-flat-button routerLink="/datasets">{{ i18n.t('dataset.back') }}</a>
+      </div>
+    </div>
+  }
+
+  @case ('failed') {
+    <div class="container section">
+      <div class="empty" role="alert">
+        <h3>{{ i18n.t('common.error') }}</h3>
+        <a mat-flat-button routerLink="/datasets">{{ i18n.t('dataset.back') }}</a>
+      </div>
+    </div>
+  }
+
+  @default {
+    @if (detail(); as dt) {
+      @let d = dt.dataset;
+      <section class="page-hero">
+        <div class="container">
+          <a class="back" routerLink="/datasets">← {{ i18n.t('dataset.back') }}</a>
+          <div class="badges">
+            @if (d.languageName) {
+              <span class="badge on-dark">{{ d.languageName }}</span>
+            }
+            <span class="badge on-dark">
+              {{ i18n.t(d.published ? 'dataset.status.published' : 'dataset.status.collecting') }}
+            </span>
+            <span class="badge on-dark">{{ i18n.t(planKey(d.plan)) }}</span>
+          </div>
+          <h1>{{ d.title }}</h1>
+        </div>
+      </section>
+
+      <div class="container layout">
+        <div class="main">
+          <section class="card block">
+            <h2>{{ i18n.t('dataset.about') }}</h2>
+            <p class="prose">{{ d.description || i18n.t('dataset.noDescription') }}</p>
+          </section>
+
+          <section class="card block">
+            <h2>{{ i18n.t('dataset.versions') }}</h2>
+            @if (dt.versions.length === 0) {
+              <p class="muted">{{ i18n.t('dataset.versions.empty') }}</p>
+            } @else {
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>{{ i18n.t('col.version') }}</th>
+                      <th>{{ i18n.t('col.date') }}</th>
+                      <th>{{ i18n.t('col.hours') }}</th>
+                      <th>{{ i18n.t('col.speakers') }}</th>
+                      <th>{{ i18n.t('col.quality') }}</th>
+                      <th>{{ i18n.t('col.license') }}</th>
+                      <th>{{ i18n.t('col.price') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (v of dt.versions; track v.label) {
+                      <tr>
+                        <td>
+                          <strong>{{ v.label }}</strong>
+                        </td>
+                        <td>{{ i18n.date(v.createdAt) }}</td>
+                        <td class="num">{{ v.hours !== null ? i18n.n(v.hours, 1) : i18n.t('common.none') }}</td>
+                        <td class="num">{{ v.speakers !== null ? i18n.n(v.speakers) : i18n.t('common.none') }}</td>
+                        <td class="num">
+                          {{ v.qualityScore !== null ? i18n.n(v.qualityScore) + '/100' : i18n.t('common.none') }}
+                        </td>
+                        <td>{{ i18n.t(licenseKey(v.license)) }}</td>
+                        <td class="num">
+                          {{
+                            v.pricePerHourFcfa !== null
+                              ? i18n.t('price.fcfa', { n: i18n.n(v.pricePerHourFcfa) })
+                              : i18n.t('common.none')
+                          }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </section>
+        </div>
+
+        <aside class="side">
+          <section class="card block">
+            <h3>{{ i18n.t('dataset.facts') }}</h3>
+            <dl class="facts">
+              <div>
+                <dt>{{ i18n.t('fact.language') }}</dt>
+                <dd>{{ d.languageName || i18n.t('common.none') }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('fact.domain') }}</dt>
+                <dd>{{ d.domain || i18n.t('common.none') }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('fact.plan') }}</dt>
+                <dd>{{ i18n.t(planKey(d.plan)) }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('fact.latest') }}</dt>
+                <dd>{{ d.latestVersion ? d.latestVersion.label : i18n.t('common.none') }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('fact.validated') }}</dt>
+                <dd>{{ i18n.n(d.validatedRecordings) }}</dd>
+              </div>
+              <div>
+                <dt>{{ i18n.t('fact.hours') }}</dt>
+                <dd>{{ i18n.n(d.validatedHours, 1) }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="card block cta">
+            @if (d.published) {
+              <button mat-flat-button type="button" disabled>{{ i18n.t('dataset.download') }}</button>
+              <p class="muted small">{{ i18n.t('dataset.download.soon') }}</p>
+            }
+            <h3>{{ i18n.t('dataset.contribute') }}</h3>
+            <p class="muted small">{{ i18n.t('dataset.contribute.body') }}</p>
+            <a mat-flat-button [routerLink]="auth.isAuthenticated() ? '/record' : '/register'">
+              {{ i18n.t('landing.cta.contribute') }}
+            </a>
+          </section>
+        </aside>
+      </div>
+    }
+  }
+}

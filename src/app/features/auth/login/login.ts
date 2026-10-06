@@ -9,12 +9,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiError, toApiError } from '../../../core/api-error';
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { BrandMark } from '../../../core/ui/brand-mark';
 
 @Component({
   selector: 'app-login',
   imports: [
     ReactiveFormsModule,
     RouterLink,
+    BrandMark,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -59,6 +61,6 @@ export class LoginPage {
   /** N'accepte qu'un chemin interne : un returnUrl externe serait une redirection ouverte (phishing). */
   private safeReturnUrl(): string {
     const url = this.route.snapshot.queryParamMap.get('returnUrl');
-    return url && url.startsWith('/') && !url.startsWith('//') ? url : '/';
+    return url && url.startsWith('/') && !url.startsWith('//') ? url : '/dashboard';
   }
 }

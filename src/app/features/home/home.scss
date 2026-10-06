@@ -1,58 +1,52 @@
-.hero {
-  margin-block-end: 1.5rem;
-}
-
-.hero-body {
+.roles {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
 }
 
-.greeting {
-  margin: 0;
-  color: var(--mat-sys-primary);
-  font-weight: 700;
-  letter-spacing: 0.04em;
+.badge.on-dark {
+  background: rgb(255 255 255 / 16%);
+  color: #fff;
 }
 
-.lead {
-  margin: 0;
-  max-inline-size: 34rem;
-  color: var(--mat-sys-on-surface-variant);
-  line-height: 1.6;
+.body {
+  padding-block: 2rem;
 }
 
-.cta {
-  margin-block-start: 0.75rem;
-  --mat-button-filled-container-height: 52px;
-  --mat-button-filled-horizontal-padding: 28px;
+.notice {
+  margin-block: 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: var(--afv-gold-50);
+  color: #6b4a00;
 }
 
-.pending {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--mat-sys-on-surface-variant);
-}
-
-.cards {
-  display: grid;
-  gap: 0.75rem;
-  margin-block-start: 1.5rem;
-}
-
+.card-link,
 .tile {
-  padding: 1rem 1.25rem;
-
-  h3 {
+  p {
     margin: 0;
-    font-size: 1.05rem;
+    color: var(--afv-muted);
+    flex: 1;
   }
 }
 
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 1.25rem;
+}
+
 .soon {
-  margin: 0.25rem 0 0;
-  font-size: 0.85rem;
-  color: var(--mat-sys-on-surface-variant);
+  background: #fafbfe;
+  box-shadow: none;
+}
+
+.go {
+  font-weight: 650;
+  color: var(--afv-accent);
 }

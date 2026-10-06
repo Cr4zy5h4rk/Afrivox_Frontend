@@ -1,10 +1,31 @@
-<header class="topbar">
-  <div class="topbar-inner">
-    <a class="brand" routerLink="/">
+<a class="skip-link" href="#main">{{ i18n.t('nav.skip') }}</a>
+
+<header class="site-header">
+  <div class="container bar">
+    <a class="brand" routerLink="/" [attr.aria-label]="i18n.t('app.name')">
       <app-brand-mark [size]="30" />
       <span class="brand-name">{{ i18n.t('app.name') }}</span>
     </a>
-    <span class="spacer"></span>
+
+    <nav class="nav" [class.open]="menuOpen()" [attr.aria-label]="i18n.t('nav.menu')">
+      <a routerLink="/datasets" routerLinkActive="active">{{ i18n.t('nav.datasets') }}</a>
+      <a routerLink="/models" routerLinkActive="active">{{ i18n.t('nav.models') }}</a>
+      <a routerLink="/leaderboard" routerLinkActive="active">{{ i18n.t('nav.leaderboard') }}</a>
+      <a routerLink="/record" routerLinkActive="active">{{ i18n.t('nav.contribute') }}</a>
+
+      <div class="nav-actions">
+        @if (auth.isAuthenticated()) {
+          <a mat-stroked-button routerLink="/dashboard">{{ i18n.t('nav.dashboard') }}</a>
+          <button mat-button type="button" (click)="auth.logout()">
+            {{ i18n.t('nav.logout') }}
+          </button>
+        } @else {
+          <a mat-button routerLink="/login">{{ i18n.t('nav.login') }}</a>
+          <a mat-flat-button routerLink="/register">{{ i18n.t('nav.register') }}</a>
+        }
+      </div>
+    </nav>
+
     <mat-button-toggle-group
       class="lang"
       [value]="i18n.lang()"
@@ -18,11 +39,61 @@
         }}</mat-button-toggle>
       }
     </mat-button-toggle-group>
-    @if (auth.isAuthenticated()) {
-      <button mat-button type="button" (click)="auth.logout()">{{ i18n.t('nav.logout') }}</button>
-    }
+
+    <button
+      type="button"
+      class="burger"
+      [attr.aria-expanded]="menuOpen()"
+      [attr.aria-label]="i18n.t('nav.menu')"
+      (click)="toggleMenu()"
+    >
+      <span></span><span></span><span></span>
+    </button>
   </div>
-  <div class="afv-band" aria-hidden="true"></div>
 </header>
 
-<router-outlet />
+<main id="main">
+  <router-outlet />
+</main>
+
+<footer class="site-footer">
+  <div class="afv-band" aria-hidden="true"></div>
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <a class="brand" routerLink="/">
+        <app-brand-mark [size]="28" />
+        <span class="brand-name">{{ i18n.t('app.name') }}</span>
+      </a>
+      <p>{{ i18n.t('footer.tagline') }}</p>
+    </div>
+    <div>
+      <h4>{{ i18n.t('footer.platform') }}</h4>
+      <ul>
+        <li>
+          <a routerLink="/datasets">{{ i18n.t('nav.datasets') }}</a>
+        </li>
+        <li>
+          <a routerLink="/models">{{ i18n.t('nav.models') }}</a>
+        </li>
+        <li>
+          <a routerLink="/leaderboard">{{ i18n.t('nav.leaderboard') }}</a>
+        </li>
+      </ul>
+    </div>
+    <div>
+      <h4>{{ i18n.t('footer.participate') }}</h4>
+      <ul>
+        <li>
+          <a routerLink="/record">{{ i18n.t('footer.record') }}</a>
+        </li>
+        <li>
+          <a routerLink="/models/new">{{ i18n.t('footer.publish') }}</a>
+        </li>
+        <li>
+          <a routerLink="/register">{{ i18n.t('footer.account') }}</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="container legal">{{ i18n.t('footer.rights') }}</div>
+</footer>

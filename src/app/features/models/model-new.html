@@ -1,0 +1,69 @@
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ i18n.t('modelnew.title') }}</h1>
+    <p>{{ i18n.t('modelnew.subtitle') }}</p>
+  </div>
+</section>
+
+<div class="container wrap">
+  <form class="card form form-column" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('modelnew.name') }}</mat-label>
+      <input matInput formControlName="name" maxlength="120" />
+      @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+        <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="two">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('modelnew.task') }}</mat-label>
+        <mat-select formControlName="task">
+          @for (t of tasks; track t) {
+            <mat-option [value]="t">{{ i18n.t(taskKey(t)) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('modelnew.language') }}</mat-label>
+        <mat-select formControlName="languageCode">
+          <mat-option value="">{{ i18n.t('modelnew.languageNone') }}</mat-option>
+          @for (l of languages(); track l.code) {
+            <mat-option [value]="l.code">{{ l.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('modelnew.description') }}</mat-label>
+      <textarea matInput formControlName="description" rows="5" maxlength="1000"></textarea>
+    </mat-form-field>
+
+    <div class="two">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('modelnew.license') }}</mat-label>
+        <input matInput formControlName="license" maxlength="60" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('modelnew.url') }}</mat-label>
+        <input matInput type="url" formControlName="url" maxlength="300" autocomplete="off" />
+        <mat-hint>{{ i18n.t('modelnew.urlHint') }}</mat-hint>
+        @if (form.controls.url.touched && form.controls.url.hasError('https')) {
+          <mat-error>{{ i18n.t('validation.https') }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    @if (error(); as err) {
+      <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+    }
+
+    <div class="actions">
+      <a mat-stroked-button routerLink="/models">{{ i18n.t('modelnew.cancel') }}</a>
+      <button mat-flat-button type="submit" [disabled]="loading()">{{ i18n.t('modelnew.submit') }}</button>
+    </div>
+  </form>
+</div>

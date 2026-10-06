@@ -1,19 +1,18 @@
 @use '@angular/material' as mat;
 
 // ---------------------------------------------------------------------------------------------
-// Identité visuelle AfriVox
-//   - sable chaud pour le fond (papier, terre), terracotta pour l'action, indigo (teinture) pour
-//     les repères, vert pour la réussite, ocre pour les accents ;
-//   - motif de triangles (inspiré des tissus bogolan) et ondes sonores comme signature ;
-//   - polices du système uniquement : aucune ressource externe, l'app reste utilisable hors ligne.
-// Material fournit la base (composants, états, accessibilité) ; les couleurs sont ensuite redéfinies
-// ci-dessous pour clair et sombre.
+// Design system AfriVox : thème clair uniquement, sobre et lisible.
+//   - fond gris très clair, cartes blanches, texte encre ;
+//   - indigo (structure : en-tête, titres, bandeaux), terracotta (actions), vert (réussite), ocre (accent) ;
+//   - polices du système (aucune ressource externe : l'app reste utilisable hors ligne).
+// Material fournit les composants (champs, boutons, états, accessibilité) ; ses couleurs sont redéfinies ici.
 // ---------------------------------------------------------------------------------------------
 html {
-  color-scheme: light dark;
+  color-scheme: light;
   @include mat.theme(
     (
       color: (
+        theme-type: light,
         primary: mat.$orange-palette,
         tertiary: mat.$green-palette,
       ),
@@ -23,95 +22,356 @@ html {
           -apple-system,
           'Segoe UI',
           Roboto,
+          'Helvetica Neue',
           sans-serif,
         ),
         brand-family: (
-          ui-serif,
-          'Iowan Old Style',
-          'Palatino Linotype',
-          Georgia,
-          serif,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif,
         ),
       ),
       density: 0,
     )
   );
+
+  // Jetons AfriVox
+  --afv-bg: #f6f7fb;
+  --afv-surface: #ffffff;
+  --afv-ink: #121633;
+  --afv-muted: #5a6180;
+  --afv-line: #e3e6f0;
+  --afv-brand: #1e2a6b; // indigo
+  --afv-brand-dark: #141d4f;
+  --afv-brand-50: #eef0fb;
+  --afv-accent: #c4411a; // terracotta (actions)
+  --afv-accent-dark: #a63515;
+  --afv-accent-50: #fdf0ea;
+  --afv-green: #1f7a55;
+  --afv-green-50: #e5f4ed;
+  --afv-gold: #d9a12a;
+  --afv-gold-50: #fbf3df;
+  --afv-recording: #c62828;
+  --afv-radius: 14px;
+  --afv-shadow: 0 1px 2px rgb(18 22 51 / 6%), 0 4px 16px rgb(18 22 51 / 5%);
+  --afv-display: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  // Correspondance Material
+  --mat-sys-primary: var(--afv-accent);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: var(--afv-accent-50);
+  --mat-sys-on-primary-container: #5b1a08;
+  --mat-sys-secondary: var(--afv-brand);
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-secondary-container: var(--afv-brand-50);
+  --mat-sys-on-secondary-container: var(--afv-brand-dark);
+  --mat-sys-tertiary: var(--afv-green);
+  --mat-sys-on-tertiary: #ffffff;
+  --mat-sys-tertiary-container: var(--afv-green-50);
+  --mat-sys-on-tertiary-container: #0b3a27;
+  --mat-sys-surface: var(--afv-bg);
+  --mat-sys-background: var(--afv-bg);
+  --mat-sys-on-surface: var(--afv-ink);
+  --mat-sys-on-background: var(--afv-ink);
+  --mat-sys-on-surface-variant: var(--afv-muted);
+  --mat-sys-surface-variant: #eceff7;
+  --mat-sys-surface-container-lowest: var(--afv-surface);
+  --mat-sys-surface-container-low: #fbfbfe;
+  --mat-sys-surface-container: #f3f4fa;
+  --mat-sys-surface-container-high: #eceef7;
+  --mat-sys-surface-container-highest: #e6e9f4;
+  --mat-sys-outline: #8a90aa;
+  --mat-sys-outline-variant: var(--afv-line);
+  --mat-sys-corner-medium: 12px;
+  --mat-sys-corner-large: var(--afv-radius);
+
+  // Boutons Material : coins arrondis (10 px) et hauteur confortable
+  --mat-button-filled-container-shape: 10px;
+  --mat-button-outlined-container-shape: 10px;
+  --mat-button-text-container-shape: 10px;
+  --mat-button-filled-container-height: 44px;
+  --mat-button-outlined-container-height: 44px;
+  --mat-button-filled-label-text-weight: 600;
+  --mat-button-outlined-label-text-weight: 600;
 }
 
-// Couleurs de marque, avec leur variante sombre (light-dark suit color-scheme).
-html {
-  --mat-sys-primary: light-dark(#a8401c, #ffb59a);
-  --mat-sys-on-primary: light-dark(#ffffff, #5b1900);
-  --mat-sys-primary-container: light-dark(#ffdbcb, #812d0a);
-  --mat-sys-on-primary-container: light-dark(#3a0e00, #ffdbcb);
-
-  --mat-sys-secondary: light-dark(#2b3a78, #b8c4ff);
-  --mat-sys-on-secondary: light-dark(#ffffff, #11205c);
-  --mat-sys-secondary-container: light-dark(#dde1ff, #3f4f8e);
-  --mat-sys-on-secondary-container: light-dark(#0a1445, #dde1ff);
-
-  --mat-sys-tertiary: light-dark(#2e6b4e, #98d4b3);
-  --mat-sys-on-tertiary: light-dark(#ffffff, #003822);
-  --mat-sys-tertiary-container: light-dark(#b4f0cf, #135138);
-  --mat-sys-on-tertiary-container: light-dark(#00210f, #b4f0cf);
-
-  --mat-sys-surface: light-dark(#fbf5ea, #17110d);
-  --mat-sys-background: light-dark(#fbf5ea, #17110d);
-  --mat-sys-on-surface: light-dark(#2a1b12, #f0e1d2);
-  --mat-sys-on-background: light-dark(#2a1b12, #f0e1d2);
-  --mat-sys-on-surface-variant: light-dark(#5a4a3f, #d5c3b3);
-  --mat-sys-surface-variant: light-dark(#ecdfc9, #3a302a);
-  --mat-sys-surface-container-lowest: light-dark(#fffdf8, #110b08);
-  --mat-sys-surface-container-low: light-dark(#f7efe1, #1f1814);
-  --mat-sys-surface-container: light-dark(#f2e9d8, #241c17);
-  --mat-sys-surface-container-high: light-dark(#ece1cd, #2f2620);
-  --mat-sys-surface-container-highest: light-dark(#e6dac4, #3a302a);
-  --mat-sys-outline: light-dark(#8a7767, #9e8c7c);
-  --mat-sys-outline-variant: light-dark(#d8c9b5, #50443a);
-
-  // Formes plus généreuses : cartes et boutons plus doux
-  --mat-sys-corner-medium: 16px;
-  --mat-sys-corner-large: 24px;
-
-  // Accents propres à AfriVox (hors Material)
-  --afv-gold: light-dark(#c98a12, #e8b04b);
-  --afv-indigo: light-dark(#2b3a78, #8d9cf0);
-  --afv-recording: light-dark(#c62828, #ff8a80);
-  --afv-display: ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
+  background: var(--afv-bg);
+  color: var(--afv-ink);
   font: var(--mat-sys-body-large);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
 h2,
-h3 {
+h3,
+h4 {
   font-family: var(--afv-display);
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   margin-block: 0 0.5rem;
+  color: var(--afv-ink);
 }
 
 h1 {
-  font-size: clamp(1.75rem, 6vw, 2.5rem);
-  line-height: 1.15;
+  font-size: clamp(1.9rem, 5vw, 2.8rem);
 }
 
 h2 {
-  font-size: 1.25rem;
+  font-size: clamp(1.4rem, 3.5vw, 1.9rem);
 }
 
-// Mise en page commune : mobile d'abord, marges logiques (compatibles droite à gauche)
-.page {
-  box-sizing: border-box;
+h3 {
+  font-size: 1.1rem;
+}
+
+p {
+  margin-block: 0 1rem;
+}
+
+a {
+  color: var(--afv-brand);
+}
+
+// ----- Mise en page -----
+.container {
   margin-inline: auto;
-  padding: 1rem;
+  inline-size: 100%;
+  max-inline-size: 72rem;
+  padding-inline: 1.25rem;
+}
+
+// Pages étroites existantes (connexion, enregistrement)
+.page {
+  margin-inline: auto;
+  padding: 1.25rem;
   max-inline-size: 40rem;
+}
+
+.section {
+  padding-block: 3.5rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-block-end: 1.5rem;
+
+  p {
+    margin: 0;
+    color: var(--afv-muted);
+  }
+}
+
+// Bandeau de titre des pages de liste
+.page-hero {
+  background: linear-gradient(135deg, var(--afv-brand-dark), var(--afv-brand));
+  color: #fff;
+  padding-block: 2.5rem 3rem;
+
+  h1 {
+    color: #fff;
+    margin-block-end: 0.5rem;
+  }
+
+  p {
+    margin: 0;
+    max-inline-size: 42rem;
+    color: rgb(255 255 255 / 80%);
+  }
+}
+
+// ----- Composants -----
+.card {
+  background: var(--afv-surface);
+  border: 1px solid var(--afv-line);
+  border-radius: var(--afv-radius);
+  box-shadow: var(--afv-shadow);
+}
+
+// Ancien nom, encore utilisé par l'écran d'enregistrement
+.afv-card {
+  @extend .card;
+  overflow: hidden;
+}
+
+.card-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--afv-brand);
+    box-shadow: 0 8px 24px rgb(18 22 51 / 10%);
+  }
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.5;
+  background: var(--afv-brand-50);
+  color: var(--afv-brand);
+
+  &.green {
+    background: var(--afv-green-50);
+    color: var(--afv-green);
+  }
+
+  &.accent {
+    background: var(--afv-accent-50);
+    color: var(--afv-accent-dark);
+  }
+
+  &.gold {
+    background: var(--afv-gold-50);
+    color: #7a5600;
+  }
+
+  &.gray {
+    background: #eceef5;
+    color: var(--afv-muted);
+  }
+}
+
+.chip {
+  @extend .badge;
+}
+
+.muted {
+  color: var(--afv-muted);
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--afv-line);
+  border-radius: var(--afv-radius);
+  background: var(--afv-surface);
+
+  h3 {
+    margin-block-end: 0.35rem;
+  }
+
+  p {
+    margin-inline: auto;
+    max-inline-size: 32rem;
+    color: var(--afv-muted);
+  }
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table.table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+
+  th,
+  td {
+    padding: 0.7rem 0.9rem;
+    text-align: start;
+    border-block-end: 1px solid var(--afv-line);
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--afv-muted);
+    background: #fafbfe;
+  }
+
+  td.num {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// Barre de filtres des listes
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+  margin-block: -1.75rem 1.5rem;
+  padding: 1rem;
+  background: var(--afv-surface);
+  border: 1px solid var(--afv-line);
+  border-radius: var(--afv-radius);
+  box-shadow: var(--afv-shadow);
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1 1 11rem;
+
+    &.grow {
+      flex: 3 1 16rem;
+    }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 650;
+      color: var(--afv-muted);
+    }
+  }
+
+  input,
+  select {
+    inline-size: 100%;
+    block-size: 44px;
+    padding-inline: 0.8rem;
+    font: inherit;
+    color: var(--afv-ink);
+    background: #fff;
+    border: 1px solid #cfd4e6;
+    border-radius: 10px;
+
+    &:focus-visible {
+      outline: 2px solid var(--afv-brand);
+      outline-offset: 1px;
+      border-color: var(--afv-brand);
+    }
+  }
 }
 
 .form-column {
@@ -126,28 +386,39 @@ h2 {
 }
 
 .form-success {
-  color: var(--mat-sys-tertiary);
+  color: var(--afv-green);
   margin-block: 0.5rem;
 }
 
-// Bandeau de triangles (signature visuelle) : or sur indigo
+// Bandeau de triangles (signature visuelle, discret)
 .afv-band {
-  block-size: 12px;
+  block-size: 8px;
   background:
-    conic-gradient(from -45deg at 50% 100%, var(--afv-gold) 0 90deg, transparent 0) 0 0 / 24px 12px,
-    var(--afv-indigo);
+    conic-gradient(from -45deg at 50% 100%, var(--afv-gold) 0 90deg, transparent 0) 0 0 / 16px 8px,
+    var(--afv-brand);
 }
 
-// Cartes de contenu : fond clair, bord discret, légère ombre chaude
-.afv-card {
-  background: var(--mat-sys-surface-container-lowest);
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--mat-sys-corner-large);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--mat-sys-on-surface) 8%, transparent);
-  overflow: hidden;
+// Lien d'évitement (accessibilité clavier)
+.skip-link {
+  position: absolute;
+  inset-inline-start: 0.5rem;
+  inset-block-start: -4rem;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: var(--afv-brand);
+  color: #fff;
+  border-radius: 8px;
+
+  &:focus {
+    inset-block-start: 0.5rem;
+  }
 }
 
-// Respecte les préférences de l'utilisateur : pas d'animation si elles sont réduites
+:focus-visible {
+  outline: 2px solid var(--afv-brand);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -155,5 +426,92 @@ h2 {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+}
+
+// ----- Pages de connexion et d'inscription : panneau de marque + formulaire -----
+.auth-page {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  min-block-size: calc(100vh - 68px);
+}
+
+.auth-aside {
+  --brand-bar: #ffffff; // la barre centrale du logo devient blanche sur fond sombre
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem clamp(1.5rem, 5vw, 4rem);
+  background:
+    radial-gradient(40rem 24rem at 100% 0, rgb(217 161 42 / 22%), transparent 60%),
+    linear-gradient(160deg, var(--afv-brand-dark), var(--afv-brand));
+  color: #fff;
+
+  h2 {
+    color: #fff;
+    font-size: clamp(1.5rem, 3vw, 2.1rem);
+    margin: 0;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.75rem;
+    color: rgb(255 255 255 / 85%);
+  }
+
+  li {
+    padding-inline-start: 1.6rem;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset-inline-start: 0;
+      inset-block-start: 0.55em;
+      inline-size: 0.7rem;
+      block-size: 0.7rem;
+      border-radius: 50%;
+      background: var(--afv-gold);
+    }
+  }
+}
+
+.auth-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+
+  mat-card {
+    inline-size: 100%;
+    max-inline-size: 30rem;
+    padding: 0.75rem;
+    background: var(--afv-surface);
+    border-radius: var(--afv-radius);
+    box-shadow: var(--afv-shadow);
+  }
+
+  mat-card-header {
+    margin-block-end: 1.25rem;
+  }
+
+  mat-card-title {
+    font-size: 1.5rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+  }
+}
+
+@media (max-width: 56rem) {
+  .auth-page {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-aside {
+    display: none;
   }
 }

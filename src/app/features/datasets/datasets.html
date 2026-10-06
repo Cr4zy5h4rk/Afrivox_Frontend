@@ -1,0 +1,60 @@
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ i18n.t('datasets.title') }}</h1>
+    <p>{{ i18n.t('datasets.subtitle') }}</p>
+  </div>
+</section>
+
+<div class="container">
+  <form class="toolbar" role="search" (submit)="$event.preventDefault()">
+    <div class="field grow">
+      <label for="ds-q">{{ i18n.t('datasets.search') }}</label>
+      <input id="ds-q" type="search" [value]="filters().q" (input)="setQuery($event)" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="ds-lang">{{ i18n.t('filter.language') }}</label>
+      <select id="ds-lang" [value]="filters().language" (change)="setLanguage($event)">
+        <option value="">{{ i18n.t('filter.all') }}</option>
+        @for (l of languages(); track l.code) {
+          <option [value]="l.code" [selected]="filters().language === l.code">{{ l.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="ds-plan">{{ i18n.t('filter.plan') }}</label>
+      <select id="ds-plan" [value]="filters().plan" (change)="setPlan($event)">
+        <option value="">{{ i18n.t('filter.all') }}</option>
+        @for (p of plans; track p) {
+          <option [value]="p" [selected]="filters().plan === p">{{ i18n.t(planKey(p)) }}</option>
+        }
+      </select>
+    </div>
+  </form>
+
+  <div class="results" aria-live="polite">
+    @if (failed()) {
+      <div class="empty" role="alert">
+        <h3>{{ i18n.t('common.error') }}</h3>
+        <button mat-flat-button type="button" (click)="retry()">{{ i18n.t('common.retry') }}</button>
+      </div>
+    } @else if (result(); as r) {
+      <p class="count muted">{{ i18n.t('datasets.count', { count: i18n.n(r.total) }) }}</p>
+      @if (r.items.length === 0) {
+        <div class="empty">
+          <h3>{{ i18n.t('datasets.empty.title') }}</h3>
+          <p>{{ i18n.t('datasets.empty.body') }}</p>
+          <a mat-flat-button routerLink="/record">{{ i18n.t('landing.cta.contribute') }}</a>
+        </div>
+      } @else {
+        <div class="grid" [class.dim]="loading()">
+          @for (d of r.items; track d.slug) {
+            <app-dataset-card [dataset]="d" />
+          }
+        </div>
+        <app-pager [page]="r.page" [pages]="r.pages" (pageChange)="setPage($event)" />
+      }
+    } @else {
+      <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+    }
+  </div>
+</div>

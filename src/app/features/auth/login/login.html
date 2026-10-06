@@ -1,4 +1,14 @@
-<main class="page">
+<main class="auth-page">
+  <aside class="auth-aside">
+    <app-brand-mark [size]="44" />
+    <h2>{{ i18n.t('auth.aside.title') }}</h2>
+    <ul>
+      <li>{{ i18n.t('auth.aside.p1') }}</li>
+      <li>{{ i18n.t('auth.aside.p2') }}</li>
+      <li>{{ i18n.t('auth.aside.p3') }}</li>
+    </ul>
+  </aside>
+  <div class="auth-main">
   <mat-card appearance="outlined">
     <mat-card-header>
       <mat-card-title>{{ i18n.t('login.title') }}</mat-card-title>
@@ -50,4 +60,5 @@
       <a mat-button routerLink="/register">{{ i18n.t('login.createAccount') }}</a>
     </mat-card-actions>
   </mat-card>
+  </div>
 </main>

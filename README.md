@@ -31,12 +31,31 @@ src/app/
     record/          écran d'enregistrement (/record)
 ```
 
+### Pages (6 octobre 2026)
+
+| Route                | Accès                    | Contenu                                                                                         |
+| -------------------- | ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `/`                  | public                   | accueil : accroche, chiffres en direct, trois usages, fonctionnement, langues, datasets         |
+| `/datasets`, `/datasets/:slug` | public         | catalogue (recherche, filtres langue et offre, pagination) et fiche (versions, détails, appel à contribuer) |
+| `/models`, `/models/:id` | public               | Model Hub (recherche, filtres tâche et langue) et fiche (évaluations, dataset d'entraînement)    |
+| `/leaderboard`       | public                   | classement par WER, filtrable par langue                                                        |
+| `/models/new`        | développeur, admin       | publication d'un modèle (lien https uniquement)                                                 |
+| `/login`, `/register`| visiteurs                | panneau de marque + formulaire                                                                  |
+| `/dashboard`         | connecté                 | espace personnel : actions selon les rôles                                                      |
+| `/record`            | contributeur, admin      | écran d'enregistrement                                                                          |
+
+Toutes les données publiques viennent de `/api/public/**` (voir `CatalogService`). **Aucun chiffre n'est écrit dans le front** : sans données, les compteurs affichent « — » ou 0 et les listes montrent un état vide avec un appel à l'action. Les liens externes saisis par les utilisateurs s'ouvrent avec `rel="noopener noreferrer nofollow"`.
+
+Limites : le téléchargement d'un dataset n'est pas encore branché (bouton désactivé, texte « bientôt »), les filtres ne sont pas dans l'URL, la demande de dataset des organisations et l'administration sont annoncées « bientôt disponible ».
+
 ### Identité visuelle
+
+**Thème clair uniquement** (depuis le 6 octobre : le mode sombre automatique a été retiré).
 
 Définie dans `src/styles.scss` (Material fournit la base, les couleurs de marque la remplacent, en clair et en sombre) :
 
-- **Terracotta** `#a8401c` (action, micro), **indigo** `#2b3a78` (repères), **vert** `#2e6b4e` (réussite), **ocre** `#c98a12` (accent), sur un **fond sable** `#fbf5ea`. Variantes sombres : fond `#17110d`, accents éclaircis.
-- Signature : bandeau de triangles (`.afv-band`, inspiré des tissus bogolan), logo en barres d'onde (`app-brand-mark`), titres en police à empattement du système (`--afv-display`).
+- **Fond** gris très clair `#f6f7fb`, cartes blanches, texte encre `#121633`. **Indigo** `#1e2a6b` (structure : bandeaux, titres), **terracotta** `#c4411a` (actions), **vert** `#1f7a55` (réussite), **ocre** `#d9a12a` (accent). Tout est défini en jetons CSS `--afv-*` dans `src/styles.scss` et reporté sur les jetons Material.
+- Signature : fin bandeau de triangles (`.afv-band`, inspiré des tissus bogolan), logo en barres d'onde (`app-brand-mark`), polices du système (sans empattement).
 - Pas de police ni d'icône externe (hors ligne) ; les icônes sont des SVG intégrés. `prefers-reduced-motion` est respecté.
 
 ### Écran d'enregistrement (`/record`, rôles contributeur et admin)

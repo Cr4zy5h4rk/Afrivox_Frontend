@@ -3,7 +3,10 @@
  * (le compilateur le vérifie grâce au type de `en`).
  * Les paramètres s'écrivent {nom}.
  */
+import { enSite, frSite } from './translations-site';
+
 export const fr = {
+  ...frSite,
   'app.name': 'AfriVox',
   'nav.logout': 'Se déconnecter',
   'nav.language': 'Langue',
@@ -122,6 +125,7 @@ export const fr = {
 export type TranslationKey = keyof typeof fr;
 
 export const en: Record<TranslationKey, string> = {
+  ...enSite,
   'app.name': 'AfriVox',
   'nav.logout': 'Log out',
   'nav.language': 'Language',

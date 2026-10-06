@@ -1,0 +1,100 @@
+.back {
+  display: inline-block;
+  margin-block-end: 1rem;
+  color: rgb(255 255 255 / 80%);
+  text-decoration: none;
+
+  &:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-block-end: 0.75rem;
+}
+
+.badge.on-dark {
+  background: rgb(255 255 255 / 16%);
+  color: #fff;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  gap: 1.5rem;
+  align-items: start;
+  padding-block: 1.5rem 2rem;
+}
+
+.main,
+.side {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.block {
+  padding: 1.5rem;
+}
+
+.prose {
+  margin: 0;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.facts {
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block-end: 0.75rem;
+    border-block-end: 1px solid var(--afv-line);
+
+    &:last-child {
+      border: 0;
+      padding: 0;
+    }
+  }
+
+  dt {
+    color: var(--afv-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 650;
+    text-align: end;
+  }
+}
+
+.cta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  h3 {
+    margin: 0.5rem 0 0;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.small {
+  font-size: 0.88rem;
+}
+
+@media (max-width: 60rem) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

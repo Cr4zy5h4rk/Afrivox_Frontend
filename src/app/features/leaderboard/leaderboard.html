@@ -1,0 +1,81 @@
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ i18n.t('leaderboard.title') }}</h1>
+    <p>{{ i18n.t('leaderboard.subtitle') }}</p>
+  </div>
+</section>
+
+<div class="container">
+  <form class="toolbar" (submit)="$event.preventDefault()">
+    <div class="field">
+      <label for="lb-lang">{{ i18n.t('filter.language') }}</label>
+      <select id="lb-lang" (change)="setLanguage($event)">
+        <option value="">{{ i18n.t('filter.all') }}</option>
+        @for (l of languages(); track l.code) {
+          <option [value]="l.code">{{ l.name }}</option>
+        }
+      </select>
+    </div>
+  </form>
+
+  <div class="results" aria-live="polite">
+    @if (failed()) {
+      <div class="empty" role="alert">
+        <h3>{{ i18n.t('common.error') }}</h3>
+        <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+      </div>
+    } @else if (rows(); as list) {
+      @if (list.length === 0) {
+        <div class="empty">
+          <h3>{{ i18n.t('leaderboard.empty.title') }}</h3>
+          <p>{{ i18n.t('leaderboard.empty.body') }}</p>
+          <a mat-flat-button routerLink="/models">{{ i18n.t('nav.models') }}</a>
+        </div>
+      } @else {
+        <div class="card table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('col.rank') }}</th>
+                <th>{{ i18n.t('col.model') }}</th>
+                <th>{{ i18n.t('model.task') }}</th>
+                <th>{{ i18n.t('model.language') }}</th>
+                <th>{{ i18n.t('col.wer') }}</th>
+                <th>{{ i18n.t('col.cer') }}</th>
+                <th>{{ i18n.t('col.testset') }}</th>
+                <th>{{ i18n.t('col.date') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of list; track $index) {
+                <tr>
+                  <td class="num rank">{{ $index + 1 }}</td>
+                  <td>
+                    <a [routerLink]="['/models', r.modelId]">{{ r.modelName }}</a>
+                  </td>
+                  <td>{{ i18n.t(taskKey(r.task)) }}</td>
+                  <td>{{ r.languageName || i18n.t('common.none') }}</td>
+                  <td class="num">
+                    <strong>{{ r.wer !== null ? i18n.n(r.wer, 1) + ' %' : i18n.t('common.none') }}</strong>
+                  </td>
+                  <td class="num">{{ r.cer !== null ? i18n.n(r.cer, 1) + ' %' : i18n.t('common.none') }}</td>
+                  <td>
+                    @if (r.testSetDataset) {
+                      <a [routerLink]="['/datasets', r.testSetDataset]">{{ r.testSetDataset }}</a>
+                      {{ r.testSetVersion }}
+                    } @else {
+                      {{ i18n.t('common.none') }}
+                    }
+                  </td>
+                  <td>{{ i18n.date(r.submittedAt) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    } @else {
+      <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+    }
+  </div>
+</div>

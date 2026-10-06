@@ -2,25 +2,69 @@ import { Routes } from '@angular/router';
 import { authGuard, guestGuard, roleGuard } from './core/auth/auth.guard';
 
 // Pages chargées à la demande : le premier chargement ne contient que la coquille.
+// Publiques : accueil, catalogue, Model Hub, classement (on parcourt avant de s'inscrire).
 export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/home/home').then((m) => m.HomePage),
+    title: 'AfriVox',
+    loadComponent: () => import('./features/landing/landing').then((m) => m.LandingPage),
+  },
+  {
+    path: 'datasets',
+    title: 'Datasets · AfriVox',
+    loadComponent: () => import('./features/datasets/datasets').then((m) => m.DatasetsPage),
+  },
+  {
+    path: 'datasets/:slug',
+    title: 'Dataset · AfriVox',
+    loadComponent: () =>
+      import('./features/datasets/dataset-detail').then((m) => m.DatasetDetailPage),
+  },
+  {
+    path: 'models',
+    title: 'Model Hub · AfriVox',
+    loadComponent: () => import('./features/models/models').then((m) => m.ModelsPage),
+  },
+  {
+    // Avant `models/:id` pour que « new » ne soit pas pris pour un identifiant
+    path: 'models/new',
+    title: 'Publier un modèle · AfriVox',
+    canActivate: [authGuard, roleGuard('ROLE_DEVELOPER', 'ROLE_ADMIN')],
+    loadComponent: () => import('./features/models/model-new').then((m) => m.ModelNewPage),
+  },
+  {
+    path: 'models/:id',
+    title: 'Modèle · AfriVox',
+    loadComponent: () => import('./features/models/model-detail').then((m) => m.ModelDetailPage),
+  },
+  {
+    path: 'leaderboard',
+    title: 'Classement · AfriVox',
+    loadComponent: () =>
+      import('./features/leaderboard/leaderboard').then((m) => m.LeaderboardPage),
   },
   {
     path: 'login',
+    title: 'Connexion · AfriVox',
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/login/login').then((m) => m.LoginPage),
   },
   {
     path: 'register',
+    title: 'Créer un compte · AfriVox',
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/register/register').then((m) => m.RegisterPage),
   },
   {
+    path: 'dashboard',
+    title: 'Mon espace · AfriVox',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/home/home').then((m) => m.HomePage),
+  },
+  {
     path: 'record',
+    title: 'Enregistrer · AfriVox',
     canActivate: [authGuard, roleGuard('ROLE_CONTRIBUTOR', 'ROLE_ADMIN')],
     loadComponent: () => import('./features/record/record').then((m) => m.RecordPage),
   },
