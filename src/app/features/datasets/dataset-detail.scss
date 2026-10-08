@@ -33,6 +33,7 @@
 .main,
 .side {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
 }
 
@@ -95,6 +96,21 @@
 
 @media (max-width: 60rem) {
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Respiration entre le titre d'un bloc et son contenu, et sous le tableau des versions. */
+.block > h2,
+.block > h3 {
+  margin-block: 0 1rem;
+}
+
+.cta > h3 {
+  margin-block: 0.5rem 0;
+}
+
+.table-wrap + p,
+.table-wrap + .small {
+  margin-block: 1rem 0;
 }
