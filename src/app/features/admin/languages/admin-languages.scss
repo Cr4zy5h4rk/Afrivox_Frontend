@@ -1,0 +1,39 @@
+@use '../admin-shared';
+
+.code {
+  margin-inline-start: 0.35rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  background: var(--afv-bg);
+  color: var(--afv-muted);
+}
+
+.progress-block {
+  display: grid;
+  gap: 0.35rem;
+
+  .meta {
+    margin: 0;
+  }
+}
+
+.bar {
+  block-size: 10px;
+  border-radius: 999px;
+  background: var(--afv-brand-50);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  block-size: 100%;
+  border-radius: 999px;
+  background: var(--afv-gold);
+  transition: inline-size 0.3s ease;
+
+  &.done {
+    background: var(--afv-green);
+  }
+}

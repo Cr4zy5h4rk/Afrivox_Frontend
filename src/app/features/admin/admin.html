@@ -27,6 +27,16 @@
     >
       {{ i18n.t('admin.tab.campaigns') }} <span class="count">{{ campaigns().length }}</span>
     </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab"
+      [class.active]="tab() === 'languages'"
+      [attr.aria-selected]="tab() === 'languages'"
+      (click)="setTab('languages')"
+    >
+      {{ i18n.t('admin.tab.languages') }}
+    </button>
   </div>
 
   <div aria-live="polite">
@@ -37,7 +47,9 @@
     }
   </div>
 
-  @if (loading()) {
+  @if (tab() === 'languages') {
+    <app-admin-languages />
+  } @else if (loading()) {
     <p class="muted">{{ i18n.t('common.loading') }}</p>
   } @else if (failed()) {
     <div class="empty" role="alert">

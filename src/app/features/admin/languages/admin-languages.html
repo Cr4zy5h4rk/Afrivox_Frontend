@@ -1,0 +1,159 @@
+<div aria-live="polite">
+  @if (notice(); as n) {
+    <p class="notice" [class.ok]="n.ok" [attr.role]="n.ok ? 'status' : 'alert'">{{ i18n.t(n.text) }}</p>
+  }
+</div>
+
+<div class="toolbar-row">
+  <button
+    mat-flat-button
+    type="button"
+    [attr.aria-expanded]="showForm()"
+    aria-controls="language-form"
+    (click)="toggleForm()"
+  >
+    {{ showForm() ? i18n.t('admin.camp.cancel') : i18n.t('adminlang.new') }}
+  </button>
+</div>
+
+@if (showForm()) {
+  <form id="language-form" class="card form-column new" [formGroup]="form" (ngSubmit)="create()" novalidate>
+    <h3 class="form-title">{{ i18n.t('adminlang.new') }}</h3>
+    <div class="two">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('adminlang.name') }}</mat-label>
+        <input matInput formControlName="name" maxlength="80" />
+        @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+          <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('adminlang.code') }}</mat-label>
+        <input matInput formControlName="code" maxlength="10" autocomplete="off" />
+        <mat-hint>{{ i18n.t('adminlang.codeHint') }}</mat-hint>
+        @if (form.controls.code.touched && form.controls.code.invalid) {
+          <mat-error>{{ i18n.t('adminlang.codeInvalid') }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('adminlang.dialect') }}</mat-label>
+      <input matInput formControlName="dialect" maxlength="80" />
+    </mat-form-field>
+    <div class="two">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('adminlang.script') }}</mat-label>
+        <mat-select formControlName="script" (selectionChange)="scriptChanged()">
+          @for (s of scripts; track s) {
+            <mat-option [value]="s">{{ i18n.t(scriptKey(s)) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('adminlang.direction') }}</mat-label>
+        <mat-select formControlName="direction">
+          @for (d of directions; track d) {
+            <mat-option [value]="d">{{ d }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('adminlang.minValidators') }}</mat-label>
+      <input matInput type="number" min="1" max="1000" formControlName="minValidators" />
+      <mat-hint>{{ i18n.t('adminlang.minValidatorsHint') }}</mat-hint>
+      @if (form.controls.minValidators.touched && form.controls.minValidators.invalid) {
+        <mat-error>{{ i18n.t('validation.min') }}</mat-error>
+      }
+    </mat-form-field>
+    <div class="actions">
+      <button mat-stroked-button type="button" (click)="toggleForm()">{{ i18n.t('admin.camp.cancel') }}</button>
+      <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('adminlang.create') }}</button>
+    </div>
+  </form>
+}
+
+@if (loading()) {
+  <p class="muted">{{ i18n.t('common.loading') }}</p>
+} @else if (failed()) {
+  <div class="empty" role="alert">
+    <h3>{{ i18n.t('common.error') }}</h3>
+    <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+  </div>
+} @else if (languages().length === 0) {
+  <div class="empty"><p>{{ i18n.t('adminlang.empty') }}</p></div>
+} @else {
+  <ul class="list">
+    @for (l of languages(); track l.id) {
+      <li class="card item" [attr.data-tone]="l.status === 'ACTIVE' ? 'green' : 'gold'">
+        <div class="head">
+          <h3>{{ l.name }} <span class="code">{{ l.code }}</span></h3>
+          <span [class]="l.status === 'ACTIVE' ? 'badge green' : 'badge gold'">
+            {{ i18n.t(l.status === 'ACTIVE' ? 'lang.active' : 'lang.waitlist') }}
+          </span>
+        </div>
+        <p class="meta muted">
+          @if (l.dialect) {
+            {{ l.dialect }} ·
+          }
+          {{ i18n.t(scriptKey(l.script)) }} · {{ l.direction }}
+        </p>
+
+        <div class="progress-block">
+          <div
+            class="bar"
+            role="progressbar"
+            [attr.aria-valuenow]="progress(l)"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-label]="i18n.t('adminlang.progress')"
+          >
+            <span class="fill" [class.done]="thresholdReached(l)" [style.inline-size.%]="progress(l)"></span>
+          </div>
+          <p class="meta">
+            {{ i18n.t('adminlang.validators', { qualified: l.qualifiedValidators, min: l.minValidators }) }}
+            @if (l.pendingValidators > 0) {
+              <span class="muted">· {{ i18n.t('adminlang.pending', { count: l.pendingValidators }) }}</span>
+            }
+          </p>
+        </div>
+
+        <p class="meta muted">
+          {{ i18n.t('adminlang.recordings', { submitted: i18n.n(l.recordingsSubmitted), validated: i18n.n(l.recordingsValidated) }) }}
+        </p>
+
+        <div class="actions">
+          <div class="field">
+            <label [for]="'min-' + l.id">{{ i18n.t('adminlang.minValidators') }}</label>
+            <input
+              [id]="'min-' + l.id"
+              type="number"
+              min="1"
+              max="1000"
+              inputmode="numeric"
+              [value]="thresholdValue(l)"
+              (input)="setThreshold(l.id, $event)"
+            />
+          </div>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="busy() || !thresholdChanged(l)"
+            (click)="saveThreshold(l)"
+          >
+            {{ i18n.t('adminlang.saveThreshold') }}
+          </button>
+          @if (l.status === 'WAITLIST') {
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="setStatus(l, 'ACTIVE')">
+              {{ i18n.t('admin.camp.activate') }}
+            </button>
+          } @else {
+            <button mat-stroked-button type="button" [disabled]="busy()" (click)="setStatus(l, 'WAITLIST')">
+              {{ i18n.t('adminlang.toWaitlist') }}
+            </button>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+}

@@ -147,4 +147,57 @@ export class AdminService {
       ),
     );
   }
+
+  languageOverview(): Observable<AdminLanguageOverview[]> {
+    return this.http.get<AdminLanguageOverview[]>('/api/admin/languages');
+  }
+
+  /** Une nouvelle langue commence toujours en liste d'attente : elle s'active quand le seuil est atteint. */
+  createLanguage(input: NewLanguage): Observable<unknown> {
+    return this.http.post('/api/languages', {
+      code: input.code,
+      name: input.name,
+      dialect: input.dialect || null,
+      script: input.script,
+      direction: input.direction,
+      status: 'WAITLIST' satisfies LanguageStatus,
+      minValidators: input.minValidators,
+    });
+  }
+
+  updateLanguage(
+    id: number,
+    change: { status?: LanguageStatus; minValidators?: number },
+  ): Observable<unknown> {
+    return this.http.patch(`/api/languages/${id}`, { id, ...change });
+  }
+}
+
+export type ScriptKind = 'LATIN' | 'ARABIC' | 'NKO' | 'OTHER';
+export type TextDirection = 'LTR' | 'RTL';
+export type LanguageStatus = 'WAITLIST' | 'ACTIVE';
+
+/** Une langue avec sa progression vers le seuil d'activation (calculée par le serveur). */
+export interface AdminLanguageOverview {
+  id: number;
+  code: string;
+  name: string;
+  dialect: string | null;
+  script: ScriptKind;
+  direction: TextDirection;
+  status: LanguageStatus;
+  minValidators: number;
+  qualifiedValidators: number;
+  pendingValidators: number;
+  recordingsSubmitted: number;
+  recordingsValidated: number;
+}
+
+export interface NewLanguage {
+  code: string;
+  name: string;
+  dialect: string;
+  script: ScriptKind;
+  direction: TextDirection;
+  minValidators: number;
 }
