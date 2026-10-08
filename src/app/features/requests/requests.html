@@ -1,0 +1,134 @@
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ i18n.t('orgreq.title') }}</h1>
+    <p>{{ i18n.t('orgreq.subtitle') }}</p>
+  </div>
+</section>
+
+<div class="container wrap">
+  <form class="card form form-column" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <h2>{{ i18n.t('orgreq.form') }}</h2>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('orgreq.orgName') }}</mat-label>
+      <input matInput formControlName="orgName" maxlength="120" autocomplete="organization" />
+      @if (form.controls.orgName.touched && form.controls.orgName.hasError('required')) {
+        <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="two">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('orgreq.sector') }}</mat-label>
+        <mat-select formControlName="sector">
+          @for (s of sectors; track s) {
+            <mat-option [value]="s">{{ i18n.t(sectorKey(s)) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('orgreq.language') }}</mat-label>
+        <mat-select formControlName="languageCode">
+          @for (l of languages(); track l.code) {
+            <mat-option [value]="l.code">{{ l.name }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.languageCode.touched && form.controls.languageCode.hasError('required')) {
+          <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <div class="two">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('orgreq.hours') }}</mat-label>
+        <input matInput type="number" min="1" max="100000" formControlName="hours" inputmode="numeric" />
+        @if (form.controls.hours.touched && form.controls.hours.hasError('required')) {
+          <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+        } @else if (form.controls.hours.touched && form.controls.hours.invalid) {
+          <mat-error>{{ i18n.t('validation.min') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('orgreq.speakers') }}</mat-label>
+        <input matInput type="number" min="1" formControlName="speakersTarget" inputmode="numeric" />
+        @if (form.controls.speakersTarget.touched && form.controls.speakersTarget.invalid) {
+          <mat-error>{{ i18n.t('validation.min') }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <div class="two">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('orgreq.usage') }}</mat-label>
+        <mat-select formControlName="usageKind">
+          @for (u of usages; track u) {
+            <mat-option [value]="u">{{ i18n.t(usageKey(u)) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('orgreq.deadline') }}</mat-label>
+        <input matInput type="date" formControlName="deadline" />
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('orgreq.conversationType') }}</mat-label>
+      <input matInput formControlName="conversationType" maxlength="120" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('orgreq.description') }}</mat-label>
+      <textarea matInput formControlName="description" rows="5" maxlength="1500"></textarea>
+      <mat-hint>{{ i18n.t('orgreq.privacy') }}</mat-hint>
+    </mat-form-field>
+
+    <div aria-live="polite">
+      @if (error(); as err) {
+        <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+      }
+      @if (sent()) {
+        <p class="form-success" role="status">{{ i18n.t('orgreq.sent') }}</p>
+      }
+    </div>
+
+    <div class="actions">
+      <button mat-flat-button type="submit" [disabled]="sending()">{{ i18n.t('orgreq.submit') }}</button>
+    </div>
+  </form>
+
+  <h2 class="mine">{{ i18n.t('orgreq.mine') }}</h2>
+  @if (loading()) {
+    <p class="muted">{{ i18n.t('common.loading') }}</p>
+  } @else if (failed()) {
+    <div class="empty" role="alert">
+      <h3>{{ i18n.t('common.error') }}</h3>
+      <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+    </div>
+  } @else if (requests().length === 0) {
+    <div class="empty"><p>{{ i18n.t('orgreq.empty') }}</p></div>
+  } @else {
+    <ul class="list">
+      @for (r of requests(); track r.id) {
+        <li class="card item">
+          <div class="head">
+            <h3>{{ r.orgName }}</h3>
+            <span class="badge">{{ i18n.t(statusKey(r.status)) }}</span>
+          </div>
+          <p class="meta muted">
+            {{ i18n.t(sectorKey(r.sector)) }} · {{ r.languageName ?? i18n.t('common.none') }} ·
+            {{ i18n.t('admin.req.hours', { hours: i18n.n(r.hours) }) }} · {{ i18n.t(usageKey(r.usageKind)) }} ·
+            {{ i18n.date(r.createdAt) }}
+          </p>
+          @if (r.quoteAmountFcfa !== null) {
+            <p class="quote">{{ i18n.t('orgreq.quote', { amount: i18n.n(r.quoteAmountFcfa) }) }}</p>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

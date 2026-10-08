@@ -16,6 +16,9 @@ const SERVER_KEYS: Partial<Record<string, TranslationKey>> = {
   'error.invalidformat': 'error.invalidformat',
   'error.promptnotfound': 'error.promptnotfound',
   'error.campaigninactive': 'error.campaigninactive',
+  'error.languagenotfound': 'error.languagenotfound',
+  'error.toomanyrequests': 'error.toomanyrequests',
+  'error.invaliddeadline': 'error.invaliddeadline',
 };
 
 /**

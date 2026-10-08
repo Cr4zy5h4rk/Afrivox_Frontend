@@ -57,7 +57,7 @@ export class HomePage {
       list.push({ title: 'dash.models.title', body: 'dash.models.body', link: '/models/new' });
     }
     if (this.auth.hasRole('ROLE_ORGANIZATION')) {
-      list.push({ title: 'dash.org.title', body: 'dash.org.body' });
+      list.push({ title: 'dash.org.title', body: 'dash.org.body', link: '/requests' });
     }
     if (this.auth.hasRole('ROLE_ADMIN')) {
       list.push({ title: 'dash.admin.title', body: 'dash.admin.body', link: '/admin' });

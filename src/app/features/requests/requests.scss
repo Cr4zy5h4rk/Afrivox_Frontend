@@ -1,0 +1,60 @@
+.wrap {
+  max-inline-size: 46rem;
+  padding-block: 1.5rem 3rem;
+  margin-block-start: -1.5rem;
+}
+
+.form {
+  padding: 1.5rem;
+}
+
+.two {
+  display: grid;
+  gap: 0 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-block-start: 0.5rem;
+}
+
+.mine {
+  margin-block: 2rem 1rem;
+}
+
+.list {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.meta,
+.quote {
+  margin: 0;
+}
+
+.quote {
+  font-weight: 600;
+}
