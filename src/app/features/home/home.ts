@@ -60,7 +60,7 @@ export class HomePage {
       list.push({ title: 'dash.org.title', body: 'dash.org.body' });
     }
     if (this.auth.hasRole('ROLE_ADMIN')) {
-      list.push({ title: 'dash.admin.title', body: 'dash.admin.body' });
+      list.push({ title: 'dash.admin.title', body: 'dash.admin.body', link: '/admin' });
     }
     return list;
   });

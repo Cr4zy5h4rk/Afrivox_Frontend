@@ -1,0 +1,218 @@
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ i18n.t('admin.title') }}</h1>
+    <p>{{ i18n.t('admin.subtitle') }}</p>
+  </div>
+</section>
+
+<div class="container body">
+  <div class="tabs" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      class="tab"
+      [class.active]="tab() === 'requests'"
+      [attr.aria-selected]="tab() === 'requests'"
+      (click)="setTab('requests')"
+    >
+      {{ i18n.t('admin.tab.requests') }} ({{ requests().length }})
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab"
+      [class.active]="tab() === 'campaigns'"
+      [attr.aria-selected]="tab() === 'campaigns'"
+      (click)="setTab('campaigns')"
+    >
+      {{ i18n.t('admin.tab.campaigns') }} ({{ campaigns().length }})
+    </button>
+  </div>
+
+  <div aria-live="polite">
+    @if (notice(); as n) {
+      <p [class]="n.ok ? 'form-success' : 'form-error'" [attr.role]="n.ok ? 'status' : 'alert'">
+        {{ i18n.t(n.text, { count: n.count ?? 0 }) }}
+      </p>
+    }
+  </div>
+
+  @if (loading()) {
+    <p class="muted">{{ i18n.t('common.loading') }}</p>
+  } @else if (failed()) {
+    <div class="empty" role="alert">
+      <h3>{{ i18n.t('common.error') }}</h3>
+      <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+    </div>
+  } @else if (tab() === 'requests') {
+    @if (requests().length === 0) {
+      <div class="empty"><p>{{ i18n.t('admin.req.empty') }}</p></div>
+    } @else {
+      <ul class="list">
+        @for (r of requests(); track r.id) {
+          <li class="card item">
+            <div class="head">
+              <h3>{{ r.orgName }}</h3>
+              <span class="badge">{{ i18n.t(reqStatusKey(r.status)) }}</span>
+            </div>
+            <p class="meta muted">
+              {{ i18n.t(sectorKey(r.sector)) }} · {{ r.language?.name ?? i18n.t('common.none') }} ·
+              {{ i18n.t('admin.req.hours', { hours: i18n.n(r.hours) }) }}
+              @if (r.speakersTarget) {
+                · {{ i18n.t('admin.req.speakers', { count: i18n.n(r.speakersTarget) }) }}
+              }
+              @if (r.deadline) {
+                · {{ i18n.t('admin.req.deadline', { date: i18n.date(r.deadline) }) }}
+              }
+              · {{ i18n.date(r.createdAt) }}
+            </p>
+            @if (r.description) {
+              <p class="desc">{{ r.description }}</p>
+            }
+
+            <div class="actions">
+              @if (canQuote(r)) {
+                <div class="field">
+                  <label [for]="'quote-' + r.id">{{ i18n.t('admin.req.quote') }}</label>
+                  <input
+                    [id]="'quote-' + r.id"
+                    type="number"
+                    min="1"
+                    inputmode="numeric"
+                    [value]="quoteValue(r)"
+                    (input)="setQuote(r.id, $event)"
+                  />
+                </div>
+              } @else if (r.quoteAmountFcfa) {
+                <p class="muted">{{ i18n.t('admin.req.quote') }} : {{ i18n.n(r.quoteAmountFcfa) }}</p>
+              }
+              @if (nextStatus(r); as next) {
+                <button mat-flat-button type="button" [disabled]="busy()" (click)="advance(r, next)">
+                  {{ i18n.t('admin.req.advance', { status: i18n.t(reqStatusKey(next)) }) }}
+                </button>
+              }
+              @if (canReject(r)) {
+                <button mat-stroked-button type="button" [disabled]="busy()" (click)="advance(r, 'REJECTED')">
+                  {{ i18n.t('admin.req.reject') }}
+                </button>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  } @else {
+    <form class="card form-column new" [formGroup]="campaignForm" (ngSubmit)="createCampaign()" novalidate>
+      <h3>{{ i18n.t('admin.camp.new') }}</h3>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('admin.camp.title') }}</mat-label>
+        <input matInput formControlName="title" maxlength="160" />
+        @if (campaignForm.controls.title.touched && campaignForm.controls.title.hasError('required')) {
+          <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('admin.camp.description') }}</mat-label>
+        <textarea matInput formControlName="description" rows="3" maxlength="1000"></textarea>
+      </mat-form-field>
+      <div class="two">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('admin.camp.language') }}</mat-label>
+          <mat-select formControlName="languageId">
+            @for (l of languages(); track l.id) {
+              <mat-option [value]="l.id">{{ l.name }}</mat-option>
+            }
+          </mat-select>
+          @if (campaignForm.controls.languageId.touched && campaignForm.controls.languageId.hasError('required')) {
+            <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('admin.camp.kind') }}</mat-label>
+          <mat-select formControlName="kind">
+            @for (k of kinds; track k) {
+              <mat-option [value]="k">{{ i18n.t(campKindKey(k)) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="two">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('admin.camp.domain') }}</mat-label>
+          <input matInput formControlName="domain" maxlength="80" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('admin.camp.target') }}</mat-label>
+          <input matInput type="number" min="1" formControlName="targetSentences" />
+        </mat-form-field>
+      </div>
+      <div class="actions">
+        <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('admin.camp.create') }}</button>
+      </div>
+    </form>
+
+    @if (campaigns().length === 0) {
+      <div class="empty"><p>{{ i18n.t('admin.camp.empty') }}</p></div>
+    } @else {
+      <ul class="list">
+        @for (c of campaigns(); track c.id) {
+          <li class="card item">
+            <div class="head">
+              <h3>{{ c.title }}</h3>
+              <span class="badge">{{ i18n.t(campStatusKey(c.status)) }}</span>
+            </div>
+            <p class="meta muted">
+              {{ c.language?.name ?? i18n.t('common.none') }} · {{ i18n.t(campKindKey(c.kind)) }}
+              @if (c.domain) {
+                · {{ c.domain }}
+              }
+              @if (c.targetSentences) {
+                · {{ i18n.t('admin.camp.target') }} : {{ i18n.n(c.targetSentences) }}
+              }
+            </p>
+            <div class="actions">
+              @switch (c.status) {
+                @case ('DRAFT') {
+                  <button mat-flat-button type="button" [disabled]="busy()" (click)="setCampaignStatus(c, 'ACTIVE')">
+                    {{ i18n.t('admin.camp.activate') }}
+                  </button>
+                }
+                @case ('ACTIVE') {
+                  <button mat-stroked-button type="button" [disabled]="busy()" (click)="setCampaignStatus(c, 'CLOSED')">
+                    {{ i18n.t('admin.camp.close') }}
+                  </button>
+                }
+                @case ('CLOSED') {
+                  <button mat-stroked-button type="button" [disabled]="busy()" (click)="setCampaignStatus(c, 'ACTIVE')">
+                    {{ i18n.t('admin.camp.reopen') }}
+                  </button>
+                }
+              }
+              <button
+                mat-stroked-button
+                type="button"
+                [attr.aria-expanded]="promptsFor() === c.id"
+                (click)="togglePrompts(c.id)"
+              >
+                {{ i18n.t('admin.camp.addPrompts') }}
+              </button>
+            </div>
+            @if (promptsFor() === c.id) {
+              <form class="form-column prompts" [formGroup]="promptsForm" (ngSubmit)="addPrompts(c.id)">
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ i18n.t('admin.camp.promptsLabel') }}</mat-label>
+                  <textarea matInput formControlName="text" rows="6"></textarea>
+                </mat-form-field>
+                <div class="actions">
+                  <button mat-flat-button type="submit" [disabled]="busy() || promptsForm.invalid">
+                    {{ i18n.t('admin.camp.promptsSend') }}
+                  </button>
+                </div>
+              </form>
+            }
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>

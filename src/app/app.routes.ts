@@ -68,5 +68,11 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard('ROLE_CONTRIBUTOR', 'ROLE_ADMIN')],
     loadComponent: () => import('./features/record/record').then((m) => m.RecordPage),
   },
+  {
+    path: 'admin',
+    title: 'Administration · AfriVox',
+    canActivate: [authGuard, roleGuard('ROLE_ADMIN')],
+    loadComponent: () => import('./features/admin/admin').then((m) => m.AdminPage),
+  },
   { path: '**', redirectTo: '' },
 ];
