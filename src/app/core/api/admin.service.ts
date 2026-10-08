@@ -1,6 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, forkJoin, map } from 'rxjs';
+import { Observable, catchError, concatMap, forkJoin, from, map, of, reduce } from 'rxjs';
+
+/** Requêtes envoyées en même temps lors de l'ajout de phrases. */
+const PARALLEL_REQUESTS = 10;
 
 export type RequestStatus =
   | 'RECEIVED'
@@ -117,12 +120,31 @@ export class AdminService {
     return this.http.patch<AdminCampaign>(`/api/campaigns/${id}`, { id, status });
   }
 
-  /** Ajoute des phrases à une campagne (une requête par phrase, en parallèle). Renvoie le nombre ajouté. */
-  addPrompts(campaignId: number, sentences: string[]): Observable<number> {
-    return forkJoin(
-      sentences.map((content) =>
-        this.http.post('/api/prompts', { content, campaign: { id: campaignId } }),
+  /**
+   * Ajoute des phrases à une campagne, par lots de 10 requêtes en parallèle.
+   * Renvoie les phrases **qui ont échoué** (liste vide = tout est passé) : l'appelant peut ainsi
+   * les proposer à nouveau sans recréer de doublons parmi celles déjà enregistrées.
+   */
+  addPrompts(campaignId: number, sentences: string[]): Observable<string[]> {
+    const chunks: string[][] = [];
+    for (let i = 0; i < sentences.length; i += PARALLEL_REQUESTS) {
+      chunks.push(sentences.slice(i, i + PARALLEL_REQUESTS));
+    }
+    return from(chunks).pipe(
+      concatMap((chunk) =>
+        forkJoin(
+          chunk.map((content) =>
+            this.http.post('/api/prompts', { content, campaign: { id: campaignId } }).pipe(
+              map(() => null),
+              catchError(() => of(content)),
+            ),
+          ),
+        ),
       ),
-    ).pipe(map((created) => created.length));
+      reduce(
+        (failed: string[], results) => failed.concat(results.filter((r): r is string => r !== null)),
+        [],
+      ),
+    );
   }
 }

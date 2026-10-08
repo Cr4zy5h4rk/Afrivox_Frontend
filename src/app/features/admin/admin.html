@@ -15,7 +15,7 @@
       [attr.aria-selected]="tab() === 'requests'"
       (click)="setTab('requests')"
     >
-      {{ i18n.t('admin.tab.requests') }} ({{ requests().length }})
+      {{ i18n.t('admin.tab.requests') }} <span class="count">{{ requests().length }}</span>
     </button>
     <button
       type="button"
@@ -25,14 +25,14 @@
       [attr.aria-selected]="tab() === 'campaigns'"
       (click)="setTab('campaigns')"
     >
-      {{ i18n.t('admin.tab.campaigns') }} ({{ campaigns().length }})
+      {{ i18n.t('admin.tab.campaigns') }} <span class="count">{{ campaigns().length }}</span>
     </button>
   </div>
 
   <div aria-live="polite">
     @if (notice(); as n) {
-      <p [class]="n.ok ? 'form-success' : 'form-error'" [attr.role]="n.ok ? 'status' : 'alert'">
-        {{ i18n.t(n.text, { count: n.count ?? 0 }) }}
+      <p class="notice" [class.ok]="n.ok" [attr.role]="n.ok ? 'status' : 'alert'">
+        {{ i18n.t(n.text, n.params) }}
       </p>
     }
   </div>
@@ -50,10 +50,10 @@
     } @else {
       <ul class="list">
         @for (r of requests(); track r.id) {
-          <li class="card item">
+          <li class="card item" [attr.data-tone]="reqTone(r.status)">
             <div class="head">
               <h3>{{ r.orgName }}</h3>
-              <span class="badge">{{ i18n.t(reqStatusKey(r.status)) }}</span>
+              <span [class]="'badge ' + reqTone(r.status)">{{ i18n.t(reqStatusKey(r.status)) }}</span>
             </div>
             <p class="meta muted">
               {{ i18n.t(sectorKey(r.sector)) }} · {{ r.language?.name ?? i18n.t('common.none') }} ·
@@ -102,64 +102,124 @@
       </ul>
     }
   } @else {
-    <form class="card form-column new" [formGroup]="campaignForm" (ngSubmit)="createCampaign()" novalidate>
-      <h3>{{ i18n.t('admin.camp.new') }}</h3>
-      <mat-form-field appearance="outline">
-        <mat-label>{{ i18n.t('admin.camp.title') }}</mat-label>
-        <input matInput formControlName="title" maxlength="160" />
-        @if (campaignForm.controls.title.touched && campaignForm.controls.title.hasError('required')) {
-          <mat-error>{{ i18n.t('validation.required') }}</mat-error>
-        }
-      </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>{{ i18n.t('admin.camp.description') }}</mat-label>
-        <textarea matInput formControlName="description" rows="3" maxlength="1000"></textarea>
-      </mat-form-field>
-      <div class="two">
+    <ng-template #stats let-s let-max="max">
+      @if (s.valid.length + s.duplicates + s.tooLong > 0) {
+        <ul class="stats" role="status">
+          <li>{{ i18n.t('admin.camp.statsValid', { count: i18n.n(s.valid.length) }) }}</li>
+          @if (s.duplicates > 0) {
+            <li class="warn">{{ i18n.t('admin.camp.statsDup', { count: s.duplicates }) }}</li>
+          }
+          @if (s.tooLong > 0) {
+            <li class="warn">{{ i18n.t('admin.camp.statsLong', { count: s.tooLong }) }}</li>
+          }
+          @if (s.valid.length > max) {
+            <li class="warn">{{ i18n.t('admin.camp.promptsTooMany', { max: max }) }}</li>
+          }
+        </ul>
+      }
+    </ng-template>
+
+    <div class="toolbar-row">
+      <button
+        mat-flat-button
+        type="button"
+        [attr.aria-expanded]="showForm()"
+        aria-controls="campaign-form"
+        (click)="toggleForm()"
+      >
+        {{ showForm() ? i18n.t('admin.camp.cancel') : i18n.t('admin.camp.new') }}
+      </button>
+    </div>
+
+    @if (showForm()) {
+      <form
+        id="campaign-form"
+        class="card form-column new"
+        [formGroup]="campaignForm"
+        (ngSubmit)="createCampaign()"
+        novalidate
+      >
+        <h3 class="form-title">{{ i18n.t('admin.camp.new') }}</h3>
         <mat-form-field appearance="outline">
-          <mat-label>{{ i18n.t('admin.camp.language') }}</mat-label>
-          <mat-select formControlName="languageId">
-            @for (l of languages(); track l.id) {
-              <mat-option [value]="l.id">{{ l.name }}</mat-option>
-            }
-          </mat-select>
-          @if (campaignForm.controls.languageId.touched && campaignForm.controls.languageId.hasError('required')) {
+          <mat-label>{{ i18n.t('admin.camp.title') }}</mat-label>
+          <input matInput formControlName="title" maxlength="160" />
+          @if (campaignForm.controls.title.touched && campaignForm.controls.title.hasError('required')) {
             <mat-error>{{ i18n.t('validation.required') }}</mat-error>
           }
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>{{ i18n.t('admin.camp.kind') }}</mat-label>
-          <mat-select formControlName="kind">
-            @for (k of kinds; track k) {
-              <mat-option [value]="k">{{ i18n.t(campKindKey(k)) }}</mat-option>
+          <mat-label>{{ i18n.t('admin.camp.description') }}</mat-label>
+          <textarea matInput formControlName="description" rows="3" maxlength="1000"></textarea>
+        </mat-form-field>
+        <div class="two">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ i18n.t('admin.camp.language') }}</mat-label>
+            <mat-select formControlName="languageId">
+              @for (l of languages(); track l.id) {
+                <mat-option [value]="l.id">{{ l.name }}</mat-option>
+              }
+            </mat-select>
+            @if (campaignForm.controls.languageId.touched && campaignForm.controls.languageId.hasError('required')) {
+              <mat-error>{{ i18n.t('validation.required') }}</mat-error>
             }
-          </mat-select>
-        </mat-form-field>
-      </div>
-      <div class="two">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ i18n.t('admin.camp.kind') }}</mat-label>
+            <mat-select formControlName="kind">
+              @for (k of kinds; track k) {
+                <mat-option [value]="k">{{ i18n.t(campKindKey(k)) }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="two">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ i18n.t('admin.camp.domain') }}</mat-label>
+            <input matInput formControlName="domain" maxlength="80" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ i18n.t('admin.camp.target') }}</mat-label>
+            <input
+              matInput
+              type="number"
+              min="1"
+              formControlName="targetSentences"
+              [placeholder]="createStats().valid.length ? i18n.n(createStats().valid.length) : ''"
+            />
+            <mat-hint>{{ i18n.t('admin.camp.targetHint') }}</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <h4 class="sub">{{ i18n.t('admin.camp.sectionSentences') }} <span class="muted">({{ i18n.t('admin.camp.optional') }})</span></h4>
         <mat-form-field appearance="outline">
-          <mat-label>{{ i18n.t('admin.camp.domain') }}</mat-label>
-          <input matInput formControlName="domain" maxlength="80" />
+          <mat-label>{{ i18n.t('admin.camp.promptsLabel', { max: maxPerBatch }) }}</mat-label>
+          <textarea matInput formControlName="sentences" rows="6"></textarea>
+          <mat-hint>{{ i18n.t('admin.camp.sentencesHint') }}</mat-hint>
         </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>{{ i18n.t('admin.camp.target') }}</mat-label>
-          <input matInput type="number" min="1" formControlName="targetSentences" />
-        </mat-form-field>
-      </div>
-      <div class="actions">
-        <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('admin.camp.create') }}</button>
-      </div>
-    </form>
+        <ng-container *ngTemplateOutlet="stats; context: { $implicit: createStats(), max: maxPerBatch }" />
+        <div class="actions file-row">
+          <label class="file-btn">
+            <input type="file" accept=".txt,.csv,text/plain" (change)="importFile($event, 'create')" />
+            <span class="file-label">{{ i18n.t('admin.camp.importFile') }}</span>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button mat-stroked-button type="button" (click)="toggleForm()">{{ i18n.t('admin.camp.cancel') }}</button>
+          <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('admin.camp.create') }}</button>
+        </div>
+      </form>
+    }
 
     @if (campaigns().length === 0) {
       <div class="empty"><p>{{ i18n.t('admin.camp.empty') }}</p></div>
     } @else {
       <ul class="list">
         @for (c of campaigns(); track c.id) {
-          <li class="card item">
+          <li class="card item" [attr.data-tone]="campTone(c.status)">
             <div class="head">
               <h3>{{ c.title }}</h3>
-              <span class="badge">{{ i18n.t(campStatusKey(c.status)) }}</span>
+              <span [class]="'badge ' + campTone(c.status)">{{ i18n.t(campStatusKey(c.status)) }}</span>
             </div>
             <p class="meta muted">
               {{ c.language?.name ?? i18n.t('common.none') }} · {{ i18n.t(campKindKey(c.kind)) }}
@@ -200,11 +260,16 @@
             @if (promptsFor() === c.id) {
               <form class="form-column prompts" [formGroup]="promptsForm" (ngSubmit)="addPrompts(c.id)">
                 <mat-form-field appearance="outline">
-                  <mat-label>{{ i18n.t('admin.camp.promptsLabel') }}</mat-label>
+                  <mat-label>{{ i18n.t('admin.camp.promptsLabel', { max: maxPerBatch }) }}</mat-label>
                   <textarea matInput formControlName="text" rows="6"></textarea>
                 </mat-form-field>
+                <ng-container *ngTemplateOutlet="stats; context: { $implicit: addStats(), max: maxPerBatch }" />
                 <div class="actions">
-                  <button mat-flat-button type="submit" [disabled]="busy() || promptsForm.invalid">
+                  <label class="file-btn">
+                    <input type="file" accept=".txt,.csv,text/plain" (change)="importFile($event, 'add')" />
+                    <span class="file-label">{{ i18n.t('admin.camp.importFile') }}</span>
+                  </label>
+                  <button mat-flat-button type="submit" [disabled]="busy() || addStats().valid.length === 0">
                     {{ i18n.t('admin.camp.promptsSend') }}
                   </button>
                 </div>

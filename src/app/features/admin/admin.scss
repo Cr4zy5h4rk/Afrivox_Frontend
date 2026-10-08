@@ -1,41 +1,109 @@
 .body {
-  padding-block: 1.5rem 3rem;
+  padding-block: 0 3rem;
 }
 
+// Onglets en segments, posés à cheval sur le bandeau (comme la barre de filtres du catalogue)
 .tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-block-end: 1rem;
-  border-block-end: 1px solid var(--afv-line);
+  display: inline-flex;
+  gap: 0.25rem;
+  margin-block: -1.5rem 1.25rem;
+  padding: 0.3rem;
+  background: var(--afv-surface);
+  border: 1px solid var(--afv-line);
+  border-radius: 999px;
+  box-shadow: var(--afv-shadow);
 }
 
 .tab {
-  padding: 0.75rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-block-size: 44px;
+  padding-inline: 1.1rem;
   border: 0;
-  border-block-end: 3px solid transparent;
-  background: none;
+  border-radius: 999px;
+  background: transparent;
   font: inherit;
-  font-weight: 600;
+  font-weight: 650;
   color: var(--afv-muted);
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    color: var(--afv-brand);
+  }
 
   &.active {
-    color: inherit;
-    border-block-end-color: currentColor;
+    background: var(--afv-brand);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--afv-brand);
+    outline-offset: 2px;
+  }
+
+  .count {
+    min-inline-size: 1.5rem;
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    text-align: center;
+    background: var(--afv-brand-50);
+    color: var(--afv-brand);
+  }
+
+  &.active .count {
+    background: rgb(255 255 255 / 20%);
+    color: #fff;
+  }
+}
+
+// Retour d'action : bandeau coloré plutôt qu'une simple ligne de texte
+.notice {
+  margin-block: 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #f1c3b5;
+  border-inline-start-width: 4px;
+  background: var(--afv-accent-50);
+  color: #7c2410;
+
+  &.ok {
+    border-color: #b9dfcd;
+    background: var(--afv-green-50);
+    color: #0b3a27;
   }
 }
 
 .list {
   display: grid;
   gap: 1rem;
-  margin: 1rem 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
+// Carte d'élément : liseré de couleur selon l'état (même code couleur que les badges)
 .item {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+  border-inline-start: 5px solid var(--afv-line);
+
+  &[data-tone='gold'] {
+    border-inline-start-color: var(--afv-gold);
+  }
+
+  &[data-tone='green'] {
+    border-inline-start-color: var(--afv-green);
+  }
+
+  &[data-tone='accent'] {
+    border-inline-start-color: var(--afv-accent);
+  }
 }
 
 .head {
@@ -55,40 +123,147 @@
   margin: 0;
 }
 
+.desc {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: var(--afv-bg);
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
   gap: 0.75rem;
   margin-block-start: 0.5rem;
+
+  &.start {
+    justify-content: flex-start;
+  }
 }
 
 .field {
   display: grid;
   gap: 0.25rem;
 
+  label {
+    font-size: 0.78rem;
+    font-weight: 650;
+    color: var(--afv-muted);
+  }
+
   input {
     min-inline-size: 11rem;
-    padding: 0.6rem 0.75rem;
+    block-size: 44px;
+    padding-inline: 0.8rem;
     font: inherit;
-    border: 1px solid var(--afv-line);
-    border-radius: 8px;
+    border: 1px solid #cfd4e6;
+    border-radius: 10px;
+
+    &:focus-visible {
+      outline: 2px solid var(--afv-brand);
+      outline-offset: 1px;
+      border-color: var(--afv-brand);
+    }
   }
 }
 
+.toolbar-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-end: 1rem;
+}
+
+// ----- Formulaire de campagne (même gabarit que « Publier un modèle ») -----
 .new {
   margin-block-end: 1.5rem;
+  padding: 1.5rem;
+}
+
+.form-title {
+  margin-block: 0 1rem;
+}
+
+.sub {
+  margin-block: 0.5rem 0.75rem;
+  font-size: 1rem;
 }
 
 .two {
   display: grid;
-  gap: 1rem;
+  gap: 0 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
 
-  @media (min-width: 640px) {
-    grid-template-columns: 1fr 1fr;
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+
+  li {
+    padding: 0.15rem 0.65rem;
+    border-radius: 999px;
+    font-weight: 650;
+    background: var(--afv-green-50);
+    color: var(--afv-green);
+  }
+
+  .warn {
+    background: var(--afv-gold-50);
+    color: #7a5600;
   }
 }
 
+.file-row {
+  justify-content: flex-start;
+  margin-block: 0 1rem;
+}
+
+.new > .actions {
+  justify-content: flex-end;
+}
+
 .prompts {
-  margin-block-start: 0.75rem;
+  margin-block-start: 0.5rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background: var(--afv-bg);
+}
+
+// Bouton de choix de fichier : l'input natif est masqué mais reste accessible au clavier
+.file-btn {
+  position: relative;
+  display: inline-flex;
+
+  input {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .file-label {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+    padding-inline: 1rem;
+    font-weight: 600;
+    background: var(--afv-surface);
+    border: 1px solid #cfd4e6;
+    border-radius: 10px;
+  }
+
+  &:hover .file-label {
+    border-color: var(--afv-brand);
+    color: var(--afv-brand);
+  }
+
+  input:focus-visible + .file-label {
+    outline: 2px solid var(--afv-brand);
+    outline-offset: 2px;
+  }
 }
