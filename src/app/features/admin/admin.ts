@@ -19,10 +19,11 @@ import {
 } from '../../core/api/admin.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { TranslationKey } from '../../core/i18n/translations';
+import { AdminDatasetsSection } from './datasets/admin-datasets';
 import { AdminLanguagesSection } from './languages/admin-languages';
 import { MAX_SENTENCES_PER_BATCH, parseSentences } from './sentences';
 
-type Tab = 'requests' | 'campaigns' | 'languages';
+type Tab = 'requests' | 'campaigns' | 'languages' | 'datasets';
 
 /** Taille maximale d'un fichier de phrases importé (lu en mémoire dans le navigateur). */
 const MAX_IMPORT_BYTES = 512 * 1024;
@@ -41,6 +42,7 @@ interface Notice {
 @Component({
   selector: 'app-admin',
   imports: [
+    AdminDatasetsSection,
     AdminLanguagesSection,
     NgTemplateOutlet,
     ReactiveFormsModule,

@@ -51,6 +51,7 @@ export class HomePage {
     const list: Action[] = [];
     if (this.auth.hasRole('ROLE_CONTRIBUTOR') || this.auth.hasRole('ROLE_ADMIN')) {
       list.push({ title: 'dash.record.title', body: 'dash.record.body', link: '/record' });
+      list.push({ title: 'dash.validate.title', body: 'dash.validate.body', link: '/validate' });
     }
     list.push({ title: 'dash.datasets.title', body: 'dash.datasets.body', link: '/datasets' });
     if (this.auth.hasRole('ROLE_DEVELOPER') || this.auth.hasRole('ROLE_ADMIN')) {

@@ -171,6 +171,26 @@ export class AdminService {
   ): Observable<unknown> {
     return this.http.patch(`/api/languages/${id}`, { id, ...change });
   }
+
+  datasets(): Observable<AdminDataset[]> {
+    return this.http.get<AdminDataset[]>('/api/datasets');
+  }
+
+  createDataset(input: NewDataset): Observable<AdminDataset> {
+    return this.http.post<AdminDataset>('/api/datasets', {
+      slug: input.slug,
+      title: input.title,
+      description: input.description || null,
+      domain: input.domain || null,
+      plan: input.plan,
+      language: { id: input.languageId },
+    });
+  }
+
+  /** Fige les enregistrements éligibles dans une archive et publie la version (le serveur calcule heures et locuteurs). */
+  publishVersion(datasetId: number, input: NewVersion): Observable<PublishedVersion> {
+    return this.http.post<PublishedVersion>(`/api/admin/datasets/${datasetId}/versions`, input);
+  }
 }
 
 export type ScriptKind = 'LATIN' | 'ARABIC' | 'NKO' | 'OTHER';
@@ -200,4 +220,40 @@ export interface NewLanguage {
   script: ScriptKind;
   direction: TextDirection;
   minValidators: number;
+}
+
+export type DatasetPlanKind = 'STARTER' | 'PLUS' | 'PRO';
+export type LicenseKindValue = 'PROTOTYPE' | 'RESEARCH' | 'COMMERCIAL';
+
+export interface AdminDataset {
+  id: number;
+  slug: string;
+  title: string;
+  description: string | null;
+  domain: string | null;
+  plan: DatasetPlanKind;
+  language: AdminLanguage | null;
+}
+
+export interface NewDataset {
+  slug: string;
+  title: string;
+  description: string;
+  domain: string;
+  plan: DatasetPlanKind;
+  languageId: number;
+}
+
+export interface NewVersion {
+  label: string;
+  license: LicenseKindValue;
+  pricePerHourFcfa: number | null;
+}
+
+export interface PublishedVersion {
+  id: number;
+  label: string;
+  hours: number;
+  speakers: number;
+  sha256: string;
 }

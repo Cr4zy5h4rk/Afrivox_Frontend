@@ -63,6 +63,7 @@
                       <th>{{ i18n.t('col.quality') }}</th>
                       <th>{{ i18n.t('col.license') }}</th>
                       <th>{{ i18n.t('col.price') }}</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -85,11 +86,29 @@
                               : i18n.t('common.none')
                           }}
                         </td>
+                        <td>
+                          @if (!downloadHint(d.plan)) {
+                            <button
+                              mat-stroked-button
+                              type="button"
+                              [disabled]="downloading() !== null"
+                              (click)="download(v.label)"
+                            >
+                              {{ i18n.t('dataset.download') }}
+                            </button>
+                          }
+                        </td>
                       </tr>
                     }
                   </tbody>
                 </table>
               </div>
+              @if (downloadHint(d.plan); as hint) {
+                <p class="muted small">{{ i18n.t(hint) }}</p>
+              }
+              @if (downloadFailed()) {
+                <p class="form-error" role="alert">{{ i18n.t('dataset.download.failed') }}</p>
+              }
             }
           </section>
         </div>
@@ -126,10 +145,6 @@
           </section>
 
           <section class="card block cta">
-            @if (d.published) {
-              <button mat-flat-button type="button" disabled>{{ i18n.t('dataset.download') }}</button>
-              <p class="muted small">{{ i18n.t('dataset.download.soon') }}</p>
-            }
             <h3>{{ i18n.t('dataset.contribute') }}</h3>
             <p class="muted small">{{ i18n.t('dataset.contribute.body') }}</p>
             <a mat-flat-button [routerLink]="auth.isAuthenticated() ? '/record' : '/register'">

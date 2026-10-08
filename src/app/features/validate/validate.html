@@ -1,0 +1,143 @@
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ i18n.t('validate.title') }}</h1>
+    <p>{{ i18n.t('validate.subtitle') }}</p>
+  </div>
+</section>
+
+<div class="container wrap">
+  <div aria-live="polite">
+    @if (notice(); as n) {
+      <p [class]="n.ok ? 'form-success' : 'form-error'" [attr.role]="n.ok ? 'status' : 'alert'">
+        {{ i18n.t(n.text) }}
+      </p>
+    }
+  </div>
+
+  @if (loading()) {
+    <p class="muted">{{ i18n.t('common.loading') }}</p>
+  } @else if (failed()) {
+    <div class="empty" role="alert">
+      <h3>{{ i18n.t('common.error') }}</h3>
+      <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+    </div>
+  } @else {
+    @if (qualified().length === 0) {
+      <div class="card block">
+        <h2>{{ i18n.t('validate.none.title') }}</h2>
+        <p class="muted">{{ i18n.t('validate.none.body') }}</p>
+      </div>
+    } @else {
+      <div class="card block">
+        <div class="langs" role="group" [attr.aria-label]="i18n.t('validate.language')">
+          @for (q of qualified(); track q.id) {
+            <button
+              type="button"
+              class="chip"
+              [class.active]="selected() === q.languageCode"
+              [attr.aria-pressed]="selected() === q.languageCode"
+              (click)="chooseLanguage(q.languageCode)"
+            >
+              {{ q.languageName }}
+              @if (q.score !== null) {
+                <span class="score">{{ i18n.t('validate.score', { score: i18n.n(q.score, 0) }) }}</span>
+              }
+            </button>
+          }
+        </div>
+
+        @switch (state()) {
+          @case ('loading') {
+            <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+          }
+          @case ('empty') {
+            <div class="empty">
+              <h3>{{ i18n.t('validate.empty.title') }}</h3>
+              <p>{{ i18n.t('validate.empty.body') }}</p>
+              <button mat-stroked-button type="button" (click)="nextTask()">{{ i18n.t('common.retry') }}</button>
+            </div>
+          }
+          @case ('failed') {
+            <div class="empty" role="alert">
+              <h3>{{ i18n.t('common.error') }}</h3>
+              <button mat-flat-button type="button" (click)="nextTask()">{{ i18n.t('common.retry') }}</button>
+            </div>
+          }
+          @case ('ready') {
+            @if (task(); as t) {
+              <div class="task">
+                <p class="count muted">{{ i18n.t('validate.reviewed', { count: reviewed() }) }}</p>
+                <p class="label">{{ i18n.t('validate.sentence') }}</p>
+                <blockquote class="sentence">{{ t.sentence }}</blockquote>
+
+                @if (audioUrl(); as src) {
+                  <audio controls [src]="src" [attr.aria-label]="i18n.t('validate.listen')"></audio>
+                }
+
+                <div class="checks">
+                  <mat-checkbox [checked]="audioOk()" (change)="audioOk.set($event.checked)">
+                    {{ i18n.t('validate.check.audio') }}
+                  </mat-checkbox>
+                  <mat-checkbox [checked]="pronunciationOk()" (change)="pronunciationOk.set($event.checked)">
+                    {{ i18n.t('validate.check.pronunciation') }}
+                  </mat-checkbox>
+                  <mat-checkbox [checked]="transcriptOk()" (change)="transcriptOk.set($event.checked)">
+                    {{ i18n.t('validate.check.transcript') }}
+                  </mat-checkbox>
+                </div>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ i18n.t('validate.note') }}</mat-label>
+                  <input matInput maxlength="300" [value]="note()" (input)="note.set($any($event.target).value)" />
+                </mat-form-field>
+
+                <div class="verdicts">
+                  <button mat-stroked-button type="button" [disabled]="sending()" (click)="submit('REJECT')">
+                    {{ i18n.t('validate.reject') }}
+                  </button>
+                  <button mat-flat-button type="button" [disabled]="sending()" (click)="submit('ACCEPT')">
+                    {{ i18n.t('validate.accept') }}
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        }
+      </div>
+    }
+
+    @if (others().length > 0) {
+      <div class="card block">
+        <h2>{{ i18n.t('validate.requests') }}</h2>
+        <ul class="plain">
+          @for (q of others(); track q.id) {
+            <li>
+              <strong>{{ q.languageName }}</strong>
+              <span [class]="q.status === 'PENDING' ? 'badge gold' : 'badge gray'">{{ i18n.t(statusKey(q.status)) }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (requestable().length > 0) {
+      <div class="card block">
+        <h2>{{ i18n.t('validate.request.title') }}</h2>
+        <p class="muted">{{ i18n.t('validate.request.body') }}</p>
+        <div class="request-row">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ i18n.t('validate.language') }}</mat-label>
+            <mat-select [value]="requestCode()" (selectionChange)="requestCode.set($event.value)">
+              @for (l of requestable(); track l.code) {
+                <mat-option [value]="l.code">{{ l.name }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button mat-flat-button type="button" [disabled]="!requestCode()" (click)="requestQualification()">
+            {{ i18n.t('validate.request.send') }}
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>

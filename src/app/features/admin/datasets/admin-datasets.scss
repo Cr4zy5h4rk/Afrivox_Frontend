@@ -1,0 +1,11 @@
+@use '../admin-shared';
+
+.code {
+  margin-inline-start: 0.35rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  background: var(--afv-bg);
+  color: var(--afv-muted);
+}

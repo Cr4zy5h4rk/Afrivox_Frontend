@@ -12,6 +12,7 @@ import {
   ScriptKind,
   TextDirection,
 } from '../../../core/api/admin.service';
+import { PendingQualification, ValidationService } from '../../../core/api/validation.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslationKey } from '../../../core/i18n/translations';
 
@@ -34,8 +35,11 @@ interface Notice {
 export class AdminLanguagesSection implements OnInit {
   protected readonly i18n = inject(I18nService);
   private readonly admin = inject(AdminService);
+  private readonly validation = inject(ValidationService);
 
   protected readonly languages = signal<AdminLanguageOverview[]>([]);
+  /** Demandes de qualification de validateurs à examiner. */
+  protected readonly pending = signal<PendingQualification[]>([]);
   protected readonly loading = signal(true);
   protected readonly failed = signal(false);
   protected readonly busy = signal(false);
@@ -63,6 +67,7 @@ export class AdminLanguagesSection implements OnInit {
   protected load(): void {
     this.loading.set(true);
     this.failed.set(false);
+    this.validation.pending().subscribe({ next: (list) => this.pending.set(list), error: () => undefined });
     this.admin.languageOverview().subscribe({
       next: (list) => {
         this.languages.set(list);
@@ -131,6 +136,11 @@ export class AdminLanguagesSection implements OnInit {
       if (!window.confirm(message)) return;
     }
     this.run(this.admin.updateLanguage(language.id, { status }));
+  }
+
+  /** Accepte ou refuse une demande de qualification ; accepter peut faire atteindre le seuil et activer la langue. */
+  protected decide(item: PendingQualification, approve: boolean): void {
+    this.run(this.validation.decide(item.id, approve));
   }
 
   protected create(): void {

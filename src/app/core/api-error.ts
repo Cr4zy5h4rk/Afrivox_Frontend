@@ -19,6 +19,14 @@ const SERVER_KEYS: Partial<Record<string, TranslationKey>> = {
   'error.languagenotfound': 'error.languagenotfound',
   'error.toomanyrequests': 'error.toomanyrequests',
   'error.invaliddeadline': 'error.invaliddeadline',
+  'error.versionexists': 'error.versionexists',
+  'error.norecordings': 'error.norecordings',
+  'error.datasetnotfound': 'error.datasetnotfound',
+  'error.nolanguage': 'error.nolanguage',
+  'error.invalidlabel': 'error.invalidlabel',
+  'error.qualificationnotfound': 'error.qualificationnotfound',
+  'error.recordingnotfound': 'error.recordingnotfound',
+  'error.ownrecording': 'error.ownrecording',
 };
 
 /**

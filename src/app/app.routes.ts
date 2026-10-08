@@ -69,6 +69,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/record/record').then((m) => m.RecordPage),
   },
   {
+    path: 'validate',
+    title: 'Validation · AfriVox',
+    canActivate: [authGuard, roleGuard('ROLE_CONTRIBUTOR', 'ROLE_ADMIN')],
+    loadComponent: () => import('./features/validate/validate').then((m) => m.ValidatePage),
+  },
+  {
     path: 'requests',
     title: 'Mes demandes · AfriVox',
     canActivate: [authGuard, roleGuard('ROLE_ORGANIZATION', 'ROLE_ADMIN')],

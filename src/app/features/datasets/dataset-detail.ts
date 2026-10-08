@@ -26,6 +26,36 @@ export class DatasetDetailPage implements OnInit {
   protected readonly detail = signal<DatasetDetail | null>(null);
   protected readonly state = signal<'loading' | 'ready' | 'notfound' | 'failed'>('loading');
 
+  protected readonly downloading = signal<string | null>(null);
+  protected readonly downloadFailed = signal(false);
+
+  /** Pourquoi le téléchargement n'est pas proposé (null = il l'est). Le serveur refait ces contrôles. */
+  protected downloadHint(plan: string): TranslationKey | null {
+    if (!this.auth.isAuthenticated()) return 'dataset.download.signin';
+    const admin = this.auth.hasRole('ROLE_ADMIN');
+    if (!admin && !this.auth.hasRole('ROLE_DEVELOPER') && !this.auth.hasRole('ROLE_ORGANIZATION')) {
+      return 'dataset.download.role';
+    }
+    return plan !== 'STARTER' && !admin ? 'dataset.download.paid' : null;
+  }
+
+  /** Demande un lien signé puis laisse le navigateur le suivre (l'en-tête Content-Disposition déclenche l'enregistrement). */
+  protected download(label: string): void {
+    if (this.downloading()) return;
+    this.downloading.set(label);
+    this.downloadFailed.set(false);
+    this.catalog.downloadLink(this.slug(), label).subscribe({
+      next: (link) => {
+        this.downloading.set(null);
+        window.location.assign(link.url);
+      },
+      error: () => {
+        this.downloading.set(null);
+        this.downloadFailed.set(true);
+      },
+    });
+  }
+
   ngOnInit(): void {
     this.catalog.dataset(this.slug()).subscribe({
       next: (detail) => {

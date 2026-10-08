@@ -1,0 +1,141 @@
+<div aria-live="polite">
+  @if (notice(); as n) {
+    <p class="notice" [class.ok]="n.ok" [attr.role]="n.ok ? 'status' : 'alert'">{{ i18n.t(n.text, n.params) }}</p>
+  }
+</div>
+
+<div class="toolbar-row">
+  <button
+    mat-flat-button
+    type="button"
+    [attr.aria-expanded]="showForm()"
+    aria-controls="dataset-form"
+    (click)="toggleForm()"
+  >
+    {{ showForm() ? i18n.t('admin.camp.cancel') : i18n.t('admindata.new') }}
+  </button>
+</div>
+
+@if (showForm()) {
+  <form id="dataset-form" class="card form-column new" [formGroup]="form" (ngSubmit)="create()" novalidate>
+    <h3 class="form-title">{{ i18n.t('admindata.new') }}</h3>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('admindata.title') }}</mat-label>
+      <input matInput formControlName="title" maxlength="120" />
+      @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+        <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('admindata.slug') }}</mat-label>
+      <input matInput formControlName="slug" maxlength="80" autocomplete="off" />
+      <mat-hint>{{ i18n.t('admindata.slugHint') }}</mat-hint>
+      @if (form.controls.slug.touched && form.controls.slug.invalid) {
+        <mat-error>{{ i18n.t('admindata.slugInvalid') }}</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('admindata.description') }}</mat-label>
+      <textarea matInput formControlName="description" rows="3" maxlength="1000"></textarea>
+    </mat-form-field>
+    <div class="two">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('admindata.language') }}</mat-label>
+        <mat-select formControlName="languageId">
+          @for (l of languages(); track l.id) {
+            <mat-option [value]="l.id">{{ l.name }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.languageId.touched && form.controls.languageId.hasError('required')) {
+          <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('admindata.plan') }}</mat-label>
+        <mat-select formControlName="plan">
+          @for (p of plans; track p) {
+            <mat-option [value]="p">{{ i18n.t(planKey(p)) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ i18n.t('admindata.domain') }}</mat-label>
+      <input matInput formControlName="domain" maxlength="80" />
+    </mat-form-field>
+    <div class="actions">
+      <button mat-stroked-button type="button" (click)="toggleForm()">{{ i18n.t('admin.camp.cancel') }}</button>
+      <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('admindata.create') }}</button>
+    </div>
+  </form>
+}
+
+@if (loading()) {
+  <p class="muted">{{ i18n.t('common.loading') }}</p>
+} @else if (failed()) {
+  <div class="empty" role="alert">
+    <h3>{{ i18n.t('common.error') }}</h3>
+    <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+  </div>
+} @else if (datasets().length === 0) {
+  <div class="empty"><p>{{ i18n.t('admindata.empty') }}</p></div>
+} @else {
+  <ul class="list">
+    @for (d of datasets(); track d.id) {
+      <li class="card item" data-tone="green">
+        <div class="head">
+          <h3>{{ d.title }} <span class="code">{{ d.slug }}</span></h3>
+          <span class="badge accent">{{ i18n.t(planKey(d.plan)) }}</span>
+        </div>
+        <p class="meta muted">
+          {{ d.language?.name ?? i18n.t('common.none') }}
+          @if (d.domain) {
+            · {{ d.domain }}
+          }
+        </p>
+        <div class="actions">
+          <button
+            mat-stroked-button
+            type="button"
+            [attr.aria-expanded]="publishingFor() === d.id"
+            (click)="togglePublish(d.id)"
+          >
+            {{ i18n.t('admindata.publish') }}
+          </button>
+        </div>
+
+        @if (publishingFor() === d.id) {
+          <form class="form-column prompts" [formGroup]="versionForm" (ngSubmit)="publish(d)" novalidate>
+            <p class="muted">{{ i18n.t('admindata.publishHint') }}</p>
+            <div class="two">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ i18n.t('admindata.label') }}</mat-label>
+                <input matInput formControlName="label" maxlength="20" autocomplete="off" />
+                <mat-hint>{{ i18n.t('admindata.labelHint') }}</mat-hint>
+                @if (versionForm.controls.label.touched && versionForm.controls.label.invalid) {
+                  <mat-error>{{ i18n.t('error.invalidlabel') }}</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ i18n.t('admindata.license') }}</mat-label>
+                <mat-select formControlName="license">
+                  @for (l of licenses; track l) {
+                    <mat-option [value]="l">{{ i18n.t(licenseKey(l)) }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ i18n.t('admindata.price') }}</mat-label>
+              <input matInput type="number" min="0" formControlName="pricePerHourFcfa" />
+              <mat-hint>{{ i18n.t('admindata.priceHint') }}</mat-hint>
+            </mat-form-field>
+            <div class="actions">
+              <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('admindata.publishNow') }}</button>
+            </div>
+          </form>
+        }
+      </li>
+    }
+  </ul>
+}

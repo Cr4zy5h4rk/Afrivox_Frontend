@@ -73,6 +73,29 @@
   </form>
 }
 
+@if (pending().length > 0) {
+  <section class="card item" data-tone="gold" aria-labelledby="pending-title">
+    <h3 id="pending-title">{{ i18n.t('adminval.title') }}</h3>
+    <ul class="pending">
+      @for (p of pending(); track p.id) {
+        <li>
+          <span>
+            {{ i18n.t('adminval.item', { name: p.displayName || i18n.t('adminval.noName'), language: p.languageName }) }}
+          </span>
+          <span class="actions">
+            <button mat-stroked-button type="button" [disabled]="busy()" (click)="decide(p, false)">
+              {{ i18n.t('adminval.refuse') }}
+            </button>
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="decide(p, true)">
+              {{ i18n.t('adminval.approve') }}
+            </button>
+          </span>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
 @if (loading()) {
   <p class="muted">{{ i18n.t('common.loading') }}</p>
 } @else if (failed()) {
