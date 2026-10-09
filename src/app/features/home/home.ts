@@ -54,6 +54,13 @@ export class HomePage {
       list.push({ title: 'dash.validate.title', body: 'dash.validate.body', link: '/validate' });
     }
     list.push({ title: 'dash.datasets.title', body: 'dash.datasets.body', link: '/datasets' });
+    if (
+      this.auth.hasRole('ROLE_DEVELOPER') ||
+      this.auth.hasRole('ROLE_ORGANIZATION') ||
+      this.auth.hasRole('ROLE_ADMIN')
+    ) {
+      list.push({ title: 'dash.purchases.title', body: 'dash.purchases.body', link: '/purchases' });
+    }
     if (this.auth.hasRole('ROLE_DEVELOPER') || this.auth.hasRole('ROLE_ADMIN')) {
       list.push({ title: 'dash.models.title', body: 'dash.models.body', link: '/models/new' });
     }

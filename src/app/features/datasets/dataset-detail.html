@@ -87,14 +87,9 @@
                           }}
                         </td>
                         <td>
-                          @if (!downloadHint(d.plan)) {
-                            <button
-                              mat-stroked-button
-                              type="button"
-                              [disabled]="downloading() !== null"
-                              (click)="download(v.label)"
-                            >
-                              {{ i18n.t('dataset.download') }}
+                          @if (!buyHint()) {
+                            <button mat-stroked-button type="button" (click)="choose(v.label)">
+                              {{ i18n.t(d.plan === 'STARTER' ? 'buy.get' : 'buy.buy') }}
                             </button>
                           }
                         </td>
@@ -103,14 +98,77 @@
                   </tbody>
                 </table>
               </div>
-              @if (downloadHint(d.plan); as hint) {
+              @if (buyHint(); as hint) {
                 <p class="muted small">{{ i18n.t(hint) }}</p>
-              }
-              @if (downloadFailed()) {
-                <p class="form-error" role="alert">{{ i18n.t('dataset.download.failed') }}</p>
               }
             }
           </section>
+
+          @if (selected(); as label) {
+            <section class="card block purchase" aria-labelledby="buy-title">
+              <h2 id="buy-title">{{ i18n.t('buy.title', { version: label }) }}</h2>
+
+              <fieldset class="licenses">
+                <legend>{{ i18n.t('buy.license') }}</legend>
+                @for (l of licenses; track l) {
+                  <label class="choice">
+                    <input
+                      type="radio"
+                      name="license"
+                      [value]="l"
+                      [checked]="license() === l"
+                      (change)="setLicense(l)"
+                    />
+                    <span>
+                      <strong>{{ i18n.t(licenseKey(l)) }}</strong>
+                      <span class="muted small">{{ i18n.t(licenseTextKey(l)) }}</span>
+                    </span>
+                  </label>
+                }
+              </fieldset>
+
+              <div class="total" aria-live="polite">
+                @if (quote(); as q) {
+                  <span>{{ i18n.t('buy.total') }}</span>
+                  <strong>
+                    {{ q.free ? i18n.t('buy.free') : i18n.t('buy.amount', { n: i18n.n(q.totalFcfa) }) }}
+                  </strong>
+                } @else if (quoteFailed()) {
+                  <span class="form-error" role="alert">{{ i18n.t('buy.quoteFailed') }}</span>
+                } @else {
+                  <span class="muted">{{ i18n.t('common.loading') }}</span>
+                }
+              </div>
+
+              <div class="terms">
+                <label class="check">
+                  <input type="checkbox" [checked]="readTerms()" (change)="readTerms.set(!readTerms())" />
+                  <span>{{ i18n.t('buy.accept.read', { license: i18n.t(licenseKey(license())) }) }}</span>
+                </label>
+                <label class="check">
+                  <input type="checkbox" [checked]="agreeUsage()" (change)="agreeUsage.set(!agreeUsage())" />
+                  <span>{{ i18n.t('buy.accept.usage') }}</span>
+                </label>
+              </div>
+
+              @if (quote(); as q) {
+                @if (!q.free) {
+                  <p class="muted small">{{ i18n.t('buy.simulated') }}</p>
+                }
+              }
+
+              @if (error(); as err) {
+                <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+              }
+
+              <div class="actions">
+                <button mat-button type="button" (click)="close()">{{ i18n.t('buy.cancel') }}</button>
+                <button mat-flat-button type="button" [disabled]="!canBuy()" (click)="buy()">
+                  {{ i18n.t(quote()?.free ? 'buy.confirmFree' : 'buy.confirm') }}
+                </button>
+              </div>
+            </section>
+          }
         </div>
 
         <aside class="side">

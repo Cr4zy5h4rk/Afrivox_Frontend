@@ -27,6 +27,9 @@ const SERVER_KEYS: Partial<Record<string, TranslationKey>> = {
   'error.qualificationnotfound': 'error.qualificationnotfound',
   'error.recordingnotfound': 'error.recordingnotfound',
   'error.ownrecording': 'error.ownrecording',
+  'error.licensenotaccepted': 'error.licensenotaccepted',
+  'error.alreadypurchased': 'error.alreadypurchased',
+  'error.nopricing': 'error.nopricing',
 };
 
 /**

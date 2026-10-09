@@ -81,6 +81,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/requests/requests').then((m) => m.RequestsPage),
   },
   {
+    path: 'purchases',
+    title: 'Mes achats · AfriVox',
+    canActivate: [authGuard, roleGuard('ROLE_DEVELOPER', 'ROLE_ORGANIZATION', 'ROLE_ADMIN')],
+    loadComponent: () => import('./features/purchases/purchases').then((m) => m.PurchasesPage),
+  },
+  {
     path: 'admin',
     title: 'Administration · AfriVox',
     canActivate: [authGuard, roleGuard('ROLE_ADMIN')],

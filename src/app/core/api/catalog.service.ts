@@ -132,14 +132,6 @@ export class CatalogService {
     });
   }
 
-  /** Lien de téléchargement signé et expirant (réservé aux comptes connectés autorisés). */
-  downloadLink(slug: string, label: string): Observable<{ url: string; expiresAt: string }> {
-    return this.http.post<{ url: string; expiresAt: string }>(
-      `/api/me/downloads/${encodeURIComponent(slug)}/${encodeURIComponent(label)}/link`,
-      {},
-    );
-  }
-
   dataset(slug: string): Observable<DatasetDetail> {
     return this.http.get<DatasetDetail>(`/api/public/datasets/${encodeURIComponent(slug)}`);
   }
