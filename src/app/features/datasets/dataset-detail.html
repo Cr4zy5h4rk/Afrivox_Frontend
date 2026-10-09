@@ -209,6 +209,16 @@
               {{ i18n.t('landing.cta.contribute') }}
             </a>
           </section>
+
+          @if (canPublishModel() && d.published) {
+            <section class="card block cta">
+              <h3>{{ i18n.t('dataset.publishModel') }}</h3>
+              <p class="muted small">{{ i18n.t('dataset.publishModel.body') }}</p>
+              <a mat-stroked-button routerLink="/models/new" [queryParams]="{ dataset: d.slug }">
+                {{ i18n.t('modelnew.title') }}
+              </a>
+            </section>
+          }
         </aside>
       </div>
     }

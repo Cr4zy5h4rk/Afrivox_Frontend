@@ -52,6 +52,11 @@ export class DatasetDetailPage implements OnInit {
   );
 
   /** Pourquoi l'achat n'est pas proposé (null = il l'est). Le serveur refait ces contrôles. */
+  /** Les développeurs (et l'admin) peuvent publier un modèle entraîné sur ce dataset. */
+  protected canPublishModel(): boolean {
+    return this.auth.hasRole('ROLE_DEVELOPER') || this.auth.hasRole('ROLE_ADMIN');
+  }
+
   protected buyHint(): TranslationKey | null {
     if (!this.auth.isAuthenticated()) return 'dataset.download.signin';
     const allowed =

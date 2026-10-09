@@ -118,6 +118,17 @@
                   }
                 </dd>
               </div>
+              @if (m.otherDatasets.length > 0) {
+                <div>
+                  <dt>{{ i18n.t('model.otherDatasets') }}</dt>
+                  <dd>
+                    @for (d of m.otherDatasets; track d.slug + d.version; let last = $last) {
+                      <a [routerLink]="['/datasets', d.slug]">{{ d.title }}</a>
+                      {{ d.version }}@if (!last) {,}
+                    }
+                  </dd>
+                </div>
+              }
             </dl>
           </section>
 

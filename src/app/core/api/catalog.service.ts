@@ -55,6 +55,22 @@ export interface DatasetDetail {
   versions: VersionView[];
 }
 
+/** Une version de dataset citée par un modèle. */
+export interface DatasetRef {
+  slug: string;
+  title: string;
+  version: string;
+}
+
+/** Une version publiée, proposée dans le formulaire de publication d'un modèle. */
+export interface VersionOption {
+  id: number;
+  slug: string;
+  title: string;
+  version: string;
+  languageCode: string | null;
+}
+
 export interface ModelSummary {
   id: number;
   name: string;
@@ -69,6 +85,7 @@ export interface ModelSummary {
   languageName: string | null;
   trainedOnDataset: string | null;
   trainedOnVersion: string | null;
+  otherDatasets: DatasetRef[];
   bestWer: number | null;
 }
 
@@ -105,6 +122,10 @@ export interface NewModel {
   license: string;
   url: string;
   languageCode: string;
+  /** Dataset principal (id de version publiée), `null` si non précisé. */
+  trainedOnVersionId: number | null;
+  /** Autres versions utilisées ; le serveur exige un dataset principal pour en accepter. */
+  otherVersionIds: number[];
 }
 
 /** Catalogue public (`/api/public/**`, sans connexion) et publication de modèles (`/api/me/models`). */
@@ -150,6 +171,11 @@ export class CatalogService {
 
   model(id: number): Observable<ModelDetail> {
     return this.http.get<ModelDetail>(`/api/public/models/${id}`);
+  }
+
+  /** Versions publiées dont le dataset correspond au texte (titre ou slug) ; 20 résultats au plus. */
+  datasetVersions(q: string): Observable<VersionOption[]> {
+    return this.http.get<VersionOption[]>('/api/public/dataset-versions', { params: toParams({ q }) });
   }
 
   leaderboard(language?: string): Observable<EvaluationRow[]> {
