@@ -122,7 +122,12 @@
     <div class="two">
       <mat-form-field appearance="outline">
         <mat-label>{{ i18n.t('modelnew.license') }}</mat-label>
-        <input matInput formControlName="license" maxlength="60" />
+        <input matInput formControlName="license" maxlength="60" autocomplete="off" [matAutocomplete]="licenseAuto" />
+        <mat-autocomplete #licenseAuto="matAutocomplete">
+          @for (l of licenseChoices(); track l) {
+            <mat-option [value]="l">{{ l }}</mat-option>
+          }
+        </mat-autocomplete>
       </mat-form-field>
 
       <mat-form-field appearance="outline">

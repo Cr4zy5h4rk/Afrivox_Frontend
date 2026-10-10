@@ -4,11 +4,12 @@ import {
   DestroyRef,
   OnInit,
   WritableSignal,
+  computed,
   inject,
   input,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -93,6 +94,30 @@ export class ModelNewPage implements OnInit {
     description: ['', Validators.maxLength(1000)],
     license: ['', Validators.maxLength(60)],
     url: ['', [Validators.maxLength(300), httpsUrl]],
+  });
+
+  /** Identifiants SPDX des licences les plus courantes ; la saisie libre reste possible pour les autres. */
+  protected readonly commonLicenses = [
+    'MIT',
+    'Apache-2.0',
+    'BSD-3-Clause',
+    'BSD-2-Clause',
+    'CC0-1.0',
+    'CC-BY-4.0',
+    'CC-BY-SA-4.0',
+    'CC-BY-NC-4.0',
+    'CC-BY-NC-SA-4.0',
+    'OpenRAIL-M',
+    'GPL-3.0',
+    'LGPL-3.0',
+    'AGPL-3.0',
+  ];
+
+  /** Suggestions filtrées par ce qui est tapé ; le champ reste libre (toute autre licence est acceptée). */
+  private readonly licenseValue = toSignal(this.form.controls.license.valueChanges, { initialValue: '' });
+  protected readonly licenseChoices = computed(() => {
+    const text = this.licenseValue().trim().toLowerCase();
+    return this.commonLicenses.filter((l) => l.toLowerCase().includes(text));
   });
 
   ngOnInit(): void {
