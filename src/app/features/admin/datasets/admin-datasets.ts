@@ -1,13 +1,15 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { forkJoin } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import {
-  AdminDataset,
+  AdminDatasetRow,
   AdminLanguage,
+  AdminVersionRow,
+  VersionStatusKind,
   AdminService,
   DatasetPlanKind,
   LicenseKindValue,
@@ -15,6 +17,9 @@ import {
 import { toApiError } from '../../../core/api-error';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslationKey } from '../../../core/i18n/translations';
+
+const PAGE_SIZE = 20;
+const SEARCH_DELAY_MS = 300;
 
 interface Notice {
   text: TranslationKey;
@@ -37,7 +42,21 @@ export class AdminDatasetsSection implements OnInit {
   protected readonly i18n = inject(I18nService);
   private readonly admin = inject(AdminService);
 
-  protected readonly datasets = signal<AdminDataset[]>([]);
+  protected readonly datasets = signal<AdminDatasetRow[]>([]);
+  protected readonly total = signal(0);
+  protected readonly page = signal(0);
+  protected readonly pages = computed(() => Math.max(1, Math.ceil(this.total() / PAGE_SIZE)));
+  protected readonly domains = signal<string[]>([]);
+  // Filtres cumulables, appliqués côté serveur
+  protected readonly query = signal('');
+  protected readonly languageFilter = signal<number | null>(null);
+  protected readonly planFilter = signal<DatasetPlanKind | ''>('');
+  protected readonly domainFilter = signal('');
+  protected readonly publishedFilter = signal<'all' | 'yes' | 'no'>('all');
+  /** Dataset dont le formulaire de modification est ouvert. */
+  protected readonly editingFor = signal<number | null>(null);
+  private searchTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly destroyRef = inject(DestroyRef);
   protected readonly languages = signal<AdminLanguage[]>([]);
   protected readonly loading = signal(true);
   protected readonly failed = signal(false);
@@ -68,16 +87,42 @@ export class AdminDatasetsSection implements OnInit {
     maxRecordings: [null as number | null, Validators.min(1)],
   });
 
+  protected readonly editForm = this.fb.group({
+    title: ['', [Validators.required, Validators.maxLength(120)]],
+    description: ['', Validators.maxLength(1000)],
+    domain: ['', Validators.maxLength(80)],
+    plan: ['STARTER' as DatasetPlanKind, Validators.required],
+  });
+
   ngOnInit(): void {
+    // Pas de requête de recherche qui part après la fermeture de l'onglet
+    this.destroyRef.onDestroy(() => clearTimeout(this.searchTimer));
+    this.loadDomains();
     this.load();
+  }
+
+  private loadDomains(): void {
+    this.admin.datasetDomains().subscribe({ next: (d) => this.domains.set(d), error: () => undefined });
   }
 
   protected load(): void {
     this.loading.set(true);
     this.failed.set(false);
-    forkJoin({ datasets: this.admin.datasets(), languages: this.admin.languages() }).subscribe({
+    const published = this.publishedFilter();
+    const filter = {
+      query: this.query(),
+      languageId: this.languageFilter(),
+      plan: this.planFilter(),
+      domain: this.domainFilter(),
+      published: published === 'all' ? null : published === 'yes',
+    };
+    forkJoin({
+      datasets: this.admin.datasetOverview(filter, this.page(), PAGE_SIZE),
+      languages: this.admin.languages(),
+    }).subscribe({
       next: ({ datasets, languages }) => {
-        this.datasets.set([...datasets].sort((a, b) => a.title.localeCompare(b.title)));
+        this.datasets.set(datasets.items);
+        this.total.set(datasets.total);
         this.languages.set(languages);
         this.loading.set(false);
       },
@@ -85,6 +130,121 @@ export class AdminDatasetsSection implements OnInit {
         this.failed.set(true);
         this.loading.set(false);
       },
+    });
+  }
+
+  /** Recherche différée : une requête par pause de frappe. */
+  protected search(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.query.set(value);
+      this.refilter();
+    }, SEARCH_DELAY_MS);
+  }
+
+  protected setLanguageFilter(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.languageFilter.set(value === '' ? null : Number(value));
+    this.refilter();
+  }
+
+  protected setPlanFilter(event: Event): void {
+    this.planFilter.set((event.target as HTMLSelectElement).value as DatasetPlanKind | '');
+    this.refilter();
+  }
+
+  protected setDomainFilter(event: Event): void {
+    this.domainFilter.set((event.target as HTMLSelectElement).value);
+    this.refilter();
+  }
+
+  protected setPublishedFilter(event: Event): void {
+    this.publishedFilter.set((event.target as HTMLSelectElement).value as 'all' | 'yes' | 'no');
+    this.refilter();
+  }
+
+  /** Un filtre qui change ramène à la première page. */
+  private refilter(): void {
+    this.page.set(0);
+    this.load();
+  }
+
+  protected goTo(page: number): void {
+    if (page < 0 || page >= this.pages()) return;
+    this.page.set(page);
+    this.load();
+  }
+
+  protected versionStatusKey(status: VersionStatusKind): TranslationKey {
+    return `adminver.status.${status}`;
+  }
+
+  protected versionTone(status: VersionStatusKind): string {
+    return status === 'PUBLISHED' ? 'badge green' : status === 'WITHDRAWN' ? 'badge gray' : 'badge gold';
+  }
+
+  /** Retire ou remet en ligne une version ; retirer coupe aussi les liens de téléchargement des acheteurs. */
+  protected toggleVersion(dataset: AdminDatasetRow, version: AdminVersionRow): void {
+    const publishing = version.status !== 'PUBLISHED';
+    if (!publishing) {
+      const message = this.i18n.t('adminver.confirmWithdraw', {
+        label: version.label,
+        title: dataset.title,
+        count: version.purchases,
+      });
+      if (!window.confirm(message)) return;
+    }
+    this.runThenReload(this.admin.setVersionStatus(version.id, publishing ? 'PUBLISHED' : 'WITHDRAWN'));
+  }
+
+  protected toggleEdit(dataset: AdminDatasetRow): void {
+    if (this.editingFor() === dataset.id) {
+      this.editingFor.set(null);
+      return;
+    }
+    this.editingFor.set(dataset.id);
+    this.publishingFor.set(null);
+    this.notice.set(null);
+    this.editForm.reset({
+      title: dataset.title,
+      description: dataset.description ?? '',
+      domain: dataset.domain ?? '',
+      plan: dataset.plan,
+    });
+  }
+
+  protected saveEdit(dataset: AdminDatasetRow): void {
+    if (this.editForm.invalid || this.busy()) {
+      this.editForm.markAllAsTouched();
+      return;
+    }
+    const value = this.editForm.getRawValue();
+    this.runThenReload(
+      this.admin.updateDataset(dataset.id, {
+        title: value.title.trim(),
+        description: value.description.trim() || null,
+        domain: value.domain.trim() || null,
+        plan: value.plan,
+      }),
+      () => this.editingFor.set(null),
+    );
+  }
+
+  /** Écriture puis rechargement : compteurs et domaines viennent du serveur. */
+  private runThenReload(call: Observable<unknown>, onSuccess?: () => void): void {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.notice.set(null);
+    call.subscribe({
+      next: () => {
+        onSuccess?.();
+        this.notice.set({ text: 'admin.saved', ok: true });
+        this.busy.set(false);
+        this.loadDomains();
+        this.load();
+      },
+      error: (err: unknown) => this.fail(err),
     });
   }
 
@@ -103,6 +263,7 @@ export class AdminDatasetsSection implements OnInit {
 
   protected togglePublish(id: number): void {
     this.publishingFor.update((current) => (current === id ? null : id));
+    this.editingFor.set(null);
     this.versionForm.reset({ license: 'RESEARCH', pricePerHourFcfa: null, maxRecordings: null });
     this.notice.set(null);
   }
@@ -128,7 +289,7 @@ export class AdminDatasetsSection implements OnInit {
     });
   }
 
-  protected publish(dataset: AdminDataset): void {
+  protected publish(dataset: AdminDatasetRow): void {
     if (this.versionForm.invalid || this.busy()) {
       this.versionForm.markAllAsTouched();
       return;
@@ -156,6 +317,7 @@ export class AdminDatasetsSection implements OnInit {
             ok: true,
           });
           this.busy.set(false);
+          this.load();
         },
         error: (err: unknown) => this.fail(err),
       });

@@ -15,7 +15,7 @@
       [attr.aria-selected]="tab() === 'requests'"
       (click)="setTab('requests')"
     >
-      {{ i18n.t('admin.tab.requests') }} <span class="count">{{ requests().length }}</span>
+      {{ i18n.t('admin.tab.requests') }} <span class="count">{{ requestTotal() }}</span>
     </button>
     <button
       type="button"
@@ -25,7 +25,7 @@
       [attr.aria-selected]="tab() === 'campaigns'"
       (click)="setTab('campaigns')"
     >
-      {{ i18n.t('admin.tab.campaigns') }} <span class="count">{{ campaigns().length }}</span>
+      {{ i18n.t('admin.tab.campaigns') }} <span class="count">{{ campaignTotal() }}</span>
     </button>
     <button
       type="button"
@@ -81,9 +81,59 @@
       <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
     </div>
   } @else if (tab() === 'requests') {
+    <div class="filters">
+      <div class="field grow">
+        <label for="req-search">{{ i18n.t('adminreq.search') }}</label>
+        <input
+          id="req-search"
+          type="search"
+          autocomplete="off"
+          maxlength="100"
+          [placeholder]="i18n.t('adminreq.searchHint')"
+          (input)="searchRequests($event)"
+        />
+      </div>
+      <div class="field">
+        <label for="req-status">{{ i18n.t('admincamp.filterStatus') }}</label>
+        <select id="req-status" (change)="setReqStatus($event)">
+          <option value="">{{ i18n.t('adminusers.all') }}</option>
+          @for (s of requestStatuses; track s) {
+            <option [value]="s">{{ i18n.t(reqStatusKey(s)) }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="req-sector">{{ i18n.t('adminreq.sector') }}</label>
+        <select id="req-sector" (change)="setReqSector($event)">
+          <option value="">{{ i18n.t('adminusers.all') }}</option>
+          @for (s of sectors; track s) {
+            <option [value]="s">{{ i18n.t(sectorKey(s)) }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="req-lang">{{ i18n.t('admin.camp.language') }}</label>
+        <select id="req-lang" (change)="setReqLanguage($event)">
+          <option value="">{{ i18n.t('adminusers.all') }}</option>
+          @for (l of languages(); track l.id) {
+            <option [value]="l.id">{{ l.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="req-usage">{{ i18n.t('adminreq.usage') }}</label>
+        <select id="req-usage" (change)="setReqUsage($event)">
+          <option value="">{{ i18n.t('adminusers.all') }}</option>
+          <option value="COMMERCIAL">{{ i18n.t('license.COMMERCIAL') }}</option>
+          <option value="RESEARCH">{{ i18n.t('license.RESEARCH') }}</option>
+        </select>
+      </div>
+    </div>
+
     @if (requests().length === 0) {
       <div class="empty"><p>{{ i18n.t('admin.req.empty') }}</p></div>
     } @else {
+      <p class="muted total">{{ i18n.t('adminreq.total', { count: i18n.n(requestTotal()) }) }}</p>
       <ul class="list">
         @for (r of requests(); track r.id) {
           <li class="card item" [attr.data-tone]="reqTone(r.status)">
@@ -101,6 +151,9 @@
                 · {{ i18n.t('admin.req.deadline', { date: i18n.date(r.deadline) }) }}
               }
               · {{ i18n.date(r.createdAt) }}
+              @if (r.requesterLogin) {
+                · {{ i18n.t('adminreq.by', { login: r.requesterLogin }) }}
+              }
             </p>
             @if (r.description) {
               <p class="desc">{{ r.description }}</p>
@@ -136,6 +189,28 @@
           </li>
         }
       </ul>
+
+      @if (requestPages() > 1) {
+        <nav class="pager" [attr.aria-label]="i18n.t('adminusers.pages')">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="requestPage() === 0"
+            (click)="goToRequestPage(requestPage() - 1)"
+          >
+            {{ i18n.t('adminusers.prev') }}
+          </button>
+          <span>{{ requestPage() + 1 }} / {{ requestPages() }}</span>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="requestPage() + 1 >= requestPages()"
+            (click)="goToRequestPage(requestPage() + 1)"
+          >
+            {{ i18n.t('adminusers.next') }}
+          </button>
+        </nav>
+      }
     }
   } @else {
     <ng-template #stats let-s let-max="max">
@@ -247,9 +322,60 @@
       </form>
     }
 
+    <div class="filters">
+      <div class="field grow">
+        <label for="camp-search">{{ i18n.t('admincamp.search') }}</label>
+        <input
+          id="camp-search"
+          type="search"
+          autocomplete="off"
+          maxlength="100"
+          [placeholder]="i18n.t('admincamp.searchHint')"
+          (input)="searchCampaigns($event)"
+        />
+      </div>
+      <div class="field">
+        <label for="camp-lang">{{ i18n.t('admin.camp.language') }}</label>
+        <select id="camp-lang" (change)="setCampLanguage($event)">
+          <option value="">{{ i18n.t('adminusers.all') }}</option>
+          @for (l of languages(); track l.id) {
+            <option [value]="l.id">{{ l.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="camp-status">{{ i18n.t('admincamp.filterStatus') }}</label>
+        <select id="camp-status" (change)="setCampStatusFilter($event)">
+          <option value="">{{ i18n.t('adminusers.all') }}</option>
+          @for (s of statuses; track s) {
+            <option [value]="s">{{ i18n.t(campStatusKey(s)) }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="camp-kind">{{ i18n.t('admin.camp.kind') }}</label>
+        <select id="camp-kind" (change)="setCampKind($event)">
+          <option value="">{{ i18n.t('adminusers.all') }}</option>
+          @for (k of kinds; track k) {
+            <option [value]="k">{{ i18n.t(campKindKey(k)) }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="camp-domain">{{ i18n.t('admin.camp.domain') }}</label>
+        <select id="camp-domain" (change)="setCampDomain($event)">
+          <option value="">{{ i18n.t('adminusers.all') }}</option>
+          @for (d of campaignDomains(); track d) {
+            <option [value]="d">{{ d }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
     @if (campaigns().length === 0) {
       <div class="empty"><p>{{ i18n.t('admin.camp.empty') }}</p></div>
     } @else {
+      <p class="muted total">{{ i18n.t('admincamp.total', { count: i18n.n(campaignTotal()) }) }}</p>
       <ul class="list">
         @for (c of campaigns(); track c.id) {
           <li class="card item" [attr.data-tone]="campTone(c.status)">
@@ -258,7 +384,7 @@
               <span [class]="'badge ' + campTone(c.status)">{{ i18n.t(campStatusKey(c.status)) }}</span>
             </div>
             <p class="meta muted">
-              {{ c.language?.name ?? i18n.t('common.none') }} · {{ i18n.t(campKindKey(c.kind)) }}
+              {{ c.languageName ?? i18n.t('common.none') }} · {{ i18n.t(campKindKey(c.kind)) }}
               @if (c.domain) {
                 · {{ c.domain }}
               }
@@ -266,6 +392,31 @@
                 · {{ i18n.t('admin.camp.target') }} : {{ i18n.n(c.targetSentences) }}
               }
             </p>
+            @if (c.description) {
+              <p class="desc">{{ c.description }}</p>
+            }
+            <p class="meta">
+              {{
+                i18n.t('admincamp.counts', {
+                  prompts: i18n.n(c.prompts),
+                  submitted: i18n.n(c.recordingsSubmitted),
+                  validated: i18n.n(c.recordingsValidated),
+                  rejected: i18n.n(c.recordingsRejected)
+                })
+              }}
+            </p>
+            @if (campProgress(c); as progress) {
+              <div
+                class="bar"
+                role="progressbar"
+                [attr.aria-valuenow]="progress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                [attr.aria-label]="i18n.t('admincamp.progress')"
+              >
+                <span class="fill" [class.done]="progress >= 100" [style.inline-size.%]="progress"></span>
+              </div>
+            }
             <div class="actions">
               @switch (c.status) {
                 @case ('DRAFT') {
@@ -292,7 +443,49 @@
               >
                 {{ i18n.t('admin.camp.addPrompts') }}
               </button>
+              <button
+                mat-stroked-button
+                type="button"
+                [attr.aria-expanded]="editingCampaign() === c.id"
+                (click)="toggleEditCampaign(c)"
+              >
+                {{ i18n.t('admincamp.edit') }}
+              </button>
             </div>
+            @if (editingCampaign() === c.id) {
+              <form
+                class="form-column prompts"
+                [formGroup]="editCampaignForm"
+                (ngSubmit)="saveCampaign(c)"
+                novalidate
+              >
+                <p class="muted">{{ i18n.t('admincamp.editHint') }}</p>
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ i18n.t('admin.camp.title') }}</mat-label>
+                  <input matInput formControlName="title" maxlength="160" />
+                  @if (editCampaignForm.controls.title.touched && editCampaignForm.controls.title.hasError('required')) {
+                    <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+                  }
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ i18n.t('admin.camp.description') }}</mat-label>
+                  <textarea matInput formControlName="description" rows="3" maxlength="1000"></textarea>
+                </mat-form-field>
+                <div class="two">
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ i18n.t('admin.camp.domain') }}</mat-label>
+                    <input matInput formControlName="domain" maxlength="80" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ i18n.t('admin.camp.target') }}</mat-label>
+                    <input matInput type="number" min="1" formControlName="targetSentences" />
+                  </mat-form-field>
+                </div>
+                <div class="actions">
+                  <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('admindata.saveEdit') }}</button>
+                </div>
+              </form>
+            }
             @if (promptsFor() === c.id) {
               <form class="form-column prompts" [formGroup]="promptsForm" (ngSubmit)="addPrompts(c.id)">
                 <mat-form-field appearance="outline">
@@ -314,6 +507,28 @@
           </li>
         }
       </ul>
+
+      @if (campaignPages() > 1) {
+        <nav class="pager" [attr.aria-label]="i18n.t('adminusers.pages')">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="campaignPage() === 0"
+            (click)="goToCampaignPage(campaignPage() - 1)"
+          >
+            {{ i18n.t('adminusers.prev') }}
+          </button>
+          <span>{{ campaignPage() + 1 }} / {{ campaignPages() }}</span>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="campaignPage() + 1 >= campaignPages()"
+            (click)="goToCampaignPage(campaignPage() + 1)"
+          >
+            {{ i18n.t('adminusers.next') }}
+          </button>
+        </nav>
+      }
     }
   }
 </div>

@@ -70,6 +70,55 @@
   </form>
 }
 
+<div class="filters">
+  <div class="field grow">
+    <label for="ds-search">{{ i18n.t('admindata.search') }}</label>
+    <input
+      id="ds-search"
+      type="search"
+      autocomplete="off"
+      maxlength="100"
+      [placeholder]="i18n.t('admindata.searchHint')"
+      (input)="search($event)"
+    />
+  </div>
+  <div class="field">
+    <label for="ds-lang">{{ i18n.t('admindata.language') }}</label>
+    <select id="ds-lang" (change)="setLanguageFilter($event)">
+      <option value="">{{ i18n.t('adminusers.all') }}</option>
+      @for (l of languages(); track l.id) {
+        <option [value]="l.id">{{ l.name }}</option>
+      }
+    </select>
+  </div>
+  <div class="field">
+    <label for="ds-plan">{{ i18n.t('admindata.plan') }}</label>
+    <select id="ds-plan" (change)="setPlanFilter($event)">
+      <option value="">{{ i18n.t('adminusers.all') }}</option>
+      @for (p of plans; track p) {
+        <option [value]="p">{{ i18n.t(planKey(p)) }}</option>
+      }
+    </select>
+  </div>
+  <div class="field">
+    <label for="ds-domain">{{ i18n.t('admindata.domain') }}</label>
+    <select id="ds-domain" (change)="setDomainFilter($event)">
+      <option value="">{{ i18n.t('adminusers.all') }}</option>
+      @for (d of domains(); track d) {
+        <option [value]="d">{{ d }}</option>
+      }
+    </select>
+  </div>
+  <div class="field">
+    <label for="ds-published">{{ i18n.t('admindata.filterPublished') }}</label>
+    <select id="ds-published" (change)="setPublishedFilter($event)">
+      <option value="all">{{ i18n.t('adminusers.all') }}</option>
+      <option value="yes">{{ i18n.t('admindata.publishedYes') }}</option>
+      <option value="no">{{ i18n.t('admindata.publishedNo') }}</option>
+    </select>
+  </div>
+</div>
+
 @if (loading()) {
   <p class="muted">{{ i18n.t('common.loading') }}</p>
 } @else if (failed()) {
@@ -80,6 +129,7 @@
 } @else if (datasets().length === 0) {
   <div class="empty"><p>{{ i18n.t('admindata.empty') }}</p></div>
 } @else {
+  <p class="muted total">{{ i18n.t('admindata.total', { count: i18n.n(total()) }) }}</p>
   <ul class="list">
     @for (d of datasets(); track d.id) {
       <li class="card item" data-tone="green">
@@ -88,12 +138,53 @@
           <span class="badge accent">{{ i18n.t(planKey(d.plan)) }}</span>
         </div>
         <p class="meta muted">
-          {{ d.language?.name ?? i18n.t('common.none') }}
+          {{ d.languageName ?? i18n.t('common.none') }}
           @if (d.domain) {
             · {{ d.domain }}
           }
         </p>
+        @if (d.description) {
+          <p class="desc">{{ d.description }}</p>
+        }
+
+        @if (d.versions.length === 0) {
+          <p class="meta muted">{{ i18n.t('admindata.noVersions') }}</p>
+        } @else {
+          <ul class="versions">
+            @for (v of d.versions; track v.id) {
+              <li>
+                <span class="v-main">
+                  <strong>{{ v.label }}</strong>
+                  <span [class]="versionTone(v.status)">{{ i18n.t(versionStatusKey(v.status)) }}</span>
+                  <span class="muted">{{ i18n.t(licenseKey(v.license)) }}</span>
+                </span>
+                <span class="muted v-stats">
+                  {{
+                    i18n.t('admindata.versionStats', {
+                      recordings: i18n.n(v.recordings),
+                      hours: i18n.n(v.hours ?? 0, 2),
+                      speakers: i18n.n(v.speakers ?? 0),
+                      purchases: i18n.n(v.purchases)
+                    })
+                  }}
+                </span>
+                <button mat-stroked-button type="button" [disabled]="busy()" (click)="toggleVersion(d, v)">
+                  {{ i18n.t(v.status === 'PUBLISHED' ? 'adminver.withdraw' : 'adminver.republish') }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
         <div class="actions">
+          <button
+            mat-stroked-button
+            type="button"
+            [attr.aria-expanded]="editingFor() === d.id"
+            (click)="toggleEdit(d)"
+          >
+            {{ i18n.t('admindata.edit') }}
+          </button>
           <button
             mat-stroked-button
             type="button"
@@ -103,6 +194,40 @@
             {{ i18n.t('admindata.publish') }}
           </button>
         </div>
+
+        @if (editingFor() === d.id) {
+          <form class="form-column prompts" [formGroup]="editForm" (ngSubmit)="saveEdit(d)" novalidate>
+            <p class="muted">{{ i18n.t('admindata.editHint') }}</p>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ i18n.t('admindata.title') }}</mat-label>
+              <input matInput formControlName="title" maxlength="120" />
+              @if (editForm.controls.title.touched && editForm.controls.title.hasError('required')) {
+                <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ i18n.t('admindata.description') }}</mat-label>
+              <textarea matInput formControlName="description" rows="3" maxlength="1000"></textarea>
+            </mat-form-field>
+            <div class="two">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ i18n.t('admindata.domain') }}</mat-label>
+                <input matInput formControlName="domain" maxlength="80" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ i18n.t('admindata.plan') }}</mat-label>
+                <mat-select formControlName="plan">
+                  @for (p of plans; track p) {
+                    <mat-option [value]="p">{{ i18n.t(planKey(p)) }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="actions">
+              <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('admindata.saveEdit') }}</button>
+            </div>
+          </form>
+        }
 
         @if (publishingFor() === d.id) {
           <form class="form-column prompts" [formGroup]="versionForm" (ngSubmit)="publish(d)" novalidate>
@@ -143,4 +268,16 @@
       </li>
     }
   </ul>
+
+  @if (pages() > 1) {
+    <nav class="pager" [attr.aria-label]="i18n.t('adminusers.pages')">
+      <button mat-stroked-button type="button" [disabled]="page() === 0" (click)="goTo(page() - 1)">
+        {{ i18n.t('adminusers.prev') }}
+      </button>
+      <span>{{ page() + 1 }} / {{ pages() }}</span>
+      <button mat-stroked-button type="button" [disabled]="page() + 1 >= pages()" (click)="goTo(page() + 1)">
+        {{ i18n.t('adminusers.next') }}
+      </button>
+    </nav>
+  }
 }

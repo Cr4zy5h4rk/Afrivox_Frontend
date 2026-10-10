@@ -47,6 +47,21 @@ export interface AdminRequest {
   quoteAmountFcfa: number | null;
   createdAt: string;
   language: AdminLanguage | null;
+  /** Identifiant du compte demandeur. */
+  requesterLogin: string | null;
+}
+
+export interface AdminRequestFilter {
+  query: string;
+  status: RequestStatus | '';
+  sector: string;
+  languageId: number | null;
+  usageKind: 'COMMERCIAL' | 'RESEARCH' | '';
+}
+
+export interface AdminRequestPage {
+  items: AdminRequest[];
+  total: number;
 }
 
 export interface AdminCampaign {
@@ -59,6 +74,37 @@ export interface AdminCampaign {
   targetSentences: number | null;
   createdAt: string;
   language: AdminLanguage | null;
+}
+
+/** Campagne avec ses compteurs, telle que renvoyée par `/api/admin/campaigns`. */
+export interface AdminCampaignRow {
+  id: number;
+  title: string;
+  description: string | null;
+  domain: string | null;
+  kind: CampaignKind;
+  status: CampaignStatus;
+  targetSentences: number | null;
+  createdAt: string;
+  languageId: number | null;
+  languageName: string | null;
+  prompts: number;
+  recordingsSubmitted: number;
+  recordingsValidated: number;
+  recordingsRejected: number;
+}
+
+export interface AdminCampaignFilter {
+  query: string;
+  languageId: number | null;
+  kind: CampaignKind | '';
+  status: CampaignStatus | '';
+  domain: string;
+}
+
+export interface AdminCampaignPage {
+  items: AdminCampaignRow[];
+  total: number;
 }
 
 export interface NewCampaign {
@@ -78,10 +124,22 @@ export interface NewCampaign {
 export class AdminService {
   private readonly http = inject(HttpClient);
 
-  requests(): Observable<AdminRequest[]> {
+  /** Une page de demandes filtrée côté serveur (récentes d'abord). */
+  requestOverview(filter: AdminRequestFilter, page: number, size: number): Observable<AdminRequestPage> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (filter.query.trim()) params = params.set('q', filter.query.trim());
+    if (filter.status) params = params.set('status', filter.status);
+    if (filter.sector) params = params.set('sector', filter.sector);
+    if (filter.languageId !== null) params = params.set('languageId', filter.languageId);
+    if (filter.usageKind) params = params.set('usageKind', filter.usageKind);
     return this.http
-      .get<AdminRequest[]>('/api/dataset-requests')
-      .pipe(map((list) => [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt))));
+      .get<AdminRequest[]>('/api/admin/requests', { params, observe: 'response' })
+      .pipe(
+        map((response) => ({
+          items: response.body ?? [],
+          total: Number(response.headers.get('X-Total-Count') ?? response.body?.length ?? 0),
+        })),
+      );
   }
 
   /** Mise à jour partielle (PATCH) : seuls le statut et le montant du devis changent. */
@@ -100,6 +158,36 @@ export class AdminService {
     return this.http
       .get<AdminCampaign[]>('/api/campaigns')
       .pipe(map((list) => [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt))));
+  }
+
+  /** Une page de campagnes avec compteurs, filtrée côté serveur (récentes d'abord). */
+  campaignOverview(filter: AdminCampaignFilter, page: number, size: number): Observable<AdminCampaignPage> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (filter.query.trim()) params = params.set('q', filter.query.trim());
+    if (filter.languageId !== null) params = params.set('languageId', filter.languageId);
+    if (filter.kind) params = params.set('kind', filter.kind);
+    if (filter.status) params = params.set('status', filter.status);
+    if (filter.domain) params = params.set('domain', filter.domain);
+    return this.http
+      .get<AdminCampaignRow[]>('/api/admin/campaigns', { params, observe: 'response' })
+      .pipe(
+        map((response) => ({
+          items: response.body ?? [],
+          total: Number(response.headers.get('X-Total-Count') ?? response.body?.length ?? 0),
+        })),
+      );
+  }
+
+  campaignDomains(): Observable<string[]> {
+    return this.http.get<string[]>('/api/admin/campaigns/domains');
+  }
+
+  /** Modifie la fiche d'une campagne ; langue et type ne changent plus (des enregistrements s'y rattachent). */
+  updateCampaign(
+    id: number,
+    change: { title: string; description: string | null; domain: string | null; targetSentences: number | null },
+  ): Observable<unknown> {
+    return this.http.patch(`/api/campaigns/${id}`, { id, ...change });
   }
 
   /** Une nouvelle campagne naît en brouillon : elle n'est visible des contributeurs qu'une fois activée. */
@@ -192,6 +280,41 @@ export class AdminService {
     return this.http.post<PublishedVersion>(`/api/admin/datasets/${datasetId}/versions`, input);
   }
 
+  /** Une page de datasets avec leurs versions et compteurs, filtrée côté serveur (titre A→Z). */
+  datasetOverview(filter: AdminDatasetFilter, page: number, size: number): Observable<AdminDatasetPage> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (filter.query.trim()) params = params.set('q', filter.query.trim());
+    if (filter.languageId !== null) params = params.set('languageId', filter.languageId);
+    if (filter.plan) params = params.set('plan', filter.plan);
+    if (filter.domain) params = params.set('domain', filter.domain);
+    if (filter.published !== null) params = params.set('published', filter.published);
+    return this.http
+      .get<AdminDatasetRow[]>('/api/admin/datasets', { params, observe: 'response' })
+      .pipe(
+        map((response) => ({
+          items: response.body ?? [],
+          total: Number(response.headers.get('X-Total-Count') ?? response.body?.length ?? 0),
+        })),
+      );
+  }
+
+  datasetDomains(): Observable<string[]> {
+    return this.http.get<string[]>('/api/admin/datasets/domains');
+  }
+
+  /** Modifie la fiche (titre, description, domaine, formule) ; l'adresse (slug) et la langue ne changent plus. */
+  updateDataset(
+    id: number,
+    change: { title: string; description: string | null; domain: string | null; plan: DatasetPlanKind },
+  ): Observable<unknown> {
+    return this.http.patch(`/api/datasets/${id}`, { id, ...change });
+  }
+
+  /** Retire (WITHDRAWN) ou remet en ligne (PUBLISHED) une version ; son contenu ne change jamais. */
+  setVersionStatus(versionId: number, status: 'PUBLISHED' | 'WITHDRAWN'): Observable<unknown> {
+    return this.http.put(`/api/admin/datasets/versions/${versionId}/status`, { status });
+  }
+
   /** Une page d'utilisateurs, les plus récents d'abord ; `query` filtre sur l'identifiant ou l'e-mail (côté serveur). */
   users(filter: AdminUserFilter, page: number, size: number): Observable<AdminUserPage> {
     let params = new HttpParams().set('page', page).set('size', size).set('sort', 'createdDate,desc');
@@ -282,6 +405,48 @@ export interface AdminDataset {
   domain: string | null;
   plan: DatasetPlanKind;
   language: AdminLanguage | null;
+}
+
+export type VersionStatusKind = 'DRAFT' | 'PUBLISHED' | 'WITHDRAWN';
+
+export interface AdminVersionRow {
+  id: number;
+  label: string;
+  license: LicenseKindValue;
+  status: VersionStatusKind;
+  hours: number | null;
+  speakers: number | null;
+  /** Enregistrements figés dans la version. */
+  recordings: number;
+  pricePerHourFcfa: number | null;
+  purchases: number;
+  createdAt: string | null;
+}
+
+export interface AdminDatasetRow {
+  id: number;
+  slug: string;
+  title: string;
+  description: string | null;
+  domain: string | null;
+  plan: DatasetPlanKind;
+  languageId: number | null;
+  languageName: string | null;
+  versions: AdminVersionRow[];
+}
+
+export interface AdminDatasetFilter {
+  query: string;
+  languageId: number | null;
+  plan: DatasetPlanKind | '';
+  domain: string;
+  /** Vrai = au moins une version publiée ; faux = aucune ; nul = pas de filtre. */
+  published: boolean | null;
+}
+
+export interface AdminDatasetPage {
+  items: AdminDatasetRow[];
+  total: number;
 }
 
 export interface NewDataset {

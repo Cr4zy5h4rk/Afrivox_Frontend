@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Observable } from 'rxjs';
 import {
-  AdminCampaign,
+  AdminCampaignRow,
   AdminLanguage,
   AdminRequest,
   AdminService,
@@ -28,6 +28,10 @@ type Tab = 'requests' | 'campaigns' | 'languages' | 'datasets' | 'users';
 
 /** Taille maximale d'un fichier de phrases importé (lu en mémoire dans le navigateur). */
 const MAX_IMPORT_BYTES = 512 * 1024;
+
+const CAMPAIGN_PAGE_SIZE = 20;
+const REQUEST_PAGE_SIZE = 20;
+const SEARCH_DELAY_MS = 300;
 
 interface Notice {
   text: TranslationKey;
@@ -68,7 +72,35 @@ export class AdminPage implements OnInit {
   protected readonly notice = signal<Notice | null>(null);
 
   protected readonly requests = signal<AdminRequest[]>([]);
-  protected readonly campaigns = signal<AdminCampaign[]>([]);
+  protected readonly requestTotal = signal(0);
+  protected readonly requestPage = signal(0);
+  protected readonly requestPages = computed(() => Math.max(1, Math.ceil(this.requestTotal() / REQUEST_PAGE_SIZE)));
+  // Filtres cumulables, appliqués côté serveur
+  protected readonly reqQuery = signal('');
+  protected readonly reqStatus = signal<RequestStatus | ''>('');
+  protected readonly reqSector = signal('');
+  protected readonly reqLanguage = signal<number | null>(null);
+  protected readonly reqUsage = signal<'COMMERCIAL' | 'RESEARCH' | ''>('');
+  protected readonly requestStatuses: readonly RequestStatus[] = [...REQUEST_FLOW, 'REJECTED'];
+  protected readonly sectors = ['BANK', 'TELECOM', 'HEALTH', 'PUBLIC', 'EDUCATION', 'STARTUP', 'RESEARCH', 'OTHER'];
+  protected readonly campaigns = signal<AdminCampaignRow[]>([]);
+  protected readonly campaignTotal = signal(0);
+  protected readonly campaignPage = signal(0);
+  protected readonly campaignPages = computed(() =>
+    Math.max(1, Math.ceil(this.campaignTotal() / CAMPAIGN_PAGE_SIZE)),
+  );
+  protected readonly campaignDomains = signal<string[]>([]);
+  // Filtres cumulables, appliqués côté serveur
+  protected readonly campQuery = signal('');
+  protected readonly campLanguage = signal<number | null>(null);
+  protected readonly campKind = signal<CampaignKind | ''>('');
+  protected readonly campStatus = signal<CampaignStatus | ''>('');
+  protected readonly campDomain = signal('');
+  /** Campagne dont le formulaire de modification est ouvert. */
+  protected readonly editingCampaign = signal<number | null>(null);
+  protected readonly statuses: CampaignStatus[] = ['DRAFT', 'ACTIVE', 'CLOSED'];
+  private searchTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly destroyRef = inject(DestroyRef);
   protected readonly languages = signal<AdminLanguage[]>([]);
   /** Montants de devis en cours de saisie, par identifiant de demande. */
   protected readonly quotes = signal<Record<number, string>>({});
@@ -105,24 +137,196 @@ export class AdminPage implements OnInit {
   protected readonly createStats = computed(() => parseSentences(this.createText()));
   protected readonly addStats = computed(() => parseSentences(this.addText()));
 
+  protected readonly editCampaignForm = inject(FormBuilder).nonNullable.group({
+    title: ['', [Validators.required, Validators.maxLength(160)]],
+    description: ['', Validators.maxLength(1000)],
+    domain: ['', Validators.maxLength(80)],
+    targetSentences: [null as number | null, [Validators.min(1), Validators.max(100000)]],
+  });
+
   ngOnInit(): void {
+    // Pas de requête de recherche qui part après la fermeture de la page
+    this.destroyRef.onDestroy(() => clearTimeout(this.searchTimer));
     this.load();
   }
 
   protected load(): void {
     this.loading.set(true);
     this.failed.set(false);
-    let pending = 3;
-    const done = () => {
-      if (--pending === 0) this.loading.set(false);
+    this.loadCampaigns();
+    this.loadRequests();
+    this.admin.languages().subscribe({
+      next: (l) => {
+        this.languages.set(l);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.failed.set(true);
+        this.loading.set(false);
+      },
+    });
+  }
+
+  /** Recharge la page courante de demandes (filtres inclus). */
+  protected loadRequests(): void {
+    const filter = {
+      query: this.reqQuery(),
+      status: this.reqStatus(),
+      sector: this.reqSector(),
+      languageId: this.reqLanguage(),
+      usageKind: this.reqUsage(),
     };
-    const fail = () => {
-      this.failed.set(true);
-      done();
+    this.admin.requestOverview(filter, this.requestPage(), REQUEST_PAGE_SIZE).subscribe({
+      next: ({ items, total }) => {
+        this.requests.set(items);
+        this.requestTotal.set(total);
+      },
+      error: () => this.failed.set(true),
+    });
+  }
+
+  protected searchRequests(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.reqQuery.set(value);
+      this.refilterRequests();
+    }, SEARCH_DELAY_MS);
+  }
+
+  protected setReqStatus(event: Event): void {
+    this.reqStatus.set((event.target as HTMLSelectElement).value as RequestStatus | '');
+    this.refilterRequests();
+  }
+
+  protected setReqSector(event: Event): void {
+    this.reqSector.set((event.target as HTMLSelectElement).value);
+    this.refilterRequests();
+  }
+
+  protected setReqLanguage(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.reqLanguage.set(value === '' ? null : Number(value));
+    this.refilterRequests();
+  }
+
+  protected setReqUsage(event: Event): void {
+    this.reqUsage.set((event.target as HTMLSelectElement).value as 'COMMERCIAL' | 'RESEARCH' | '');
+    this.refilterRequests();
+  }
+
+  /** Un filtre qui change ramène à la première page. */
+  private refilterRequests(): void {
+    this.requestPage.set(0);
+    this.loadRequests();
+  }
+
+  protected goToRequestPage(page: number): void {
+    if (page < 0 || page >= this.requestPages()) return;
+    this.requestPage.set(page);
+    this.loadRequests();
+  }
+
+  /** Recharge la page courante de campagnes (filtres inclus) ; les compteurs viennent du serveur. */
+  protected loadCampaigns(): void {
+    const filter = {
+      query: this.campQuery(),
+      languageId: this.campLanguage(),
+      kind: this.campKind(),
+      status: this.campStatus(),
+      domain: this.campDomain(),
     };
-    this.admin.requests().subscribe({ next: (r) => (this.requests.set(r), done()), error: fail });
-    this.admin.campaigns().subscribe({ next: (c) => (this.campaigns.set(c), done()), error: fail });
-    this.admin.languages().subscribe({ next: (l) => (this.languages.set(l), done()), error: fail });
+    this.admin.campaignOverview(filter, this.campaignPage(), CAMPAIGN_PAGE_SIZE).subscribe({
+      next: ({ items, total }) => {
+        this.campaigns.set(items);
+        this.campaignTotal.set(total);
+      },
+      error: () => this.failed.set(true),
+    });
+    this.admin.campaignDomains().subscribe({ next: (d) => this.campaignDomains.set(d), error: () => undefined });
+  }
+
+  protected searchCampaigns(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.campQuery.set(value);
+      this.refilterCampaigns();
+    }, SEARCH_DELAY_MS);
+  }
+
+  protected setCampLanguage(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.campLanguage.set(value === '' ? null : Number(value));
+    this.refilterCampaigns();
+  }
+
+  protected setCampKind(event: Event): void {
+    this.campKind.set((event.target as HTMLSelectElement).value as CampaignKind | '');
+    this.refilterCampaigns();
+  }
+
+  protected setCampStatusFilter(event: Event): void {
+    this.campStatus.set((event.target as HTMLSelectElement).value as CampaignStatus | '');
+    this.refilterCampaigns();
+  }
+
+  protected setCampDomain(event: Event): void {
+    this.campDomain.set((event.target as HTMLSelectElement).value);
+    this.refilterCampaigns();
+  }
+
+  /** Un filtre qui change ramène à la première page. */
+  private refilterCampaigns(): void {
+    this.campaignPage.set(0);
+    this.loadCampaigns();
+  }
+
+  protected goToCampaignPage(page: number): void {
+    if (page < 0 || page >= this.campaignPages()) return;
+    this.campaignPage.set(page);
+    this.loadCampaigns();
+  }
+
+  /** Part des phrases déjà enregistrées par rapport à l'objectif, plafonnée à 100 % (barre de progression). */
+  protected campProgress(c: AdminCampaignRow): number | null {
+    return c.targetSentences ? Math.min(100, Math.round((c.recordingsValidated / c.targetSentences) * 100)) : null;
+  }
+
+  protected toggleEditCampaign(c: AdminCampaignRow): void {
+    if (this.editingCampaign() === c.id) {
+      this.editingCampaign.set(null);
+      return;
+    }
+    this.editingCampaign.set(c.id);
+    this.promptsFor.set(null);
+    this.notice.set(null);
+    this.editCampaignForm.reset({
+      title: c.title,
+      description: c.description ?? '',
+      domain: c.domain ?? '',
+      targetSentences: c.targetSentences,
+    });
+  }
+
+  protected saveCampaign(c: AdminCampaignRow): void {
+    if (this.editCampaignForm.invalid || this.busy()) {
+      this.editCampaignForm.markAllAsTouched();
+      return;
+    }
+    const value = this.editCampaignForm.getRawValue();
+    this.run(
+      this.admin.updateCampaign(c.id, {
+        title: value.title.trim(),
+        description: value.description.trim() || null,
+        domain: value.domain.trim() || null,
+        targetSentences: value.targetSentences,
+      }),
+      () => {
+        this.editingCampaign.set(null);
+        this.loadCampaigns();
+      },
+    );
   }
 
   protected setTab(tab: Tab): void {
@@ -177,8 +381,8 @@ export class AdminPage implements OnInit {
         status,
         quoteAmountFcfa: this.canQuote(request) ? amount : request.quoteAmountFcfa,
       }),
-      (updated) =>
-        this.requests.update((list) => list.map((r) => (r.id === updated.id ? updated : r))),
+      // Recharge la page : le nouvel état peut sortir la demande du filtre en cours
+      () => this.loadRequests(),
     );
   }
 
@@ -245,7 +449,7 @@ export class AdminPage implements OnInit {
       })
       .subscribe({
         next: (created) => {
-          this.campaigns.update((list) => [created, ...list]);
+          this.loadCampaigns();
           this.campaignForm.reset({ kind: 'OPEN' });
           this.showForm.set(false);
           if (sentences.valid.length === 0) {
@@ -262,14 +466,14 @@ export class AdminPage implements OnInit {
       });
   }
 
-  protected setCampaignStatus(campaign: AdminCampaign, status: CampaignStatus): void {
-    this.run(this.admin.setCampaignStatus(campaign.id, status), (updated) =>
-      this.campaigns.update((list) => list.map((c) => (c.id === updated.id ? updated : c))),
-    );
+  protected setCampaignStatus(campaign: AdminCampaignRow, status: CampaignStatus): void {
+    // Recharge la page : l'état change aussi ce que les filtres laissent voir
+    this.run(this.admin.setCampaignStatus(campaign.id, status), () => this.loadCampaigns());
   }
 
   protected togglePrompts(id: number): void {
     this.promptsFor.update((current) => (current === id ? null : id));
+    this.editingCampaign.set(null);
     this.promptsForm.reset();
     this.notice.set(null);
   }
@@ -312,6 +516,7 @@ export class AdminPage implements OnInit {
       next: (failedSentences) => {
         const added = sentences.length - failedSentences.length;
         this.promptsForm.reset({ text: failedSentences.join('\n') });
+        this.loadCampaigns();
         if (failedSentences.length === 0) {
           if (this.promptsFor() === campaignId) this.promptsFor.set(null);
           this.notice.set({ text: successText, ok: true, params: { count: added } });
