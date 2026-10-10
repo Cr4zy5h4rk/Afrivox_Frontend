@@ -3,13 +3,22 @@ import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, si
 import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { ApiError, toApiError } from '../../core/api-error';
-import { CatalogService, DatasetDetail, LicenseKind } from '../../core/api/catalog.service';
+import {
+  CatalogService,
+  DatasetDetail,
+  DatasetTechnical,
+  DurationBucket,
+  LicenseKind,
+  PreviewRow,
+} from '../../core/api/catalog.service';
 import { PurchaseService, Quote } from '../../core/api/purchase.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { TranslationKey } from '../../core/i18n/translations';
 
 const LICENSES: LicenseKind[] = ['PROTOTYPE', 'RESEARCH', 'COMMERCIAL'];
+
+type Tab = 'card' | 'stats' | 'viewer' | 'files' | 'models';
 
 /** Fiche d'un dataset : versions publiées, détails, et parcours d'achat (licence, acceptation, paiement simulé). */
 @Component({
@@ -31,6 +40,128 @@ export class DatasetDetailPage implements OnInit {
 
   protected readonly detail = signal<DatasetDetail | null>(null);
   protected readonly state = signal<'loading' | 'ready' | 'notfound' | 'failed'>('loading');
+
+  // ---- Vue technique (onglets façon Hugging Face) ----
+  protected readonly tab = signal<Tab>('card');
+  /** Version dont on regarde les chiffres ; `null` = la plus récente. */
+  protected readonly techVersion = signal<string | null>(null);
+  protected readonly tech = signal<DatasetTechnical | null>(null);
+  protected readonly techState = signal<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
+  protected readonly preview = signal<PreviewRow[] | null>(null);
+  protected readonly previewState = signal<'idle' | 'loading' | 'ready' | 'failed'>('idle');
+  protected readonly copied = signal(false);
+
+  /** Hauteur relative des barres de l'histogramme (la tranche la plus fournie vaut 100 %). */
+  protected readonly histogramMax = computed(() =>
+    Math.max(1, ...(this.tech()?.stats.durationHistogram ?? []).map((b) => b.count)),
+  );
+
+  /** Catégorie de taille, comme les étiquettes « size_categories » de Hugging Face. */
+  protected readonly sizeCategory = computed(() => {
+    const hours = this.tech()?.stats.hours ?? this.detail()?.dataset.latestVersion?.hours ?? null;
+    if (hours === null) return null;
+    return hours < 1 ? '< 1 h' : hours < 10 ? '1–10 h' : hours < 100 ? '10–100 h' : '> 100 h';
+  });
+
+  /** Extrait de chargement : il décrit l'archive réelle (colonnes du manifeste, découpages par fichier). */
+  protected readonly snippet = computed(() => {
+    const t = this.tech();
+    if (!t) return '';
+    return [
+      'import zipfile, pandas as pd',
+      '',
+      `with zipfile.ZipFile("${t.slug}-${t.version}.zip") as z:`,
+      '    z.extractall("data")',
+      '',
+      'train = pd.read_csv("data/splits/train.tsv", sep="\\t")',
+      'dev = pd.read_csv("data/splits/dev.tsv", sep="\\t")',
+      'test = pd.read_csv("data/splits/test.tsv", sep="\\t")',
+      '',
+      `# colonnes : ${t.columns.join(", ")}`,
+      '# audio : data/<colonne "file">',
+      'print(train.head())',
+    ].join('\n');
+  });
+
+  protected readonly tabs: { id: Tab; label: TranslationKey }[] = [
+    { id: 'card', label: 'dsx.tab.card' },
+    { id: 'stats', label: 'dsx.tab.stats' },
+    { id: 'viewer', label: 'dsx.tab.viewer' },
+    { id: 'files', label: 'dsx.tab.files' },
+    { id: 'models', label: 'dsx.tab.models' },
+  ];
+
+  protected setTab(tab: Tab): void {
+    this.tab.set(tab);
+    if (tab === 'viewer') this.loadPreview();
+  }
+
+  protected setTechVersion(label: string): void {
+    this.techVersion.set(label);
+    this.preview.set(null);
+    this.previewState.set('idle');
+    this.loadTechnical();
+    if (this.tab() === 'viewer') this.loadPreview();
+  }
+
+  private loadTechnical(): void {
+    this.techState.set('loading');
+    this.catalog.technical(this.slug(), this.techVersion() ?? undefined).subscribe({
+      next: (t) => {
+        this.tech.set(t);
+        if (this.techVersion() === null) this.techVersion.set(t.version);
+        this.techState.set('ready');
+      },
+      // 404 : pas de version publiée, ou archive absente du serveur
+      error: () => this.techState.set('unavailable'),
+    });
+  }
+
+  private loadPreview(): void {
+    if (!this.auth.isAuthenticated() || this.previewState() === 'loading' || this.preview() !== null) return;
+    this.previewState.set('loading');
+    this.catalog.preview(this.slug(), this.techVersion() ?? undefined).subscribe({
+      next: (rows) => {
+        this.preview.set(rows);
+        this.previewState.set('ready');
+      },
+      error: () => this.previewState.set('failed'),
+    });
+  }
+
+  protected async copy(text: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(text);
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 1500);
+    } catch {
+      // presse-papiers indisponible (contexte non sécurisé) : l'utilisateur sélectionne le texte à la main
+    }
+  }
+
+  protected barHeight(bucket: DurationBucket): number {
+    return Math.round((bucket.count / this.histogramMax()) * 100);
+  }
+
+  protected bucketLabel(bucket: DurationBucket): string {
+    return bucket.toSec === null ? `${bucket.fromSec}+` : `${bucket.fromSec}–${bucket.toSec}`;
+  }
+
+  /** Taille lisible (octets → Ko, Mo, Go), sur 1 décimale. */
+  protected bytes(value: number): string {
+    const units = ['o', 'Ko', 'Mo', 'Go'];
+    let v = value;
+    let i = 0;
+    while (v >= 1024 && i < units.length - 1) {
+      v /= 1024;
+      i++;
+    }
+    return `${this.i18n.n(v, i === 0 ? 0 : 1)} ${units[i]}`;
+  }
+
+  protected percent(part: number, total: number): string {
+    return total > 0 ? `${this.i18n.n((part / total) * 100, 0)} %` : this.i18n.t('common.none');
+  }
 
   protected readonly licenses = LICENSES;
   /** Version choisie pour l'achat (null = panneau fermé). */
@@ -123,6 +254,9 @@ export class DatasetDetailPage implements OnInit {
       next: (detail) => {
         this.detail.set(detail);
         this.state.set('ready');
+        // Sans version publiée, il n'y a pas d'archive à analyser : les onglets techniques restent vides
+        if (detail.versions.length > 0) this.loadTechnical();
+        else this.techState.set('unavailable');
       },
       error: (error: unknown) =>
         this.state.set(error instanceof HttpErrorResponse && error.status === 404 ? 'notfound' : 'failed'),

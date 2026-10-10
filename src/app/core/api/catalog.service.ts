@@ -50,6 +50,84 @@ export interface DatasetSummary {
   validatedHours: number;
 }
 
+export interface DurationBucket {
+  fromSec: number;
+  /** `null` pour la dernière tranche (ouverte). */
+  toSec: number | null;
+  count: number;
+}
+
+export interface TextStats {
+  meanChars: number;
+  meanWords: number;
+  totalWords: number;
+  vocabulary: number;
+}
+
+export interface TechStats {
+  recordings: number;
+  speakers: number;
+  hours: number;
+  minSec: number;
+  meanSec: number;
+  medianSec: number;
+  maxSec: number;
+  minPerSpeaker: number;
+  medianPerSpeaker: number;
+  maxPerSpeaker: number;
+  durationHistogram: DurationBucket[];
+  text: TextStats;
+}
+
+export interface SplitStat {
+  name: 'train' | 'dev' | 'test';
+  recordings: number;
+  speakers: number;
+  hours: number;
+}
+
+export interface AudioFormatView {
+  container: string;
+  sampleRateHz: number | null;
+  channels: number | null;
+  bitsPerSample: number | null;
+  encoding: string | null;
+  /** Fichiers de l'échantillon d'en-têtes lus qui ont ce format. */
+  filesInspected: number;
+}
+
+export interface ArchiveFile {
+  path: string;
+  sizeBytes: number;
+}
+
+/** Vue technique d'une version, lue dans l'archive publiée (voir DatasetTechnicalService). */
+export interface DatasetTechnical {
+  slug: string;
+  version: string;
+  license: LicenseKind;
+  publishedAt: string;
+  sha256: string;
+  archiveBytes: number;
+  stats: TechStats;
+  splits: SplitStat[];
+  audioFormats: AudioFormatView[];
+  columns: string[];
+  files: ArchiveFile[];
+  audioFiles: number;
+  audioBytes: number;
+  models: ModelSummary[];
+}
+
+export interface PreviewRow {
+  id: number;
+  file: string;
+  speaker: string;
+  durationMs: number;
+  text: string;
+  split: string;
+}
+
 export interface DatasetDetail {
   dataset: DatasetSummary;
   versions: VersionView[];
@@ -155,6 +233,20 @@ export class CatalogService {
 
   dataset(slug: string): Observable<DatasetDetail> {
     return this.http.get<DatasetDetail>(`/api/public/datasets/${encodeURIComponent(slug)}`);
+  }
+
+  /** Statistiques techniques d'une version (la dernière si `version` est omis) ; 404 sans version publiée. */
+  technical(slug: string, version?: string): Observable<DatasetTechnical> {
+    return this.http.get<DatasetTechnical>(`/api/public/datasets/${encodeURIComponent(slug)}/technical`, {
+      params: toParams({ version }),
+    });
+  }
+
+  /** Premières lignes (texte et durée, sans audio) ; exige un compte connecté. */
+  preview(slug: string, version?: string): Observable<PreviewRow[]> {
+    return this.http.get<PreviewRow[]>(`/api/catalog/datasets/${encodeURIComponent(slug)}/preview`, {
+      params: toParams({ version }),
+    });
   }
 
   models(filters: {

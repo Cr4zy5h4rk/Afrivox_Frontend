@@ -37,11 +37,291 @@
             <span class="badge on-dark">{{ i18n.t(planKey(d.plan)) }}</span>
           </div>
           <h1>{{ d.title }}</h1>
+          <p class="slug">{{ d.slug }}</p>
+          <ul class="tags" [attr.aria-label]="i18n.t('dsx.tags')">
+            <li><span class="k">{{ i18n.t('dsx.tag.modality') }}</span> {{ i18n.t('dsx.tag.audioText') }}</li>
+            <li><span class="k">{{ i18n.t('dsx.tag.task') }}</span> ASR</li>
+            @if (d.languageCode) {
+              <li><span class="k">{{ i18n.t('fact.language') }}</span> {{ d.languageCode }}</li>
+            }
+            @if (d.domain) {
+              <li><span class="k">{{ i18n.t('fact.domain') }}</span> {{ d.domain }}</li>
+            }
+            @if (sizeCategory(); as size) {
+              <li><span class="k">{{ i18n.t('dsx.tag.size') }}</span> {{ size }}</li>
+            }
+            @if (d.latestVersion; as lv) {
+              <li><span class="k">{{ i18n.t('col.license') }}</span> {{ i18n.t(licenseKey(lv.license)) }}</li>
+            }
+          </ul>
         </div>
       </section>
 
       <div class="container layout">
         <div class="main">
+          <div class="tabs" role="tablist">
+            @for (t of tabs; track t.id) {
+              <button
+                type="button"
+                role="tab"
+                class="tab"
+                [class.active]="tab() === t.id"
+                [attr.aria-selected]="tab() === t.id"
+                (click)="setTab(t.id)"
+              >
+                {{ i18n.t(t.label) }}
+                @if (t.id === 'models' && tech()) {
+                  <span class="count">{{ tech()!.models.length }}</span>
+                }
+              </button>
+            }
+          </div>
+
+          @if (tab() !== 'card') {
+            @if (techState() === 'loading' || techState() === 'idle') {
+              <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+            } @else if (techState() === 'unavailable') {
+              <div class="empty"><p>{{ i18n.t('dsx.unavailable') }}</p></div>
+            } @else if (tech(); as t) {
+              <div class="version-pick">
+                <label for="tech-version">{{ i18n.t('col.version') }}</label>
+                <select id="tech-version" (change)="setTechVersion($any($event.target).value)">
+                  @for (v of dt.versions; track v.label) {
+                    <option [value]="v.label" [selected]="v.label === t.version">{{ v.label }}</option>
+                  }
+                </select>
+                <span class="muted small">{{ i18n.date(t.publishedAt) }} · {{ i18n.t(licenseKey(t.license)) }}</span>
+              </div>
+
+              @switch (tab()) {
+                @case ('stats') {
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.overview') }}</h2>
+                    <div class="tiles">
+                      <div class="tile"><span>{{ i18n.t('dsx.recordings') }}</span><strong>{{ i18n.n(t.stats.recordings) }}</strong></div>
+                      <div class="tile"><span>{{ i18n.t('fact.hours') }}</span><strong>{{ i18n.n(t.stats.hours, 2) }}</strong></div>
+                      <div class="tile"><span>{{ i18n.t('col.speakers') }}</span><strong>{{ i18n.n(t.stats.speakers) }}</strong></div>
+                      <div class="tile"><span>{{ i18n.t('dsx.meanDuration') }}</span><strong>{{ i18n.n(t.stats.meanSec, 1) }} s</strong></div>
+                    </div>
+                  </section>
+
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.durations') }}</h2>
+                    <div class="histogram" role="img" [attr.aria-label]="i18n.t('dsx.durations')">
+                      @for (b of t.stats.durationHistogram; track b.fromSec) {
+                        <div class="col" [attr.title]="bucketLabel(b) + ' s : ' + b.count">
+                          <span class="num">{{ i18n.n(b.count) }}</span>
+                          <span class="bar" [style.block-size.%]="barHeight(b)"></span>
+                          <span class="lbl">{{ bucketLabel(b) }}</span>
+                        </div>
+                      }
+                    </div>
+                    <p class="muted small">{{ i18n.t('dsx.durationsUnit') }}</p>
+                    <dl class="kv">
+                      <div><dt>{{ i18n.t('dsx.min') }}</dt><dd>{{ i18n.n(t.stats.minSec, 1) }} s</dd></div>
+                      <div><dt>{{ i18n.t('dsx.median') }}</dt><dd>{{ i18n.n(t.stats.medianSec, 1) }} s</dd></div>
+                      <div><dt>{{ i18n.t('dsx.mean') }}</dt><dd>{{ i18n.n(t.stats.meanSec, 1) }} s</dd></div>
+                      <div><dt>{{ i18n.t('dsx.max') }}</dt><dd>{{ i18n.n(t.stats.maxSec, 1) }} s</dd></div>
+                    </dl>
+                  </section>
+
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.splits') }}</h2>
+                    <div class="table-wrap">
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th>{{ i18n.t('dsx.split') }}</th>
+                            <th>{{ i18n.t('dsx.recordings') }}</th>
+                            <th>{{ i18n.t('col.speakers') }}</th>
+                            <th>{{ i18n.t('fact.hours') }}</th>
+                            <th>{{ i18n.t('dsx.share') }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (s of t.splits; track s.name) {
+                            <tr>
+                              <td><code>{{ s.name }}</code></td>
+                              <td class="num">{{ i18n.n(s.recordings) }}</td>
+                              <td class="num">{{ i18n.n(s.speakers) }}</td>
+                              <td class="num">{{ i18n.n(s.hours, 2) }}</td>
+                              <td class="num">{{ percent(s.recordings, t.stats.recordings) }}</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                    @if (t.stats.speakers < 3) {
+                      <p class="muted small">{{ i18n.t('dsx.fewSpeakers') }}</p>
+                    } @else {
+                      <p class="muted small">{{ i18n.t('dsx.splitNote') }}</p>
+                    }
+                  </section>
+
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.speakersTitle') }}</h2>
+                    <dl class="kv">
+                      <div><dt>{{ i18n.t('dsx.min') }}</dt><dd>{{ i18n.n(t.stats.minPerSpeaker) }}</dd></div>
+                      <div><dt>{{ i18n.t('dsx.median') }}</dt><dd>{{ i18n.n(t.stats.medianPerSpeaker, 1) }}</dd></div>
+                      <div><dt>{{ i18n.t('dsx.max') }}</dt><dd>{{ i18n.n(t.stats.maxPerSpeaker) }}</dd></div>
+                    </dl>
+                    <p class="muted small">{{ i18n.t('dsx.speakersNote') }}</p>
+                  </section>
+
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.textTitle') }}</h2>
+                    <dl class="kv">
+                      <div><dt>{{ i18n.t('dsx.meanWords') }}</dt><dd>{{ i18n.n(t.stats.text.meanWords, 1) }}</dd></div>
+                      <div><dt>{{ i18n.t('dsx.meanChars') }}</dt><dd>{{ i18n.n(t.stats.text.meanChars, 1) }}</dd></div>
+                      <div><dt>{{ i18n.t('dsx.totalWords') }}</dt><dd>{{ i18n.n(t.stats.text.totalWords) }}</dd></div>
+                      <div><dt>{{ i18n.t('dsx.vocabulary') }}</dt><dd>{{ i18n.n(t.stats.text.vocabulary) }}</dd></div>
+                    </dl>
+                  </section>
+
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.audioTitle') }}</h2>
+                    @for (f of t.audioFormats; track $index) {
+                      <dl class="kv">
+                        <div><dt>{{ i18n.t('dsx.container') }}</dt><dd>{{ f.container }}</dd></div>
+                        @if (f.sampleRateHz !== null) {
+                          <div><dt>{{ i18n.t('dsx.sampleRate') }}</dt><dd>{{ i18n.n(f.sampleRateHz) }} Hz</dd></div>
+                          <div><dt>{{ i18n.t('dsx.channels') }}</dt><dd>{{ f.channels }}</dd></div>
+                          <div><dt>{{ i18n.t('dsx.bits') }}</dt><dd>{{ f.bitsPerSample }} bits · {{ f.encoding }}</dd></div>
+                        }
+                        <div><dt>{{ i18n.t('dsx.inspected') }}</dt><dd>{{ i18n.n(f.filesInspected) }}</dd></div>
+                      </dl>
+                    }
+                    <p class="muted small">{{ i18n.t('dsx.audioNote') }}</p>
+                  </section>
+                }
+
+                @case ('viewer') {
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.viewerTitle') }}</h2>
+                    @if (!auth.isAuthenticated()) {
+                      <p class="muted">{{ i18n.t('dsx.viewerSignin') }}</p>
+                      <a mat-flat-button routerLink="/login">{{ i18n.t('dataset.download.signin') }}</a>
+                    } @else if (previewState() === 'loading') {
+                      <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+                    } @else if (previewState() === 'failed') {
+                      <p class="form-error" role="alert">{{ i18n.t('common.error') }}</p>
+                    } @else if (preview(); as rows) {
+                      <div class="table-wrap">
+                        <table class="table">
+                          <thead>
+                            <tr>
+                              @for (c of t.columns; track c) {
+                                <th>{{ c }}</th>
+                              }
+                              <th>{{ i18n.t('dsx.split') }}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (r of rows; track r.id) {
+                              <tr>
+                                <td class="num">{{ r.id }}</td>
+                                <td><code>{{ r.file }}</code></td>
+                                <td><code>{{ r.speaker }}</code></td>
+                                <td class="num">{{ i18n.n(r.durationMs) }}</td>
+                                <td class="text-cell">{{ r.text }}</td>
+                                <td><code>{{ r.split }}</code></td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                      <p class="muted small">{{ i18n.t('dsx.viewerNote', { n: rows.length, total: i18n.n(t.stats.recordings) }) }}</p>
+                    }
+                  </section>
+                }
+
+                @case ('files') {
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.archive') }}</h2>
+                    <dl class="kv">
+                      <div><dt>{{ i18n.t('dsx.archiveSize') }}</dt><dd>{{ bytes(t.archiveBytes) }}</dd></div>
+                      <div><dt>{{ i18n.t('dsx.audioFiles') }}</dt><dd>{{ i18n.n(t.audioFiles) }} · {{ bytes(t.audioBytes) }}</dd></div>
+                    </dl>
+                    <p class="hash-label">SHA-256</p>
+                    <div class="hash">
+                      <code>{{ t.sha256 }}</code>
+                      <button mat-stroked-button type="button" (click)="copy(t.sha256)">
+                        {{ i18n.t(copied() ? 'dsx.copied' : 'dsx.copy') }}
+                      </button>
+                    </div>
+                  </section>
+
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.contents') }}</h2>
+                    <ul class="tree">
+                      <li><code>audio/</code> <span class="muted">{{ i18n.n(t.audioFiles) }} · {{ bytes(t.audioBytes) }}</span></li>
+                      @for (f of t.files; track f.path) {
+                        <li><code>{{ f.path }}</code> <span class="muted">{{ bytes(f.sizeBytes) }}</span></li>
+                      }
+                    </ul>
+                  </section>
+
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.schema') }}</h2>
+                    <div class="table-wrap">
+                      <table class="table">
+                        <thead>
+                          <tr><th>{{ i18n.t('dsx.column') }}</th><th>{{ i18n.t('dsx.meaning') }}</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td><code>id</code></td><td>{{ i18n.t('dsx.col.id') }}</td></tr>
+                          <tr><td><code>file</code></td><td>{{ i18n.t('dsx.col.file') }}</td></tr>
+                          <tr><td><code>speaker</code></td><td>{{ i18n.t('dsx.col.speaker') }}</td></tr>
+                          <tr><td><code>duration_ms</code></td><td>{{ i18n.t('dsx.col.duration') }}</td></tr>
+                          <tr><td><code>text</code></td><td>{{ i18n.t('dsx.col.text') }}</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.useTitle') }}</h2>
+                    <p class="muted small">{{ i18n.t('dsx.useNote') }}</p>
+                    <div class="code-box">
+                      <pre><code>{{ snippet() }}</code></pre>
+                      <button mat-stroked-button type="button" (click)="copy(snippet())">
+                        {{ i18n.t(copied() ? 'dsx.copied' : 'dsx.copy') }}
+                      </button>
+                    </div>
+                    <p class="muted small">{{ i18n.t('dsx.verify') }}</p>
+                  </section>
+                }
+
+                @case ('models') {
+                  <section class="card block">
+                    <h2>{{ i18n.t('dsx.modelsTitle') }}</h2>
+                    @if (t.models.length === 0) {
+                      <p class="muted">{{ i18n.t('dsx.modelsEmpty') }}</p>
+                    } @else {
+                      <ul class="model-list">
+                        @for (m of t.models; track m.id) {
+                          <li>
+                            <a [routerLink]="['/models', m.id]">{{ m.name }}</a>
+                            <span class="muted small">
+                              {{ m.task }}
+                              @if (m.trainedOnVersion) {
+                                · {{ m.trainedOnVersion }}
+                              }
+                              @if (m.bestWer !== null) {
+                                · WER {{ i18n.n(m.bestWer, 3) }}
+                              }
+                            </span>
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </section>
+                }
+              }
+            }
+          }
+
+          @if (tab() === 'card') {
           <section class="card block">
             <h2>{{ i18n.t('dataset.about') }}</h2>
             <p class="prose">{{ d.description || i18n.t('dataset.noDescription') }}</p>
@@ -168,6 +448,7 @@
                 </button>
               </div>
             </section>
+          }
           }
         </div>
 

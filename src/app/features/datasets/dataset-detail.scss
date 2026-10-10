@@ -174,3 +174,264 @@
   justify-content: flex-end;
   gap: 0.75rem;
 }
+
+/* ----- Vue technique (onglets façon Hugging Face) ----- */
+.slug {
+  margin: 0 0 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  color: rgb(255 255 255 / 75%);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 0.2rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    background: rgb(255 255 255 / 14%);
+    color: #fff;
+  }
+
+  .k {
+    margin-inline-end: 0.35rem;
+    color: rgb(255 255 255 / 65%);
+  }
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-block-end: 1px solid var(--afv-line);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-block-size: 44px;
+  padding-inline: 1rem;
+  border: 0;
+  border-block-end: 3px solid transparent;
+  background: transparent;
+  font: inherit;
+  font-weight: 650;
+  color: var(--afv-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--afv-brand);
+  }
+
+  &.active {
+    color: var(--afv-brand);
+    border-block-end-color: var(--afv-brand);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--afv-brand);
+    outline-offset: -2px;
+  }
+
+  .count {
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    background: var(--afv-brand-50);
+    color: var(--afv-brand);
+  }
+}
+
+.version-pick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+
+  label {
+    font-weight: 650;
+  }
+
+  select {
+    block-size: 40px;
+    padding-inline: 0.6rem;
+    font: inherit;
+    border: 1px solid #cfd4e6;
+    border-radius: 10px;
+    background: #fff;
+  }
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.tile {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: var(--afv-bg);
+
+  span {
+    font-size: 0.82rem;
+    color: var(--afv-muted);
+  }
+
+  strong {
+    font-size: 1.4rem;
+  }
+}
+
+.histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  block-size: 11rem;
+  padding-block: 0.5rem;
+
+  .col {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    block-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .bar {
+    inline-size: 100%;
+    min-block-size: 2px;
+    border-radius: 4px 4px 0 0;
+    background: var(--afv-brand);
+  }
+
+  .num,
+  .lbl {
+    font-size: 0.72rem;
+    color: var(--afv-muted);
+  }
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 1rem 0 0;
+
+  div {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  dt {
+    font-size: 0.82rem;
+    color: var(--afv-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 650;
+  }
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88em;
+}
+
+.text-cell {
+  max-inline-size: 28rem;
+  overflow-wrap: anywhere;
+}
+
+.hash-label {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.82rem;
+  color: var(--afv-muted);
+}
+
+.hash {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+
+  code {
+    flex: 1 1 18rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    background: var(--afv-bg);
+    overflow-wrap: anywhere;
+  }
+}
+
+.tree {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 8px;
+    background: var(--afv-bg);
+  }
+}
+
+.code-box {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+
+  pre {
+    inline-size: 100%;
+    margin: 0;
+    padding: 1rem;
+    border-radius: 10px;
+    overflow-x: auto;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+
+  code {
+    font-size: inherit;
+  }
+}
+
+.model-list {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    background: var(--afv-bg);
+  }
+}
