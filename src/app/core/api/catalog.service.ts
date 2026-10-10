@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 export type DatasetPlan = 'STARTER' | 'PLUS' | 'PRO';
 export type LicenseKind = 'PROTOTYPE' | 'RESEARCH' | 'COMMERCIAL';
-export type MlTask = 'ASR' | 'TTS' | 'INTENT' | 'OTHER';
+export type MlTask = 'ASR' | 'TTS' | 'INTENT' | 'CONVERSATION' | 'OTHER';
 
 export interface Stats {
   activeLanguages: number;
@@ -204,6 +204,30 @@ export interface EvaluationResult {
   submittedAt: string;
 }
 
+/** Un commentaire de la section communauté d'un modèle. */
+export interface ModelCommentView {
+  id: number;
+  /** `null` pour un commentaire de premier niveau ; les réponses n'ont pas de réponses (un seul niveau). */
+  parentId: number | null;
+  authorName: string;
+  body: string;
+  createdAt: string;
+  mine: boolean;
+  canDelete: boolean;
+  replies: ModelCommentView[];
+}
+
+export interface ModelCommentPage {
+  items: ModelCommentView[];
+  page: number;
+  size: number;
+  /** Commentaires de premier niveau (sert à la pagination). */
+  total: number;
+  pages: number;
+  /** Tous les commentaires du modèle, réponses comprises. */
+  totalWithReplies: number;
+}
+
 export interface PageView<T> {
   items: T[];
   page: number;
@@ -308,6 +332,20 @@ export class CatalogService {
     form.set('testSetId', String(testSetId));
     form.set('file', file);
     return this.http.post<EvaluationResult>(`/api/me/models/${modelId}/evaluations`, form);
+  }
+
+  comments(modelId: number, page = 0, size = 20): Observable<ModelCommentPage> {
+    return this.http.get<ModelCommentPage>(`/api/public/models/${modelId}/comments`, {
+      params: toParams({ page, size }),
+    });
+  }
+
+  addComment(modelId: number, body: string, parentId: number | null = null): Observable<ModelCommentView> {
+    return this.http.post<ModelCommentView>(`/api/community/models/${modelId}/comments`, { body, parentId });
+  }
+
+  deleteComment(commentId: number): Observable<void> {
+    return this.http.delete<void>(`/api/community/comments/${commentId}`);
   }
 
   publishModel(model: NewModel): Observable<ModelSummary> {

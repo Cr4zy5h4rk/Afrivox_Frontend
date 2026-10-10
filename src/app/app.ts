@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { CommunityService } from './core/api/community.service';
 import { AuthService } from './core/auth/auth.service';
 import { I18nService, LANGUAGES, Lang } from './core/i18n/i18n.service';
 import { BrandMark } from './core/ui/brand-mark';
@@ -29,6 +30,9 @@ export class App {
   protected readonly languages = LANGUAGES;
   protected readonly menuOpen = signal(false);
   protected readonly year = new Date().getFullYear();
+  private readonly community = inject(CommunityService);
+  /** Notifications non lues, relues à chaque changement de page (pas de temps réel dans le projet). */
+  protected readonly unread = signal(0);
 
   constructor() {
     // Le menu mobile se referme à chaque changement de page
@@ -37,7 +41,17 @@ export class App {
         filter((event) => event instanceof NavigationEnd),
         takeUntilDestroyed(inject(DestroyRef)),
       )
-      .subscribe(() => this.menuOpen.set(false));
+      .subscribe(() => {
+        this.menuOpen.set(false);
+        if (this.auth.isAuthenticated()) {
+          this.community.unreadCount().subscribe({
+            next: (r) => this.unread.set(r.unread),
+            error: () => undefined,
+          });
+        } else {
+          this.unread.set(0);
+        }
+      });
   }
 
   protected setLang(lang: Lang): void {

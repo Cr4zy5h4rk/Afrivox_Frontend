@@ -1,0 +1,33 @@
+<div class="container section">
+  <h1>{{ i18n.t('notif.title') }}</h1>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+    }
+    @case ('failed') {
+      <p class="form-error" role="alert">{{ i18n.t('common.error') }}</p>
+    }
+    @default {
+      @if (items().length === 0) {
+        <p class="muted">{{ i18n.t('notif.empty') }}</p>
+      } @else {
+        <ul class="notifications">
+          @for (n of items(); track n.id) {
+            <li [class.unread]="!n.read">
+              @if (n.modelId !== null) {
+                <a [routerLink]="['/models', n.modelId]" fragment="community">{{ text(n) }}</a>
+              } @else {
+                <span>{{ text(n) }}</span>
+              }
+              <span class="muted">{{ i18n.date(n.createdAt) }}</span>
+              @if (!n.read) {
+                <span class="badge">{{ i18n.t('notif.new') }}</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</div>

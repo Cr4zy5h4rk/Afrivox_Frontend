@@ -57,6 +57,16 @@
     >
       {{ i18n.t('admin.tab.users') }}
     </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab"
+      [class.active]="tab() === 'moderation'"
+      [attr.aria-selected]="tab() === 'moderation'"
+      (click)="setTab('moderation')"
+    >
+      {{ i18n.t('admin.tab.moderation') }}
+    </button>
   </div>
 
   <div aria-live="polite">
@@ -71,6 +81,8 @@
     <app-admin-datasets />
   } @else if (tab() === 'users') {
     <app-admin-users />
+  } @else if (tab() === 'moderation') {
+    <app-admin-moderation />
   } @else if (tab() === 'languages') {
     <app-admin-languages />
   } @else if (loading()) {

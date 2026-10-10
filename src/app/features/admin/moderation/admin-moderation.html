@@ -1,0 +1,46 @@
+<section>
+  <h2>{{ i18n.t('adminmod.title') }}</h2>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+    }
+    @case ('failed') {
+      <p class="form-error" role="alert">{{ i18n.t('common.error') }}</p>
+    }
+    @default {
+      @if (items().length === 0) {
+        <p class="muted">{{ i18n.t('adminmod.empty') }}</p>
+      } @else {
+        <ul class="reports">
+          @for (r of items(); track r.commentId) {
+            <li class="report">
+              <div class="meta">
+                <span>
+                  {{ i18n.t('adminmod.model') }} :
+                  <a [routerLink]="['/models', r.modelId]" fragment="community">{{ r.modelName ?? r.modelId }}</a>
+                </span>
+                <span>{{ i18n.t('adminmod.author') }} : <strong>{{ r.authorName }}</strong></span>
+                <span class="muted">{{ i18n.date(r.createdAt) }}</span>
+                <span class="badge">{{ i18n.t('adminmod.reports', { n: r.reports }) }}</span>
+              </div>
+              <p class="body">{{ r.body }}</p>
+              <p class="muted">
+                @for (reason of r.reasons; track reason; let last = $last) {
+                  {{ i18n.t(reasonKey(reason)) }}@if (!last) {,}
+                }
+              </p>
+              @for (d of r.details; track $index) {
+                <p class="muted detail">« {{ d }} »</p>
+              }
+              <div class="actions">
+                <button mat-stroked-button type="button" (click)="dismiss(r)">{{ i18n.t('adminmod.dismiss') }}</button>
+                <button mat-flat-button type="button" (click)="remove(r)">{{ i18n.t('adminmod.delete') }}</button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</section>

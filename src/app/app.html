@@ -15,6 +15,9 @@
 
       <div class="nav-actions">
         @if (auth.isAuthenticated()) {
+          <a mat-button routerLink="/notifications" [attr.aria-label]="i18n.t('nav.notifications') + (unread() > 0 ? ' (' + unread() + ')' : '')">
+            {{ i18n.t('nav.notifications') }}@if (unread() > 0) { ({{ unread() }}) }
+          </a>
           <a mat-stroked-button routerLink="/dashboard">{{ i18n.t('nav.dashboard') }}</a>
           <button mat-button type="button" (click)="auth.logout()">
             {{ i18n.t('nav.logout') }}

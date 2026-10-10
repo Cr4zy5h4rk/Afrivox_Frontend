@@ -43,6 +43,13 @@ const SERVER_KEYS: Partial<Record<string, TranslationKey>> = {
   'error.texttoolong': 'error.texttoolong',
   'error.testsetnotfound': 'error.testsetnotfound',
   'error.modelnotfound': 'error.modelnotfound',
+  'error.invalidcomment': 'error.invalidcomment',
+  'error.invalidparent': 'error.invalidparent',
+  'error.invalidreason': 'error.invalidreason',
+  'error.commentnotfound': 'error.commentnotfound',
+  'error.ownreport': 'error.ownreport',
+  'error.alreadyreported': 'error.alreadyreported',
+  'error.toomanycomments': 'error.toomanycomments',
 };
 
 /**

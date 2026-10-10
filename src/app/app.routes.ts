@@ -87,6 +87,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/purchases/purchases').then((m) => m.PurchasesPage),
   },
   {
+    path: 'notifications',
+    title: 'Notifications · AfriVox',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/notifications/notifications').then((m) => m.NotificationsPage),
+  },
+  {
     path: 'admin',
     title: 'Administration · AfriVox',
     canActivate: [authGuard, roleGuard('ROLE_ADMIN')],

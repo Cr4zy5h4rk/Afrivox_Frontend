@@ -72,7 +72,7 @@ export class ModelNewPage implements OnInit {
   /** Nombre maximal d'« autres datasets » (le serveur revérifie). */
   protected readonly maxOthers = 10;
 
-  protected readonly tasks: MlTask[] = ['ASR', 'TTS', 'INTENT', 'OTHER'];
+  protected readonly tasks: MlTask[] = ['ASR', 'TTS', 'INTENT', 'CONVERSATION', 'OTHER'];
   protected readonly languages = signal<LanguageView[]>([]);
   protected readonly loading = signal(false);
   protected readonly error = signal<ApiError | null>(null);

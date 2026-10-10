@@ -43,7 +43,7 @@ export class ModelsPage {
   protected readonly loading = signal(true);
   protected readonly failed = signal(false);
   protected readonly languages = signal<LanguageView[]>([]);
-  protected readonly tasks: MlTask[] = ['ASR', 'TTS', 'INTENT', 'OTHER'];
+  protected readonly tasks: MlTask[] = ['ASR', 'TTS', 'INTENT', 'CONVERSATION', 'OTHER'];
 
   constructor() {
     this.catalog.languages().subscribe({ next: (l) => this.languages.set(l), error: () => undefined });

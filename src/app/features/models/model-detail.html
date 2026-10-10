@@ -132,6 +132,194 @@
               }
             </section>
           }
+
+          <section class="card block" id="community">
+            <h2>{{ i18n.t('community.title') }}</h2>
+            <p class="muted">{{ i18n.t('community.intro') }}</p>
+
+            @if (auth.isAuthenticated()) {
+              <form class="comment-form" (submit)="$event.preventDefault(); postComment()">
+                <textarea
+                  rows="3"
+                  maxlength="1000"
+                  [placeholder]="i18n.t('community.placeholder')"
+                  [attr.aria-label]="i18n.t('community.placeholder')"
+                  [value]="commentText()"
+                  (input)="commentText.set($any($event.target).value)"
+                ></textarea>
+                <div class="comment-actions">
+                  <span class="muted">{{ commentText().length }}/1000 · {{ i18n.t('community.rules') }}</span>
+                  <button mat-flat-button type="submit" [disabled]="posting() || commentText().trim() === ''">
+                    {{ posting() ? i18n.t('community.sending') : i18n.t('community.send') }}
+                  </button>
+                </div>
+                @if (commentError(); as err) {
+                  <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+                }
+              </form>
+            } @else {
+              <p>
+                <a routerLink="/login" [queryParams]="{ returnUrl: '/models/' + m.id }">{{ i18n.t('community.signin') }}</a>
+              </p>
+            }
+
+            <h3 class="comment-count">{{ i18n.t('community.count', { n: commentTotal() }) }}</h3>
+            @if (comments().length === 0) {
+              <p class="muted">{{ i18n.t('community.empty') }}</p>
+            } @else {
+              <ul class="comments">
+                @for (c of comments(); track c.id) {
+                  <li class="comment">
+                    <div class="comment-head">
+                      <strong>{{ c.authorName }}</strong>
+                      @if (c.mine) {
+                        <span class="badge">{{ i18n.t('community.you') }}</span>
+                      }
+                      <span class="muted">{{ i18n.date(c.createdAt) }}</span>
+                      @if (c.canDelete) {
+                        <button type="button" class="link-button" (click)="removeComment(c)">
+                          {{ i18n.t('community.delete') }}
+                        </button>
+                      }
+                    </div>
+                    <p class="comment-body">{{ c.body }}</p>
+
+                    @if (auth.isAuthenticated()) {
+                      <div class="comment-tools">
+                        <button type="button" class="link-button plain" (click)="startReply(c)">
+                          {{ i18n.t('community.reply') }}
+                        </button>
+                        @if (!c.mine) {
+                          @if (reported().has(c.id)) {
+                            <span class="muted">{{ i18n.t('community.reportDone') }}</span>
+                          } @else {
+                            <button type="button" class="link-button plain" (click)="startReport(c)">
+                              {{ i18n.t('community.report') }}
+                            </button>
+                          }
+                        }
+                      </div>
+                    }
+
+                    @if (replyingTo() === c.id) {
+                      <form class="comment-form reply-form" (submit)="$event.preventDefault(); sendReply()">
+                        <textarea
+                          rows="2"
+                          maxlength="1000"
+                          [placeholder]="i18n.t('community.replyPlaceholder')"
+                          [attr.aria-label]="i18n.t('community.replyTo', { name: c.authorName })"
+                          [value]="replyText()"
+                          (input)="replyText.set($any($event.target).value)"
+                        ></textarea>
+                        <div class="comment-actions">
+                          <button mat-button type="button" (click)="cancelReply()">{{ i18n.t('community.cancel') }}</button>
+                          <button mat-flat-button type="submit" [disabled]="posting() || replyText().trim() === ''">
+                            {{ posting() ? i18n.t('community.sending') : i18n.t('community.send') }}
+                          </button>
+                        </div>
+                        @if (replyError(); as err) {
+                          <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+                        }
+                      </form>
+                    }
+
+                    @if (reportingId() === c.id) {
+                      <form class="comment-form reply-form" (submit)="$event.preventDefault(); sendReport()">
+                        <strong>{{ i18n.t('community.reportTitle') }}</strong>
+                        <label>
+                          <span>{{ i18n.t('community.reportReason') }}</span>
+                          <select [value]="reportReason()" (change)="reportReason.set($any($event.target).value)">
+                            @for (r of reasons; track r) {
+                              <option [value]="r">{{ i18n.t(reasonKey(r)) }}</option>
+                            }
+                          </select>
+                        </label>
+                        <textarea
+                          rows="2"
+                          maxlength="300"
+                          [placeholder]="i18n.t('community.reportDetails')"
+                          [attr.aria-label]="i18n.t('community.reportDetails')"
+                          [value]="reportDetails()"
+                          (input)="reportDetails.set($any($event.target).value)"
+                        ></textarea>
+                        <div class="comment-actions">
+                          <button mat-button type="button" (click)="cancelReport()">{{ i18n.t('community.cancel') }}</button>
+                          <button mat-flat-button type="submit">{{ i18n.t('community.reportSend') }}</button>
+                        </div>
+                        @if (reportError(); as err) {
+                          <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+                        }
+                      </form>
+                    }
+
+                    @if (c.replies.length > 0) {
+                      <ul class="comments replies" [attr.aria-label]="i18n.t('community.replies', { n: c.replies.length })">
+                        @for (r of c.replies; track r.id) {
+                          <li class="comment">
+                            <div class="comment-head">
+                              <strong>{{ r.authorName }}</strong>
+                              @if (r.mine) {
+                                <span class="badge">{{ i18n.t('community.you') }}</span>
+                              }
+                              <span class="muted">{{ i18n.date(r.createdAt) }}</span>
+                              @if (r.canDelete) {
+                                <button type="button" class="link-button" (click)="removeComment(r)">
+                                  {{ i18n.t('community.delete') }}
+                                </button>
+                              }
+                            </div>
+                            <p class="comment-body">{{ r.body }}</p>
+                            @if (auth.isAuthenticated() && !r.mine) {
+                              <div class="comment-tools">
+                                @if (reported().has(r.id)) {
+                                  <span class="muted">{{ i18n.t('community.reportDone') }}</span>
+                                } @else {
+                                  <button type="button" class="link-button plain" (click)="startReport(r)">
+                                    {{ i18n.t('community.report') }}
+                                  </button>
+                                }
+                              </div>
+                            }
+                            @if (reportingId() === r.id) {
+                              <form class="comment-form reply-form" (submit)="$event.preventDefault(); sendReport()">
+                                <strong>{{ i18n.t('community.reportTitle') }}</strong>
+                                <label>
+                                  <span>{{ i18n.t('community.reportReason') }}</span>
+                                  <select [value]="reportReason()" (change)="reportReason.set($any($event.target).value)">
+                                    @for (reason of reasons; track reason) {
+                                      <option [value]="reason">{{ i18n.t(reasonKey(reason)) }}</option>
+                                    }
+                                  </select>
+                                </label>
+                                <textarea
+                                  rows="2"
+                                  maxlength="300"
+                                  [placeholder]="i18n.t('community.reportDetails')"
+                                  [attr.aria-label]="i18n.t('community.reportDetails')"
+                                  [value]="reportDetails()"
+                                  (input)="reportDetails.set($any($event.target).value)"
+                                ></textarea>
+                                <div class="comment-actions">
+                                  <button mat-button type="button" (click)="cancelReport()">{{ i18n.t('community.cancel') }}</button>
+                                  <button mat-flat-button type="submit">{{ i18n.t('community.reportSend') }}</button>
+                                </div>
+                                @if (reportError(); as err) {
+                                  <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+                                }
+                              </form>
+                            }
+                          </li>
+                        }
+                      </ul>
+                    }
+                  </li>
+                }
+              </ul>
+              @if (hasMoreComments()) {
+                <button mat-stroked-button type="button" (click)="moreComments()">{{ i18n.t('community.more') }}</button>
+              }
+            }
+          </section>
         </div>
 
         <aside class="side">
