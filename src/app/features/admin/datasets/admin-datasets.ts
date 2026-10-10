@@ -65,6 +65,7 @@ export class AdminDatasetsSection implements OnInit {
     label: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9][A-Za-z0-9._-]{0,19}$/)]],
     license: ['RESEARCH' as LicenseKindValue, Validators.required],
     pricePerHourFcfa: [null as number | null, Validators.min(0)],
+    maxRecordings: [null as number | null, Validators.min(1)],
   });
 
   ngOnInit(): void {
@@ -102,7 +103,7 @@ export class AdminDatasetsSection implements OnInit {
 
   protected togglePublish(id: number): void {
     this.publishingFor.update((current) => (current === id ? null : id));
-    this.versionForm.reset({ license: 'RESEARCH', pricePerHourFcfa: null });
+    this.versionForm.reset({ license: 'RESEARCH', pricePerHourFcfa: null, maxRecordings: null });
     this.notice.set(null);
   }
 
@@ -140,6 +141,7 @@ export class AdminDatasetsSection implements OnInit {
         label: value.label.trim(),
         license: value.license,
         pricePerHourFcfa: value.pricePerHourFcfa,
+        maxRecordings: value.maxRecordings,
       })
       .subscribe({
         next: (version) => {

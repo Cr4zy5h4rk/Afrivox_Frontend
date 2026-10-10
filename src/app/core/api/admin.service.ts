@@ -248,6 +248,8 @@ export interface NewVersion {
   label: string;
   license: LicenseKindValue;
   pricePerHourFcfa: number | null;
+  /** Taille maximale de la version (échantillon) ; `null` = tous les enregistrements éligibles. */
+  maxRecordings: number | null;
 }
 
 export interface PublishedVersion {

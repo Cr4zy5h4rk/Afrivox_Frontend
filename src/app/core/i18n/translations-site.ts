@@ -432,6 +432,8 @@ export const frSite = {
   'admindata.license': 'Licence',
   'admindata.price': 'Prix par heure (FCFA)',
   'admindata.priceHint': 'Facultatif.',
+  'admindata.maxRecordings': 'Nombre maximal d’enregistrements',
+  'admindata.maxRecordingsHint': 'Facultatif : laissez vide pour tout inclure. Un échantillon (plan Starter) prend les premiers, en alternant les contributeurs.',
   'admindata.publishNow': 'Publier',
   'admindata.publishHint':
     "L'archive reprend les enregistrements validés de la langue dont le contributeur a encore un consentement actif. Une version publiée ne change plus.",
@@ -862,6 +864,8 @@ export const enSite: Record<keyof typeof frSite, string> = {
   'admindata.license': 'License',
   'admindata.price': 'Price per hour (FCFA)',
   'admindata.priceHint': 'Optional.',
+  'admindata.maxRecordings': 'Maximum number of recordings',
+  'admindata.maxRecordingsHint': 'Optional: leave empty to include everything. A sample (Starter plan) takes the first ones, alternating between contributors.',
   'admindata.publishNow': 'Publish',
   'admindata.publishHint':
     "The archive contains the language's validated recordings whose contributor still has an active consent. A published version never changes.",
