@@ -156,6 +156,7 @@ export interface ModelSummary {
   description: string | null;
   license: string | null;
   url: string | null;
+  sha256: string | null;
   downloads: number | null;
   createdAt: string;
   ownerName: string | null;
@@ -199,6 +200,8 @@ export interface NewModel {
   description: string;
   license: string;
   url: string;
+  /** Empreinte SHA-256 facultative du fichier pointé par `url` (vide = non renseignée). */
+  sha256: string;
   languageCode: string;
   /** Dataset principal (id de version publiée), `null` si non précisé. */
   trainedOnVersionId: number | null;

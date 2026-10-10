@@ -103,6 +103,12 @@
                 <dt>{{ i18n.t('model.license') }}</dt>
                 <dd>{{ m.license || i18n.t('common.none') }}</dd>
               </div>
+              @if (m.sha256) {
+                <div>
+                  <dt>{{ i18n.t('model.sha256') }}</dt>
+                  <dd class="hash">{{ m.sha256 }}</dd>
+                </div>
+              }
               <div>
                 <dt>{{ i18n.t('model.bestWer') }}</dt>
                 <dd>{{ m.bestWer !== null ? i18n.n(m.bestWer, 1) + ' %' : i18n.t('common.none') }}</dd>

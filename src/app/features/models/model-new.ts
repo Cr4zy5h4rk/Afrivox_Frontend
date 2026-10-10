@@ -94,6 +94,7 @@ export class ModelNewPage implements OnInit {
     description: ['', Validators.maxLength(1000)],
     license: ['', Validators.maxLength(60)],
     url: ['', [Validators.maxLength(300), httpsUrl]],
+    sha256: ['', Validators.pattern(/^\s*([0-9a-fA-F]{64})?\s*$/)],
   });
 
   /** Identifiants SPDX des licences les plus courantes ; la saisie libre reste possible pour les autres. */
