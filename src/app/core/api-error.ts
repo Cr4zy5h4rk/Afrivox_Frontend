@@ -30,6 +30,19 @@ const SERVER_KEYS: Partial<Record<string, TranslationKey>> = {
   'error.licensenotaccepted': 'error.licensenotaccepted',
   'error.alreadypurchased': 'error.alreadypurchased',
   'error.nopricing': 'error.nopricing',
+  'error.invalidurl': 'error.invalidurl',
+  'error.invalidsha256': 'error.invalidsha256',
+  'error.tasknotasr': 'error.tasknotasr',
+  'error.languagemismatch': 'error.languagemismatch',
+  'error.toosoon': 'error.toosoon',
+  'error.csvinvalid': 'error.csvinvalid',
+  'error.csvtoolarge': 'error.csvtoolarge',
+  'error.idunknown': 'error.idunknown',
+  'error.idsmissing': 'error.idsmissing',
+  'error.idduplicate': 'error.idduplicate',
+  'error.texttoolong': 'error.texttoolong',
+  'error.testsetnotfound': 'error.testsetnotfound',
+  'error.modelnotfound': 'error.modelnotfound',
 };
 
 /**

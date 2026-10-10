@@ -186,6 +186,24 @@ export interface ModelDetail {
   evaluations: EvaluationRow[];
 }
 
+/** Une version publiée qui a un jeu de test pour le classement. */
+export interface TestSetView {
+  versionId: number;
+  slug: string;
+  title: string;
+  version: string;
+  languageCode: string | null;
+  sentences: number;
+}
+
+export interface EvaluationResult {
+  evaluationId: number;
+  wer: number;
+  cer: number;
+  sentences: number;
+  submittedAt: string;
+}
+
 export interface PageView<T> {
   items: T[];
   page: number;
@@ -277,6 +295,19 @@ export class CatalogService {
     return this.http.get<EvaluationRow[]>('/api/public/leaderboard', {
       params: toParams({ language }),
     });
+  }
+
+  /** Jeux de test disponibles : versions publiées dont les transcriptions de référence sont gardées au serveur. */
+  testSets(language?: string): Observable<TestSetView[]> {
+    return this.http.get<TestSetView[]>('/api/public/test-sets', { params: toParams({ language }) });
+  }
+
+  /** Envoie un CSV de prédictions (colonnes id,text) ; le serveur calcule WER et CER. */
+  submitPredictions(modelId: number, testSetId: number, file: File): Observable<EvaluationResult> {
+    const form = new FormData();
+    form.set('testSetId', String(testSetId));
+    form.set('file', file);
+    return this.http.post<EvaluationResult>(`/api/me/models/${modelId}/evaluations`, form);
   }
 
   publishModel(model: NewModel): Observable<ModelSummary> {

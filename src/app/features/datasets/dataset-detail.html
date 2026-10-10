@@ -223,7 +223,7 @@
                                 <td><code>{{ r.file }}</code></td>
                                 <td><code>{{ r.speaker }}</code></td>
                                 <td class="num">{{ i18n.n(r.durationMs) }}</td>
-                                <td class="text-cell">{{ r.text }}</td>
+                                <td class="text-cell">{{ r.text || i18n.t('viewer.masked') }}</td>
                                 <td><code>{{ r.split }}</code></td>
                               </tr>
                             }

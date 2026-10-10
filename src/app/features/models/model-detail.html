@@ -85,6 +85,53 @@
               </div>
             }
           </section>
+
+          @if (canEvaluate()) {
+            <section class="card block">
+              <h2>{{ i18n.t('evalsub.title') }}</h2>
+              @if (m.task !== 'ASR') {
+                <p class="muted">{{ i18n.t('evalsub.asrOnly') }}</p>
+              } @else {
+                <p class="prose">{{ i18n.t('evalsub.intro') }}</p>
+                <p class="muted">{{ i18n.t('evalsub.steps') }}</p>
+                @if (testSets().length === 0) {
+                  <p class="muted">{{ i18n.t('evalsub.none') }}</p>
+                } @else {
+                  <form class="eval-form" (submit)="$event.preventDefault(); submit()">
+                    <label>
+                      <span>{{ i18n.t('evalsub.testSet') }}</span>
+                      <select [value]="testSetId()" (change)="testSetId.set(+$any($event.target).value)">
+                        @for (t of testSets(); track t.versionId) {
+                          <option [value]="t.versionId">{{ t.title }} · {{ t.version }} ({{ t.sentences }})</option>
+                        }
+                      </select>
+                    </label>
+                    @if (testSetId() !== null) {
+                      <a class="template" [href]="'/api/public/test-sets/' + testSetId() + '/template.csv'" download>
+                        {{ i18n.t('evalsub.template') }}
+                      </a>
+                    }
+                    <label>
+                      <span>{{ i18n.t('evalsub.file') }}</span>
+                      <input type="file" accept=".csv,.tsv,text/csv,text/tab-separated-values" (change)="pickFile($event)" />
+                    </label>
+                    <p class="muted">{{ i18n.t('evalsub.rules') }}</p>
+                    <button mat-flat-button type="submit" [disabled]="sending() || file() === null || testSetId() === null">
+                      {{ sending() ? i18n.t('evalsub.sending') : i18n.t('evalsub.submit') }}
+                    </button>
+                  </form>
+                  @if (submitError(); as err) {
+                    <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+                  }
+                  @if (result(); as r) {
+                    <p role="status">
+                      <strong>{{ i18n.t('evalsub.result', { wer: i18n.n(r.wer, 1), cer: i18n.n(r.cer, 1), n: r.sentences }) }}</strong>
+                    </p>
+                  }
+                }
+              }
+            </section>
+          }
         </div>
 
         <aside class="side">
