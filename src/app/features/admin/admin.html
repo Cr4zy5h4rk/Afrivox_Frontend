@@ -47,6 +47,16 @@
     >
       {{ i18n.t('admin.tab.datasets') }}
     </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab"
+      [class.active]="tab() === 'users'"
+      [attr.aria-selected]="tab() === 'users'"
+      (click)="setTab('users')"
+    >
+      {{ i18n.t('admin.tab.users') }}
+    </button>
   </div>
 
   <div aria-live="polite">
@@ -59,6 +69,8 @@
 
   @if (tab() === 'datasets') {
     <app-admin-datasets />
+  } @else if (tab() === 'users') {
+    <app-admin-users />
   } @else if (tab() === 'languages') {
     <app-admin-languages />
   } @else if (loading()) {

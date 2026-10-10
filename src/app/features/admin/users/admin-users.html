@@ -1,0 +1,118 @@
+<div aria-live="polite">
+  @if (notice(); as n) {
+    <p class="notice" [class.ok]="n.ok" [attr.role]="n.ok ? 'status' : 'alert'">{{ i18n.t(n.text) }}</p>
+  }
+</div>
+
+<div class="field search">
+  <label for="user-search">{{ i18n.t('adminusers.search') }}</label>
+  <input
+    id="user-search"
+    type="search"
+    autocomplete="off"
+    maxlength="100"
+    [placeholder]="i18n.t('adminusers.searchHint')"
+    (input)="search($event)"
+  />
+</div>
+
+<div class="filters">
+  <div class="field">
+    <label for="user-role">{{ i18n.t('adminusers.filterRole') }}</label>
+    <select id="user-role" [value]="role()" (change)="setRole($event)">
+      <option value="">{{ i18n.t('adminusers.all') }}</option>
+      @for (r of roles; track r) {
+        <option [value]="r">{{ i18n.t(roleKey(r)) }}</option>
+      }
+    </select>
+  </div>
+  <div class="field">
+    <label for="user-status">{{ i18n.t('adminusers.filterStatus') }}</label>
+    <select id="user-status" [value]="status()" (change)="setStatus($event)">
+      <option value="all">{{ i18n.t('adminusers.all') }}</option>
+      <option value="active">{{ i18n.t('adminusers.active') }}</option>
+      <option value="inactive">{{ i18n.t('adminusers.inactive') }}</option>
+    </select>
+  </div>
+  <label class="check">
+    <input type="checkbox" [checked]="excludeTest()" (change)="setExcludeTest($event)" />
+    {{ i18n.t('adminusers.hideTest') }}
+  </label>
+</div>
+
+@if (loading()) {
+  <p class="muted">{{ i18n.t('common.loading') }}</p>
+} @else if (failed()) {
+  <div class="empty" role="alert">
+    <h3>{{ i18n.t('common.error') }}</h3>
+    <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+  </div>
+} @else if (users().length === 0) {
+  <div class="empty"><p>{{ i18n.t('adminusers.empty') }}</p></div>
+} @else {
+  <p class="muted total">{{ i18n.t('adminusers.total', { count: i18n.n(total()) }) }}</p>
+  <ul class="list">
+    @for (u of users(); track u.id) {
+      <li class="card item" [attr.data-tone]="u.activated ? 'green' : 'gold'">
+        <div class="head">
+          <h3>
+            {{ u.login }}
+            @if (isSelf(u)) {
+              <span class="you">{{ i18n.t('adminusers.you') }}</span>
+            }
+          </h3>
+          <span [class]="u.activated ? 'badge green' : 'badge gold'">
+            {{ i18n.t(u.activated ? 'adminusers.active' : 'adminusers.inactive') }}
+          </span>
+        </div>
+        <p class="meta muted">
+          {{ u.email }}
+          @if (fullName(u)) {
+            · {{ fullName(u) }}
+          }
+        </p>
+
+        <fieldset class="roles" [disabled]="busy()">
+          <legend>{{ i18n.t('adminusers.roles') }}</legend>
+          @for (role of roles; track role) {
+            <label class="role" [class.on]="hasRole(u, role)">
+              <input
+                type="checkbox"
+                [checked]="hasRole(u, role)"
+                [disabled]="isSelf(u) && role === 'ROLE_ADMIN'"
+                (change)="toggleRole(u, role)"
+              />
+              {{ i18n.t(roleKey(role)) }}
+            </label>
+          }
+        </fieldset>
+
+        <div class="actions start">
+          @if (isSelf(u)) {
+            <span class="muted">{{ i18n.t('adminusers.selfNote') }}</span>
+          } @else if (u.activated) {
+            <button mat-stroked-button type="button" [disabled]="busy()" (click)="toggleActivated(u)">
+              {{ i18n.t('adminusers.deactivate') }}
+            </button>
+          } @else {
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="toggleActivated(u)">
+              {{ i18n.t('adminusers.activate') }}
+            </button>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+
+  @if (pages() > 1) {
+    <nav class="pager" [attr.aria-label]="i18n.t('adminusers.pages')">
+      <button mat-stroked-button type="button" [disabled]="page() === 0" (click)="goTo(page() - 1)">
+        {{ i18n.t('adminusers.prev') }}
+      </button>
+      <span>{{ page() + 1 }} / {{ pages() }}</span>
+      <button mat-stroked-button type="button" [disabled]="page() + 1 >= pages()" (click)="goTo(page() + 1)">
+        {{ i18n.t('adminusers.next') }}
+      </button>
+    </nav>
+  }
+}

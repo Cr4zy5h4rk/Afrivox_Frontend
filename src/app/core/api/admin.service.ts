@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, concatMap, forkJoin, from, map, of, reduce } from 'rxjs';
 
@@ -191,6 +191,55 @@ export class AdminService {
   publishVersion(datasetId: number, input: NewVersion): Observable<PublishedVersion> {
     return this.http.post<PublishedVersion>(`/api/admin/datasets/${datasetId}/versions`, input);
   }
+
+  /** Une page d'utilisateurs, les plus récents d'abord ; `query` filtre sur l'identifiant ou l'e-mail (côté serveur). */
+  users(filter: AdminUserFilter, page: number, size: number): Observable<AdminUserPage> {
+    let params = new HttpParams().set('page', page).set('size', size).set('sort', 'createdDate,desc');
+    if (filter.query.trim()) params = params.set('q', filter.query.trim());
+    if (filter.role) params = params.set('role', filter.role);
+    if (filter.activated !== null) params = params.set('activated', filter.activated);
+    if (filter.excludeTest) params = params.set('excludeTest', true);
+    return this.http
+      .get<AdminUser[]>('/api/admin/users', { params, observe: 'response' })
+      .pipe(
+        map((response) => ({
+          items: response.body ?? [],
+          total: Number(response.headers.get('X-Total-Count') ?? response.body?.length ?? 0),
+        })),
+      );
+  }
+
+  /** Remplace le compte (le serveur attend l'objet complet) : activation et rôles sont les seuls champs que l'interface modifie. */
+  updateUser(user: AdminUser, change: { activated?: boolean; authorities?: string[] }): Observable<AdminUser> {
+    return this.http.put<AdminUser>('/api/admin/users', { ...user, ...change });
+  }
+}
+
+export interface AdminUser {
+  id: number;
+  login: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  imageUrl: string | null;
+  activated: boolean;
+  langKey: string | null;
+  createdDate: string | null;
+  authorities: string[];
+}
+
+/** Critères cumulables de la liste ; `role` vide et `activated` nul = pas de filtre. */
+export interface AdminUserFilter {
+  query: string;
+  role: string;
+  activated: boolean | null;
+  /** Masque les comptes créés par les scripts d'import (préfixe `imp_`). */
+  excludeTest: boolean;
+}
+
+export interface AdminUserPage {
+  items: AdminUser[];
+  total: number;
 }
 
 export type ScriptKind = 'LATIN' | 'ARABIC' | 'NKO' | 'OTHER';
