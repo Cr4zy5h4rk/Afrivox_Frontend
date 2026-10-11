@@ -61,6 +61,16 @@
       type="button"
       role="tab"
       class="tab"
+      [class.active]="tab() === 'contributors'"
+      [attr.aria-selected]="tab() === 'contributors'"
+      (click)="setTab('contributors')"
+    >
+      {{ i18n.t('admin.tab.contributors') }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab"
       [class.active]="tab() === 'moderation'"
       [attr.aria-selected]="tab() === 'moderation'"
       (click)="setTab('moderation')"
@@ -81,6 +91,8 @@
     <app-admin-datasets />
   } @else if (tab() === 'users') {
     <app-admin-users />
+  } @else if (tab() === 'contributors') {
+    <app-admin-contributors />
   } @else if (tab() === 'moderation') {
     <app-admin-moderation />
   } @else if (tab() === 'languages') {

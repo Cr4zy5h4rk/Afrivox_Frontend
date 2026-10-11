@@ -336,6 +336,42 @@ export class AdminService {
   updateUser(user: AdminUser, change: { activated?: boolean; authorities?: string[] }): Observable<AdminUser> {
     return this.http.put<AdminUser>('/api/admin/users', { ...user, ...change });
   }
+
+  /** Une page de contributeurs avec leur période d'essai, les plus récents d'abord ; `status` filtre côté serveur. */
+  contributors(
+    status: AdminContributorStatus | '',
+    page: number,
+    size: number,
+  ): Observable<{ items: AdminContributor[]; total: number }> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (status) params = params.set('status', status);
+    return this.http
+      .get<AdminContributor[]>('/api/admin/contributors', { params, observe: 'response' })
+      .pipe(
+        map((response) => ({
+          items: response.body ?? [],
+          total: Number(response.headers.get('X-Total-Count') ?? response.body?.length ?? 0),
+        })),
+      );
+  }
+
+  setContributorStatus(id: number, status: AdminContributorStatus): Observable<unknown> {
+    return this.http.post(`/api/admin/contributors/${id}/status`, null, { params: { value: status } });
+  }
+}
+
+export type AdminContributorStatus = 'TRIAL' | 'ACTIVE' | 'SUSPENDED';
+
+export interface AdminContributor {
+  id: number;
+  displayName: string;
+  login: string | null;
+  status: AdminContributorStatus;
+  createdAt: string;
+  used: number;
+  pending: number;
+  validated: number;
+  rejected: number;
 }
 
 export interface AdminUser {

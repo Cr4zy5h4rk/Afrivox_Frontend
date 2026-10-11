@@ -11,8 +11,13 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { CampaignView, ContributionService, PromptView } from '../../core/api/contribution.service';
+import { catchError, forkJoin, of } from 'rxjs';
+import {
+  CampaignView,
+  ContributionService,
+  PromptView,
+  TrialView,
+} from '../../core/api/contribution.service';
 import { toApiError } from '../../core/api-error';
 import { AudioRecorder, RecordedClip, RecorderError } from '../../core/audio/audio-recorder';
 import { OutboxService } from '../../core/audio/outbox.service';
@@ -23,6 +28,7 @@ type Phase =
   | 'loading'
   | 'failed'
   | 'consent'
+  | 'blocked'
   | 'empty'
   | 'pick'
   | 'ready'
@@ -77,6 +83,9 @@ export class RecordPage implements OnInit, OnDestroy {
   protected readonly clipUrl = signal<string | null>(null);
   protected readonly notice = signal<Notice | null>(null);
   protected readonly busy = signal(false);
+  /** Période d'essai (null si le serveur ne l'a pas renvoyée : on laisse alors le serveur trancher à l'envoi). */
+  protected readonly trial = signal<TrialView | null>(null);
+  protected readonly suspended = computed(() => this.trial()?.status === 'SUSPENDED');
   private readonly sentThisSession = signal(0);
 
   /** Phrases déjà traitées (envoyées ou gardées hors ligne) : à ne pas reproposer si le serveur ne les connaît pas encore. */
@@ -109,14 +118,19 @@ export class RecordPage implements OnInit, OnDestroy {
 
   protected load(): void {
     this.phase.set('loading');
-    forkJoin({ consents: this.api.consents(), campaigns: this.api.openCampaigns() }).subscribe({
-      next: ({ consents, campaigns }) => {
+    forkJoin({
+      consents: this.api.consents(),
+      campaigns: this.api.openCampaigns(),
+      trial: this.api.trial().pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ consents, campaigns, trial }) => {
         this.campaigns.set(campaigns);
+        this.trial.set(trial);
         const consented = consents.some((c) => c.kind === 'COLLECTION' && c.revokedAt === null);
-        if (consented) {
-          this.proceed();
-        } else {
+        if (!consented) {
           this.phase.set('consent');
+        } else {
+          this.proceed();
         }
       },
       error: () => this.phase.set('failed'),
@@ -184,7 +198,9 @@ export class RecordPage implements OnInit, OnDestroy {
 
   private proceed(): void {
     const campaigns = this.campaigns();
-    if (campaigns.length === 0) {
+    if (this.isBlocked(this.trial())) {
+      this.phase.set('blocked');
+    } else if (campaigns.length === 0) {
       this.phase.set('empty');
     } else if (campaigns.length === 1) {
       this.selectCampaign(campaigns[0]);
@@ -249,6 +265,16 @@ export class RecordPage implements OnInit, OnDestroy {
       this.phase.set('consent'); // consentement retiré entre-temps
       return;
     }
+    const code = error instanceof HttpErrorResponse ? error.error?.message : null;
+    if (code === 'error.triallimit' || code === 'error.contributorsuspended') {
+      // Plafond de l'essai atteint ou compte suspendu : on relit l'état pour l'afficher fidèlement
+      this.api.trial().subscribe({
+        next: (trial) => this.trial.set(trial),
+        error: () => undefined,
+        complete: () => this.phase.set('blocked'),
+      });
+      return;
+    }
     this.notice.set({ kind: 'error', ...toApiError(error) });
     this.phase.set('review');
   }
@@ -260,15 +286,27 @@ export class RecordPage implements OnInit, OnDestroy {
     countAsSent: boolean,
   ): void {
     this.handled.add(promptId);
-    if (countAsSent) this.sentThisSession.update((n) => n + 1);
+    if (countAsSent) {
+      this.sentThisSession.update((n) => n + 1);
+      // Garde le compteur de l'essai à jour sans rappeler le serveur
+      this.trial.update((t) => (t ? { ...t, used: t.used + 1, pending: t.pending + 1 } : t));
+    }
     this.discardClip();
     this.queue.update((q) => q.filter((p) => p.id !== promptId));
     this.notice.set({ kind, key });
-    if (this.queue().length > 0) {
+    if (this.isBlocked(this.trial())) {
+      this.phase.set('blocked');
+    } else if (this.queue().length > 0) {
       this.phase.set('ready');
     } else {
       this.loadTodo();
     }
+  }
+
+  /** Suspendu, ou en essai avec tout le quota déjà envoyé : le serveur refuserait le prochain envoi. */
+  private isBlocked(trial: TrialView | null): boolean {
+    if (!trial) return false;
+    return trial.status === 'SUSPENDED' || (trial.status === 'TRIAL' && trial.used >= trial.limit);
   }
 
   private discardClip(): void {

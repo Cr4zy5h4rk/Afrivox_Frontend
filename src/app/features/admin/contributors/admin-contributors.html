@@ -1,0 +1,80 @@
+<section>
+  <h2>{{ i18n.t('admincontrib.title') }}</h2>
+  <p class="muted">{{ i18n.t('admincontrib.hint') }}</p>
+
+  <div class="filter">
+    <label for="contrib-status">{{ i18n.t('admincontrib.filter') }}</label>
+    <select id="contrib-status" [value]="filter()" (change)="setFilter($event)">
+      <option value="">{{ i18n.t('adminusers.all') }}</option>
+      @for (s of statuses; track s) {
+        <option [value]="s" [selected]="filter() === s">{{ i18n.t(statusKey(s)) }}</option>
+      }
+    </select>
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+    }
+    @case ('failed') {
+      <p class="form-error" role="alert">{{ i18n.t('common.error') }}</p>
+      <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+    }
+    @default {
+      @if (items().length === 0) {
+        <p class="muted">{{ i18n.t('admincontrib.empty') }}</p>
+      } @else {
+        <ul class="contributors">
+          @for (c of items(); track c.id) {
+            <li class="contributor">
+              <div class="head">
+                <strong>{{ c.displayName }}</strong>
+                <span [class]="'badge ' + tone(c.status)">{{ i18n.t(statusKey(c.status)) }}</span>
+                <span class="muted">{{ i18n.date(c.createdAt) }}</span>
+              </div>
+              <p class="muted">
+                {{
+                  i18n.t('admincontrib.counts', {
+                    used: i18n.n(c.used),
+                    pending: i18n.n(c.pending),
+                    validated: i18n.n(c.validated),
+                    rejected: i18n.n(c.rejected)
+                  })
+                }}
+              </p>
+              <div class="actions">
+                @if (c.status !== 'ACTIVE') {
+                  <button mat-flat-button type="button" [disabled]="busy()" (click)="decide(c, 'ACTIVE')">
+                    {{ i18n.t('admincontrib.activate') }}
+                  </button>
+                }
+                @if (c.status !== 'SUSPENDED') {
+                  <button mat-stroked-button type="button" [disabled]="busy()" (click)="decide(c, 'SUSPENDED')">
+                    {{ i18n.t('admincontrib.suspend') }}
+                  </button>
+                }
+                @if (c.status === 'SUSPENDED') {
+                  <button mat-stroked-button type="button" [disabled]="busy()" (click)="decide(c, 'TRIAL')">
+                    {{ i18n.t('admincontrib.toTrial') }}
+                  </button>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+
+        @if (pages() > 1) {
+          <nav class="pager" [attr.aria-label]="i18n.t('adminusers.pages')">
+            <button mat-stroked-button type="button" [disabled]="page() === 0" (click)="goTo(page() - 1)">
+              {{ i18n.t('adminusers.prev') }}
+            </button>
+            <span>{{ page() + 1 }} / {{ pages() }}</span>
+            <button mat-stroked-button type="button" [disabled]="page() + 1 >= pages()" (click)="goTo(page() + 1)">
+              {{ i18n.t('adminusers.next') }}
+            </button>
+          </nav>
+        }
+      }
+    }
+  }
+</section>

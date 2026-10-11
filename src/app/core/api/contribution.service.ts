@@ -31,6 +31,18 @@ export interface PromptView {
   content: string;
 }
 
+export type ContributorStatus = 'TRIAL' | 'ACTIVE' | 'SUSPENDED';
+
+/** Ma période d'essai : état, plafond, et ce qui est déjà envoyé ou relu (calculé par le serveur). */
+export interface TrialView {
+  status: ContributorStatus;
+  limit: number;
+  used: number;
+  pending: number;
+  validated: number;
+  rejected: number;
+}
+
 /** Extension de fichier pour un type MIME de MediaRecorder (le serveur vérifie de toute façon le contenu). */
 export function extensionFor(mimeType: string): string {
   if (mimeType.includes('webm')) return 'webm';
@@ -51,6 +63,10 @@ export class ContributionService {
 
   grantConsent(kind: ConsentKind): Observable<ConsentRecord> {
     return this.http.post<ConsentRecord>('/api/consents', { kind });
+  }
+
+  trial(): Observable<TrialView> {
+    return this.http.get<TrialView>('/api/me/contributor');
   }
 
   openCampaigns(): Observable<CampaignView[]> {

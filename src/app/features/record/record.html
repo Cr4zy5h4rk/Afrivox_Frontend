@@ -28,6 +28,22 @@
       </section>
     }
 
+    @case ('blocked') {
+      <section class="afv-card panel">
+        <div class="afv-band" aria-hidden="true"></div>
+        <div class="panel-body center">
+          @if (suspended()) {
+            <h1>{{ i18n.t('record.trial.suspended.title') }}</h1>
+            <p>{{ i18n.t('record.trial.suspended.body') }}</p>
+          } @else {
+            <h1>{{ i18n.t('record.trial.limit.title') }}</h1>
+            <p>{{ i18n.t('record.trial.limit.body', { limit: trial()?.limit ?? 0 }) }}</p>
+          }
+          <a mat-stroked-button routerLink="/">{{ i18n.t('record.done.home') }}</a>
+        </div>
+      </section>
+    }
+
     @case ('empty') {
       <section class="afv-card panel">
         <div class="panel-body center">
@@ -190,6 +206,14 @@
           }
         </div>
       </section>
+
+      @if (trial(); as t) {
+        @if (t.status === 'TRIAL') {
+          <p class="pending" role="status">
+            {{ i18n.t('record.trial.banner', { used: t.used, limit: t.limit }) }}
+          </p>
+        }
+      }
 
       @if (outbox.pending() > 0) {
         <p class="pending" role="status">
