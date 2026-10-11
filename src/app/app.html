@@ -18,11 +18,29 @@
           <a mat-button routerLink="/notifications" [attr.aria-label]="i18n.t('nav.notifications') + (unread() > 0 ? ' (' + unread() + ')' : '')">
             {{ i18n.t('nav.notifications') }}@if (unread() > 0) { ({{ unread() }}) }
           </a>
-          <a mat-button routerLink="/profile">{{ i18n.t('nav.profile') }}</a>
-          <a mat-stroked-button routerLink="/dashboard">{{ i18n.t('nav.dashboard') }}</a>
-          <button mat-button type="button" (click)="auth.logout()">
-            {{ i18n.t('nav.logout') }}
-          </button>
+          <!-- Espace, profil et déconnexion sont regroupés : trois boutons de plus ne tiennent pas sur une ligne -->
+          <div class="account">
+            <button
+              mat-stroked-button
+              type="button"
+              class="account-trigger"
+              aria-haspopup="true"
+              [attr.aria-expanded]="accountOpen()"
+              (click)="toggleAccount()"
+            >
+              {{ i18n.t('nav.account') }}
+              <span class="chevron" aria-hidden="true">▾</span>
+            </button>
+            @if (accountOpen()) {
+              <div class="account-panel" role="menu">
+                <a role="menuitem" routerLink="/dashboard">{{ i18n.t('nav.dashboard') }}</a>
+                <a role="menuitem" routerLink="/profile">{{ i18n.t('nav.profile') }}</a>
+                <button role="menuitem" type="button" (click)="auth.logout()">
+                  {{ i18n.t('nav.logout') }}
+                </button>
+              </div>
+            }
+          </div>
         } @else {
           <a mat-button routerLink="/login">{{ i18n.t('nav.login') }}</a>
           <a mat-flat-button routerLink="/register">{{ i18n.t('nav.register') }}</a>

@@ -23,12 +23,18 @@ import { BrandMark } from './core/ui/brand-mark';
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    // Le menu du compte se ferme au clic ailleurs ou sur Échap
+    '(document:click)': 'closeAccountOutside($event)',
+    '(document:keydown.escape)': 'accountOpen.set(false)',
+  },
 })
 export class App {
   protected readonly i18n = inject(I18nService);
   protected readonly auth = inject(AuthService);
   protected readonly languages = LANGUAGES;
   protected readonly menuOpen = signal(false);
+  protected readonly accountOpen = signal(false);
   protected readonly year = new Date().getFullYear();
   private readonly community = inject(CommunityService);
   /** Notifications non lues, relues à chaque changement de page (pas de temps réel dans le projet). */
@@ -43,6 +49,7 @@ export class App {
       )
       .subscribe(() => {
         this.menuOpen.set(false);
+        this.accountOpen.set(false);
         if (this.auth.isAuthenticated()) {
           this.community.unreadCount().subscribe({
             next: (r) => this.unread.set(r.unread),
@@ -56,6 +63,16 @@ export class App {
 
   protected setLang(lang: Lang): void {
     this.i18n.setLang(lang);
+  }
+
+  protected toggleAccount(): void {
+    this.accountOpen.update((open) => !open);
+  }
+
+  protected closeAccountOutside(event: Event): void {
+    if (this.accountOpen() && !(event.target as Element | null)?.closest('.account')) {
+      this.accountOpen.set(false);
+    }
   }
 
   protected toggleMenu(): void {

@@ -1,15 +1,32 @@
-<main class="page profile">
-  <h1>{{ i18n.t('profile.title') }}</h1>
+<section class="page-hero">
+  <div class="container hero">
+    <div class="avatar" aria-hidden="true">{{ initials() }}</div>
+    <div class="who">
+      <p class="eyebrow">{{ i18n.t('profile.title') }}</p>
+      <h1>{{ auth.account()?.login }}</h1>
+      <p class="email">{{ auth.account()?.email }}</p>
+      <div class="badges">
+        @for (role of roleLabels(); track role) {
+          <span class="pill">{{ i18n.t(role) }}</span>
+        }
+        @if (trial(); as t) {
+          <span [class]="'pill status ' + statusTone(t.status)">{{ i18n.t(statusKey(t.status)) }}</span>
+        }
+      </div>
+    </div>
+  </div>
+</section>
 
+<div class="container body">
   @switch (state()) {
     @case ('loading') {
       <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
     }
     @case ('failed') {
-      <section class="afv-card block" role="alert">
-        <p>{{ i18n.t('profile.failed') }}</p>
+      <div class="empty" role="alert">
+        <h3>{{ i18n.t('profile.failed') }}</h3>
         <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
-      </section>
+      </div>
     }
     @default {
       <div aria-live="polite">
@@ -20,59 +37,106 @@
         }
       </div>
 
-      <section class="afv-card block">
-        <h2>{{ i18n.t('profile.account') }}</h2>
-        @if (auth.account(); as account) {
-          <dl>
-            <dt>{{ i18n.t('profile.login') }}</dt>
-            <dd>{{ account.login }}</dd>
-            <dt>{{ i18n.t('profile.email') }}</dt>
-            <dd>{{ account.email }}</dd>
-            @if (nativeLanguageName(); as language) {
-              <dt>{{ i18n.t('profile.nativeLanguage') }}</dt>
-              <dd>{{ language }}</dd>
-            }
-          </dl>
-        }
-      </section>
-
-      @if (isContributor()) {
-        @if (profile(); as p) {
-          <section class="afv-card block">
-            <h2>{{ i18n.t('profile.declared') }}</h2>
-            <p class="muted">{{ i18n.t('profile.declared.intro') }}</p>
-            <app-contributor-profile-form
-              [initial]="p"
-              submitLabel="record.profile.save"
-              (saved)="onSaved($event)"
-            />
-          </section>
-        }
-
-        <section class="afv-card block">
-          <h2>{{ i18n.t('profile.consent.title') }}</h2>
-          <p>{{ i18n.t('profile.consent.body') }}</p>
-          @if (activeConsent(); as consent) {
-            <p class="status ok">
-              {{
-                i18n.t('profile.consent.active', {
-                  date: i18n.date(consent.grantedAt),
-                  version: consent.policyVersion
-                })
-              }}
-            </p>
-            <p class="muted">{{ i18n.t('profile.consent.effect') }}</p>
-            <button mat-stroked-button type="button" [disabled]="busy()" (click)="revoke()">
-              {{ i18n.t('profile.consent.revoke') }}
-            </button>
+      <div class="layout">
+        <div class="main">
+          @if (isContributor() && profile(); as p) {
+            <section class="card block">
+              <header class="block-head">
+                <div>
+                  <h2>{{ i18n.t('profile.declared') }}</h2>
+                  <p class="muted">{{ i18n.t('profile.declared.intro') }}</p>
+                </div>
+                <span [class]="'badge ' + (p.complete ? 'green' : 'gold')">
+                  {{ i18n.t(p.complete ? 'profile.complete' : 'profile.incomplete') }}
+                </span>
+              </header>
+              <app-contributor-profile-form
+                [initial]="p"
+                submitLabel="record.profile.save"
+                (saved)="onSaved($event)"
+              />
+            </section>
           } @else {
-            <p class="status">{{ i18n.t('profile.consent.none') }}</p>
-            <button mat-flat-button type="button" [disabled]="busy()" (click)="grant()">
-              {{ i18n.t('profile.consent.grant') }}
-            </button>
+            <section class="card block">
+              <h2>{{ i18n.t('profile.account') }}</h2>
+              <p class="muted">{{ i18n.t('profile.nonContributor') }}</p>
+            </section>
           }
-        </section>
-      }
+        </div>
+
+        <aside class="side">
+          <section class="card block">
+            <h2>{{ i18n.t('profile.account') }}</h2>
+            <dl>
+              <dt>{{ i18n.t('profile.login') }}</dt>
+              <dd>{{ auth.account()?.login }}</dd>
+              <dt>{{ i18n.t('profile.email') }}</dt>
+              <dd>{{ auth.account()?.email }}</dd>
+              @if (nativeLanguageName(); as language) {
+                <dt>{{ i18n.t('profile.nativeLanguage') }}</dt>
+                <dd>{{ language }}</dd>
+              }
+            </dl>
+          </section>
+
+          @if (trial(); as t) {
+            <section class="card block">
+              <h2>{{ i18n.t('profile.trial.title') }}</h2>
+              @if (t.status === 'TRIAL') {
+                <div
+                  class="bar"
+                  role="progressbar"
+                  [attr.aria-valuenow]="trialPercent()"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  [attr.aria-label]="i18n.t('profile.trial.title')"
+                >
+                  <span class="fill" [style.inline-size.%]="trialPercent()"></span>
+                </div>
+                <p class="strong">{{ i18n.t('profile.trial.progress', { used: t.used, limit: t.limit }) }}</p>
+                <p class="muted">{{ i18n.t('profile.trial.hint') }}</p>
+              } @else if (t.status === 'ACTIVE') {
+                <p class="strong ok">{{ i18n.t('profile.trial.active') }}</p>
+              } @else {
+                <p class="strong">{{ i18n.t('profile.trial.suspended') }}</p>
+              }
+            </section>
+          }
+
+          @if (isContributor()) {
+            <section class="card block">
+              <header class="block-head">
+                <h2>{{ i18n.t('profile.consent.title') }}</h2>
+                @if (activeConsent()) {
+                  <span class="badge green">{{ i18n.t('profile.consent.on') }}</span>
+                } @else {
+                  <span class="badge gray">{{ i18n.t('profile.consent.off') }}</span>
+                }
+              </header>
+              <p>{{ i18n.t('profile.consent.body') }}</p>
+              @if (activeConsent(); as consent) {
+                <p class="muted">
+                  {{
+                    i18n.t('profile.consent.active', {
+                      date: i18n.date(consent.grantedAt),
+                      version: consent.policyVersion
+                    })
+                  }}
+                </p>
+                <p class="muted">{{ i18n.t('profile.consent.effect') }}</p>
+                <button mat-stroked-button type="button" [disabled]="busy()" (click)="revoke()">
+                  {{ i18n.t('profile.consent.revoke') }}
+                </button>
+              } @else {
+                <p class="muted">{{ i18n.t('profile.consent.none') }}</p>
+                <button mat-flat-button type="button" [disabled]="busy()" (click)="grant()">
+                  {{ i18n.t('profile.consent.grant') }}
+                </button>
+              }
+            </section>
+          }
+        </aside>
+      </div>
     }
   }
-</main>
+</div>

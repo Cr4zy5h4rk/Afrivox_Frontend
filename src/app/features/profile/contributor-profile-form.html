@@ -1,4 +1,4 @@
-<form class="form-column" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+<form class="form-grid" [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <mat-form-field appearance="outline">
     <mat-label>{{ i18n.t('record.profile.age') }}</mat-label>
     <mat-select formControlName="ageRange" required>
@@ -40,7 +40,7 @@
     }
   </mat-form-field>
 
-  <mat-form-field appearance="outline">
+  <mat-form-field appearance="outline" class="wide">
     <mat-label>{{ i18n.t('record.profile.otherLanguages') }}</mat-label>
     <mat-select formControlName="otherLanguages" multiple>
       @for (l of languages(); track l.code) {
@@ -51,8 +51,8 @@
   </mat-form-field>
 
   @if (error(); as key) {
-    <p class="form-error" role="alert">{{ i18n.t(key) }}</p>
+    <p class="form-error wide" role="alert">{{ i18n.t(key) }}</p>
   }
 
-  <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t(submitLabel()) }}</button>
+  <button mat-flat-button type="submit" class="wide" [disabled]="busy()">{{ i18n.t(submitLabel()) }}</button>
 </form>

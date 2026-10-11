@@ -25,6 +25,17 @@ main {
   block-size: 68px;
 }
 
+// Rien dans l'en-tête ne passe à la ligne : s'il manque de la place, c'est le menu mobile qui prend le relais
+.bar,
+.nav,
+.nav-actions {
+  white-space: nowrap;
+}
+
+.bar > * {
+  flex-shrink: 0;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
@@ -65,11 +76,60 @@ main {
   }
 }
 
+.nav {
+  // La barre peut rétrécir (les liens ne se replient pas) pour laisser sa place à la langue et au compte
+  flex-shrink: 1;
+  min-inline-size: 0;
+}
+
 .nav-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-inline-start: auto;
+}
+
+.account {
+  position: relative;
+}
+
+.account-trigger .chevron {
+  margin-inline-start: 0.35rem;
+  font-size: 0.8em;
+}
+
+.account-panel {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline-end: 0;
+  z-index: 30;
+  min-inline-size: 12rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem;
+  background: #fff;
+  border: 1px solid var(--afv-line);
+  border-radius: 10px;
+  box-shadow: 0 16px 32px rgb(18 22 51 / 12%);
+
+  a,
+  button {
+    padding: 0.6rem 0.8rem;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--afv-ink);
+    font: inherit;
+    font-weight: 600;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: #f0f2f9;
+    }
+  }
 }
 
 .lang {
@@ -101,8 +161,9 @@ main {
   }
 }
 
-// Mobile : la navigation devient un panneau sous l'en-tête
-@media (max-width: 62rem) {
+// Mobile et petits écrans : la navigation devient un panneau sous l'en-tête. Le seuil est assez haut pour que
+// marque + 4 liens + notifications + compte + langue tiennent sur une ligne au-dessus.
+@media (max-width: 66rem) {
   .burger {
     display: flex;
     margin-inline-start: auto;
@@ -139,6 +200,13 @@ main {
     > * {
       inline-size: 100%;
     }
+  }
+
+  // Dans le panneau mobile, les entrées du compte s'affichent à la suite, sans fenêtre flottante
+  .account-panel {
+    position: static;
+    margin-block-start: 0.35rem;
+    box-shadow: none;
   }
 
   .lang {
