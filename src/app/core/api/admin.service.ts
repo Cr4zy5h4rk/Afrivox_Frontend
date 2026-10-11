@@ -315,6 +315,11 @@ export class AdminService {
     return this.http.put(`/api/admin/datasets/versions/${versionId}/status`, { status });
   }
 
+  /** Fixe le tarif horaire d'une version publiée ; les achats déjà faits gardent leur prix. */
+  setVersionPrice(versionId: number, pricePerHourFcfa: number): Observable<unknown> {
+    return this.http.put(`/api/admin/datasets/versions/${versionId}/price`, { pricePerHourFcfa });
+  }
+
   /** Une page d'utilisateurs, les plus récents d'abord ; `query` filtre sur l'identifiant ou l'e-mail (côté serveur). */
   users(filter: AdminUserFilter, page: number, size: number): Observable<AdminUserPage> {
     let params = new HttpParams().set('page', page).set('size', size).set('sort', 'createdDate,desc');

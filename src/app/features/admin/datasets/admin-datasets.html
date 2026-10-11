@@ -168,6 +168,31 @@
                     })
                   }}
                 </span>
+                @if (!isFree(d)) {
+                  <span class="v-price">
+                    @if (v.pricePerHourFcfa === null) {
+                      <span class="badge gold">{{ i18n.t('adminver.noPrice') }}</span>
+                    }
+                    <label class="visually-hidden" [for]="'price-' + v.id">{{ i18n.t('adminver.priceLabel') }}</label>
+                    <input
+                      [id]="'price-' + v.id"
+                      type="number"
+                      min="0"
+                      inputmode="numeric"
+                      [placeholder]="i18n.t('adminver.priceLabel')"
+                      [value]="priceValue(v)"
+                      (input)="setPriceDraft(v.id, $event)"
+                    />
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      [disabled]="busy() || !canSavePrice(v)"
+                      (click)="savePrice(v)"
+                    >
+                      {{ i18n.t('adminver.savePrice') }}
+                    </button>
+                  </span>
+                }
                 <button mat-stroked-button type="button" [disabled]="busy()" (click)="toggleVersion(d, v)">
                   {{ i18n.t(v.status === 'PUBLISHED' ? 'adminver.withdraw' : 'adminver.republish') }}
                 </button>
@@ -189,7 +214,7 @@
             mat-stroked-button
             type="button"
             [attr.aria-expanded]="publishingFor() === d.id"
-            (click)="togglePublish(d.id)"
+            (click)="togglePublish(d)"
           >
             {{ i18n.t('admindata.publish') }}
           </button>
@@ -254,6 +279,9 @@
               <mat-label>{{ i18n.t('admindata.price') }}</mat-label>
               <input matInput type="number" min="0" formControlName="pricePerHourFcfa" />
               <mat-hint>{{ i18n.t('admindata.priceHint') }}</mat-hint>
+              @if (versionForm.controls.pricePerHourFcfa.touched && versionForm.controls.pricePerHourFcfa.invalid) {
+                <mat-error>{{ i18n.t('error.nopricing') }}</mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>{{ i18n.t('admindata.maxRecordings') }}</mat-label>

@@ -261,11 +261,49 @@ export class AdminDatasetsSection implements OnInit {
     this.notice.set(null);
   }
 
-  protected togglePublish(id: number): void {
-    this.publishingFor.update((current) => (current === id ? null : id));
+  protected togglePublish(dataset: AdminDatasetRow): void {
+    this.publishingFor.update((current) => (current === dataset.id ? null : dataset.id));
     this.editingFor.set(null);
     this.versionForm.reset({ license: 'RESEARCH', pricePerHourFcfa: null, maxRecordings: null });
+    // Un dataset payant ne peut pas être acheté sans tarif horaire : le serveur le refuse, on l'exige aussi ici
+    const price = this.versionForm.controls.pricePerHourFcfa;
+    price.setValidators(
+      dataset.plan === 'STARTER' ? [Validators.min(0)] : [Validators.required, Validators.min(0)],
+    );
+    price.updateValueAndValidity();
     this.notice.set(null);
+  }
+
+  /** Dataset gratuit : pas de tarif à fixer. */
+  protected isFree(dataset: AdminDatasetRow): boolean {
+    return dataset.plan === 'STARTER';
+  }
+
+  /** Tarifs en cours de saisie, par version ; sans saisie on montre le tarif enregistré. */
+  protected readonly priceDrafts = signal<Record<number, string>>({});
+
+  protected priceValue(version: AdminVersionRow): string {
+    return this.priceDrafts()[version.id] ?? (version.pricePerHourFcfa?.toString() ?? '');
+  }
+
+  protected setPriceDraft(versionId: number, event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.priceDrafts.update((drafts) => ({ ...drafts, [versionId]: value }));
+  }
+
+  protected canSavePrice(version: AdminVersionRow): boolean {
+    const typed = Number(this.priceValue(version));
+    return this.priceValue(version) !== '' && Number.isInteger(typed) && typed >= 0 && typed !== version.pricePerHourFcfa;
+  }
+
+  protected savePrice(version: AdminVersionRow): void {
+    if (!this.canSavePrice(version)) return;
+    this.runThenReload(this.admin.setVersionPrice(version.id, Number(this.priceValue(version))), () =>
+      this.priceDrafts.update((drafts) => {
+        const { [version.id]: _removed, ...rest } = drafts;
+        return rest;
+      }),
+    );
   }
 
   protected create(): void {

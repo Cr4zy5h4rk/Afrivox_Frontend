@@ -60,6 +60,34 @@
   font-size: 0.9rem;
 }
 
+// Tarif horaire d'une version : saisie compacte sur la même ligne que la version
+.v-price {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+
+  input {
+    inline-size: 9rem;
+    block-size: 44px;
+    padding-inline: 0.8rem;
+    font: inherit;
+    color: var(--afv-ink);
+    background: #fff;
+    border: 1px solid #cfd4e6;
+    border-radius: 10px;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .pager {
   display: flex;
   align-items: center;
