@@ -1,0 +1,50 @@
+<section>
+  <h2>{{ i18n.t('adminleak.title') }}</h2>
+  <p class="muted">{{ i18n.t('adminleak.intro') }}</p>
+
+  <div class="picker">
+    <label for="leak-file">{{ i18n.t('adminleak.file') }}</label>
+    <input id="leak-file" type="file" accept=".wav,.tsv,.txt,.csv,audio/wav,text/plain" (change)="pick($event)" />
+    <button mat-flat-button type="button" [disabled]="busy() || !file()" (click)="run()">
+      {{ i18n.t('adminleak.run') }}
+    </button>
+  </div>
+
+  @if (failed()) {
+    <p class="form-error" role="alert">{{ i18n.t('adminleak.failed') }}</p>
+  }
+
+  @if (report(); as r) {
+    <div class="result" role="status">
+      <p class="kind">
+        <span class="badge">{{ i18n.t(r.kind === 'AUDIO' ? 'adminleak.kind.AUDIO' : 'adminleak.kind.NAMES') }}</span>
+        <span class="muted">
+          {{ i18n.t(r.kind === 'AUDIO' ? 'adminleak.inspectedAudio' : 'adminleak.inspectedNames', { count: r.inspected }) }}
+        </span>
+      </p>
+
+      @if (r.matches.length === 0) {
+        <p>{{ i18n.t(r.kind === 'NAMES' && r.inspected < 3 ? 'adminleak.noneNames' : 'adminleak.none') }}</p>
+      } @else {
+        <ul class="matches">
+          @for (m of r.matches; track m.purchaseId) {
+            <li class="card">
+              <p>
+                {{
+                  i18n.t('adminleak.match', {
+                    id: m.purchaseId,
+                    dataset: m.datasetSlug,
+                    version: m.versionLabel,
+                    buyer: m.buyer,
+                    date: i18n.date(m.purchasedAt)
+                  })
+                }}
+              </p>
+              <p class="muted">{{ i18n.t('adminleak.score', { score: percent(m.score) }) }}</p>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</section>

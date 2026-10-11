@@ -360,9 +360,33 @@ export class AdminService {
       );
   }
 
+  /** Cherche à quel achat correspond un fichier d'une copie suspecte (WAV, manifest.tsv ou liste de noms). */
+  leakCheck(file: File): Observable<LeakReport> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return this.http.post<LeakReport>('/api/admin/leak-check', form);
+  }
+
   setContributorStatus(id: number, status: AdminContributorStatus): Observable<unknown> {
     return this.http.post(`/api/admin/contributors/${id}/status`, null, { params: { value: status } });
   }
+}
+
+export interface LeakMatch {
+  purchaseId: number;
+  datasetSlug: string;
+  versionLabel: string;
+  buyer: string;
+  purchasedAt: string;
+  /** Concordance entre 0 et 1. */
+  score: number;
+}
+
+export interface LeakReport {
+  kind: 'AUDIO' | 'NAMES';
+  /** AUDIO : achats comparés ; NAMES : noms de fichiers reconnus dans le fichier. */
+  inspected: number;
+  matches: LeakMatch[];
 }
 
 export type AdminContributorStatus = 'TRIAL' | 'ACTIVE' | 'SUSPENDED';

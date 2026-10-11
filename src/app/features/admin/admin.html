@@ -71,6 +71,16 @@
       type="button"
       role="tab"
       class="tab"
+      [class.active]="tab() === 'leaks'"
+      [attr.aria-selected]="tab() === 'leaks'"
+      (click)="setTab('leaks')"
+    >
+      {{ i18n.t('admin.tab.leaks') }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab"
       [class.active]="tab() === 'moderation'"
       [attr.aria-selected]="tab() === 'moderation'"
       (click)="setTab('moderation')"
@@ -93,6 +103,8 @@
     <app-admin-users />
   } @else if (tab() === 'contributors') {
     <app-admin-contributors />
+  } @else if (tab() === 'leaks') {
+    <app-admin-leaks />
   } @else if (tab() === 'moderation') {
     <app-admin-moderation />
   } @else if (tab() === 'languages') {
