@@ -46,9 +46,9 @@ export interface TrialView {
 export type AgeRange = 'R18_25' | 'R26_35' | 'R36_45' | 'R46_60' | 'R61_PLUS';
 export type Gender = 'FEMALE' | 'MALE' | 'OTHER';
 
-/** Ce que le contributeur a déclaré (tout est facultatif) ; `answered` : questionnaire rempli ou passé. */
+/** Ce que le contributeur a déclaré ; `complete` : âge, genre, pays et région sont renseignés (obligatoire pour enregistrer). */
 export interface ContributorProfile {
-  answered: boolean;
+  complete: boolean;
   nativeLanguage: string | null;
   ageRange: AgeRange | null;
   gender: Gender | null;
@@ -60,8 +60,8 @@ export interface ContributorProfile {
 export interface ContributorProfileInput {
   ageRange: AgeRange | null;
   gender: Gender | null;
-  country: string | null;
-  region: string | null;
+  country: string;
+  region: string;
   otherLanguages: string[];
 }
 
@@ -85,6 +85,11 @@ export class ContributionService {
 
   grantConsent(kind: ConsentKind): Observable<ConsentRecord> {
     return this.http.post<ConsentRecord>('/api/consents', { kind });
+  }
+
+  /** Retire un consentement : on ne supprime rien, la date de retrait est enregistrée. */
+  revokeConsent(id: number): Observable<ConsentRecord> {
+    return this.http.post<ConsentRecord>(`/api/consents/${id}/revoke`, {});
   }
 
   trial(): Observable<TrialView> {

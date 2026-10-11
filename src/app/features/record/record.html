@@ -31,64 +31,11 @@
     @case ('profile') {
       <section class="afv-card panel">
         <div class="afv-band" aria-hidden="true"></div>
-        <form class="panel-body" [formGroup]="profileForm" (ngSubmit)="saveProfile(false)">
+        <div class="panel-body">
           <h1>{{ i18n.t('record.profile.title') }}</h1>
           <p>{{ i18n.t('record.profile.intro') }}</p>
-
-          <mat-form-field appearance="outline">
-            <mat-label>{{ i18n.t('record.profile.age') }}</mat-label>
-            <mat-select formControlName="ageRange">
-              <mat-option value="">{{ i18n.t('record.profile.none') }}</mat-option>
-              @for (a of ageRanges; track a) {
-                <mat-option [value]="a">{{ i18n.t(ageKey(a)) }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>{{ i18n.t('record.profile.gender') }}</mat-label>
-            <mat-select formControlName="gender">
-              <mat-option value="">{{ i18n.t('record.profile.none') }}</mat-option>
-              @for (g of genders; track g) {
-                <mat-option [value]="g">{{ i18n.t(genderKey(g)) }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>{{ i18n.t('record.profile.country') }}</mat-label>
-            <input matInput formControlName="country" maxlength="60" autocomplete="country-name" />
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>{{ i18n.t('record.profile.region') }}</mat-label>
-            <input matInput formControlName="region" maxlength="60" />
-            <mat-hint>{{ i18n.t('record.profile.region.hint') }}</mat-hint>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>{{ i18n.t('record.profile.otherLanguages') }}</mat-label>
-            <mat-select formControlName="otherLanguages" multiple>
-              @for (l of languages(); track l.code) {
-                <mat-option [value]="l.code">{{ l.name }}</mat-option>
-              }
-              <mat-option value="other">{{ i18n.t('register.nativeLanguage.other') }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          @if (notice(); as n) {
-            <p class="form-error" role="alert">{{ i18n.t(n.key, n.params) }}</p>
-          }
-
-          <div class="actions">
-            <button mat-stroked-button type="button" [disabled]="busy()" (click)="saveProfile(true)">
-              {{ i18n.t('record.profile.skip') }}
-            </button>
-            <button mat-flat-button type="submit" [disabled]="busy()">
-              {{ i18n.t('record.profile.save') }}
-            </button>
-          </div>
-        </form>
+          <app-contributor-profile-form [initial]="profile()" (saved)="onProfileSaved($event)" />
+        </div>
       </section>
     }
 

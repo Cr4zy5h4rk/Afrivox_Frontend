@@ -1,0 +1,58 @@
+<form class="form-column" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <mat-form-field appearance="outline">
+    <mat-label>{{ i18n.t('record.profile.age') }}</mat-label>
+    <mat-select formControlName="ageRange" required>
+      @for (a of ageRanges; track a) {
+        <mat-option [value]="a">{{ i18n.t(ageKey(a)) }}</mat-option>
+      }
+    </mat-select>
+    @if (form.controls.ageRange.touched && form.controls.ageRange.invalid) {
+      <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>{{ i18n.t('record.profile.gender') }}</mat-label>
+    <mat-select formControlName="gender" required>
+      @for (g of genders; track g) {
+        <mat-option [value]="g">{{ i18n.t(genderKey(g)) }}</mat-option>
+      }
+    </mat-select>
+    @if (form.controls.gender.touched && form.controls.gender.invalid) {
+      <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>{{ i18n.t('record.profile.country') }}</mat-label>
+    <input matInput formControlName="country" maxlength="60" autocomplete="country-name" required />
+    @if (form.controls.country.touched && form.controls.country.invalid) {
+      <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>{{ i18n.t('record.profile.region') }}</mat-label>
+    <input matInput formControlName="region" maxlength="60" required />
+    <mat-hint>{{ i18n.t('record.profile.region.hint') }}</mat-hint>
+    @if (form.controls.region.touched && form.controls.region.invalid) {
+      <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>{{ i18n.t('record.profile.otherLanguages') }}</mat-label>
+    <mat-select formControlName="otherLanguages" multiple>
+      @for (l of languages(); track l.code) {
+        <mat-option [value]="l.code">{{ l.name }}</mat-option>
+      }
+      <mat-option value="other">{{ i18n.t('register.nativeLanguage.other') }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  @if (error(); as key) {
+    <p class="form-error" role="alert">{{ i18n.t(key) }}</p>
+  }
+
+  <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t(submitLabel()) }}</button>
+</form>

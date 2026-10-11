@@ -1,0 +1,12 @@
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-inline-size: 28rem;
+  inline-size: 100%;
+
+  button[type='submit'] {
+    align-self: flex-start;
+    margin-block-start: 0.5rem;
+  }
+}

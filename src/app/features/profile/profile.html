@@ -1,0 +1,78 @@
+<main class="page profile">
+  <h1>{{ i18n.t('profile.title') }}</h1>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+    }
+    @case ('failed') {
+      <section class="afv-card block" role="alert">
+        <p>{{ i18n.t('profile.failed') }}</p>
+        <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+      </section>
+    }
+    @default {
+      <div aria-live="polite">
+        @if (notice(); as n) {
+          <p class="notice" [class.ok]="n.ok" [attr.role]="n.ok ? 'status' : 'alert'">
+            {{ i18n.t(n.key) }}
+          </p>
+        }
+      </div>
+
+      <section class="afv-card block">
+        <h2>{{ i18n.t('profile.account') }}</h2>
+        @if (auth.account(); as account) {
+          <dl>
+            <dt>{{ i18n.t('profile.login') }}</dt>
+            <dd>{{ account.login }}</dd>
+            <dt>{{ i18n.t('profile.email') }}</dt>
+            <dd>{{ account.email }}</dd>
+            @if (nativeLanguageName(); as language) {
+              <dt>{{ i18n.t('profile.nativeLanguage') }}</dt>
+              <dd>{{ language }}</dd>
+            }
+          </dl>
+        }
+      </section>
+
+      @if (isContributor()) {
+        @if (profile(); as p) {
+          <section class="afv-card block">
+            <h2>{{ i18n.t('profile.declared') }}</h2>
+            <p class="muted">{{ i18n.t('profile.declared.intro') }}</p>
+            <app-contributor-profile-form
+              [initial]="p"
+              submitLabel="record.profile.save"
+              (saved)="onSaved($event)"
+            />
+          </section>
+        }
+
+        <section class="afv-card block">
+          <h2>{{ i18n.t('profile.consent.title') }}</h2>
+          <p>{{ i18n.t('profile.consent.body') }}</p>
+          @if (activeConsent(); as consent) {
+            <p class="status ok">
+              {{
+                i18n.t('profile.consent.active', {
+                  date: i18n.date(consent.grantedAt),
+                  version: consent.policyVersion
+                })
+              }}
+            </p>
+            <p class="muted">{{ i18n.t('profile.consent.effect') }}</p>
+            <button mat-stroked-button type="button" [disabled]="busy()" (click)="revoke()">
+              {{ i18n.t('profile.consent.revoke') }}
+            </button>
+          } @else {
+            <p class="status">{{ i18n.t('profile.consent.none') }}</p>
+            <button mat-flat-button type="button" [disabled]="busy()" (click)="grant()">
+              {{ i18n.t('profile.consent.grant') }}
+            </button>
+          }
+        </section>
+      }
+    }
+  }
+</main>
