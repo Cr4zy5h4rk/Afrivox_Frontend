@@ -50,6 +50,9 @@ const SERVER_KEYS: Partial<Record<string, TranslationKey>> = {
   'error.ownreport': 'error.ownreport',
   'error.alreadyreported': 'error.alreadyreported',
   'error.toomanycomments': 'error.toomanycomments',
+  'error.adultrequired': 'error.adultrequired',
+  'error.nativelanguagerequired': 'error.nativelanguagerequired',
+  'error.invalidlanguage': 'error.invalidlanguage',
   'error.triallimit': 'error.triallimit',
   'error.contributorsuspended': 'error.contributorsuspended',
 };

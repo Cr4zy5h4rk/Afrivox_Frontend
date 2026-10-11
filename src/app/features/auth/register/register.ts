@@ -13,8 +13,10 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { ApiError, toApiError } from '../../../core/api-error';
+import { CatalogService, LanguageView } from '../../../core/api/catalog.service';
 import { AuthService, RegistrableRole } from '../../../core/auth/auth.service';
 import { ConsentService } from '../../../core/consent.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -40,6 +42,7 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
     MatButtonModule,
     MatCheckboxModule,
     MatRadioModule,
+    MatSelectModule,
   ],
   templateUrl: './register.html',
   styleUrl: './register.scss',
@@ -49,6 +52,7 @@ export class RegisterPage {
   protected readonly i18n = inject(I18nService);
   private readonly auth = inject(AuthService);
   private readonly consents = inject(ConsentService);
+  private readonly catalog = inject(CatalogService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -81,10 +85,17 @@ export class RegisterPage {
       password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(100)]],
       passwordConfirm: ['', Validators.required],
       role: [null as RegistrableRole | null, Validators.required],
+      // Réservés au rôle contributeur : leurs validateurs ne s'appliquent que si ce rôle est choisi
+      adult: [false],
+      nativeLanguage: [''],
       consent: [false, Validators.requiredTrue],
     },
     { validators: passwordsMatch },
   );
+
+  /** Langues du catalogue proposées comme langue maternelle (la valeur `other` est ajoutée dans le gabarit). */
+  protected readonly languages = signal<LanguageView[]>([]);
+  protected readonly isContributor = signal(false);
 
   /** Version du consentement lue sur le serveur ; l'inscription est impossible tant qu'elle n'est pas chargée. */
   protected readonly consentVersion = signal<string | null>(null);
@@ -92,6 +103,22 @@ export class RegisterPage {
   protected readonly error = signal<ApiError | null>(null);
 
   constructor() {
+    this.catalog
+      .languages()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (list) => this.languages.set(list), error: () => undefined });
+
+    // Majorité et langue maternelle ne sont exigées que d'un contributeur
+    this.form.controls.role.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((role) => {
+      const contributor = role === 'CONTRIBUTOR';
+      this.isContributor.set(contributor);
+      const { adult, nativeLanguage } = this.form.controls;
+      adult.setValidators(contributor ? Validators.requiredTrue : null);
+      nativeLanguage.setValidators(contributor ? Validators.required : null);
+      adult.updateValueAndValidity();
+      nativeLanguage.updateValueAndValidity();
+    });
+
     this.consents
       .currentVersion()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -103,7 +130,7 @@ export class RegisterPage {
 
   protected submit(): void {
     const version = this.consentVersion();
-    const { login, email, password, role } = this.form.getRawValue();
+    const { login, email, password, role, adult, nativeLanguage } = this.form.getRawValue();
     if (this.form.invalid || !version || !role || this.loading()) {
       this.form.markAllAsTouched();
       return;
@@ -118,6 +145,7 @@ export class RegisterPage {
         role,
         langKey: this.i18n.lang(),
         consentVersion: version,
+        ...(role === 'CONTRIBUTOR' ? { adult, nativeLanguage } : {}),
       })
       .subscribe({
         next: () => void this.router.navigate(['/login'], { queryParams: { registered: 1 } }),

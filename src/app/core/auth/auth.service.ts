@@ -42,6 +42,9 @@ export interface RegisterRequest {
   langKey: string;
   role: RegistrableRole;
   consentVersion: string;
+  /** Contributeur : confirmation de majorité et langue maternelle (code de langue ou `other`). */
+  adult?: boolean;
+  nativeLanguage?: string;
 }
 
 interface TokenResponse {

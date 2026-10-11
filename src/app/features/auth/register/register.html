@@ -92,6 +92,27 @@
           }
         </fieldset>
 
+        @if (isContributor()) {
+          <mat-form-field appearance="outline">
+            <mat-label>{{ i18n.t('register.nativeLanguage') }}</mat-label>
+            <mat-select formControlName="nativeLanguage">
+              @for (l of languages(); track l.code) {
+                <mat-option [value]="l.code">{{ l.name }}</mat-option>
+              }
+              <mat-option value="other">{{ i18n.t('register.nativeLanguage.other') }}</mat-option>
+            </mat-select>
+            <mat-hint>{{ i18n.t('register.nativeLanguage.hint') }}</mat-hint>
+            @if (form.controls.nativeLanguage.touched && form.controls.nativeLanguage.invalid) {
+              <mat-error>{{ i18n.t('validation.required') }}</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-checkbox formControlName="adult">{{ i18n.t('register.adult') }}</mat-checkbox>
+          @if (form.controls.adult.touched && form.controls.adult.invalid) {
+            <p class="form-error" role="alert">{{ i18n.t('error.adultrequired') }}</p>
+          }
+        }
+
         @if (consentVersion(); as version) {
           <mat-checkbox formControlName="consent">{{
             i18n.t('register.consent', { version })

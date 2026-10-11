@@ -43,6 +43,28 @@ export interface TrialView {
   rejected: number;
 }
 
+export type AgeRange = 'R18_25' | 'R26_35' | 'R36_45' | 'R46_60' | 'R61_PLUS';
+export type Gender = 'FEMALE' | 'MALE' | 'OTHER';
+
+/** Ce que le contributeur a déclaré (tout est facultatif) ; `answered` : questionnaire rempli ou passé. */
+export interface ContributorProfile {
+  answered: boolean;
+  nativeLanguage: string | null;
+  ageRange: AgeRange | null;
+  gender: Gender | null;
+  country: string | null;
+  region: string | null;
+  otherLanguages: string[];
+}
+
+export interface ContributorProfileInput {
+  ageRange: AgeRange | null;
+  gender: Gender | null;
+  country: string | null;
+  region: string | null;
+  otherLanguages: string[];
+}
+
 /** Extension de fichier pour un type MIME de MediaRecorder (le serveur vérifie de toute façon le contenu). */
 export function extensionFor(mimeType: string): string {
   if (mimeType.includes('webm')) return 'webm';
@@ -67,6 +89,14 @@ export class ContributionService {
 
   trial(): Observable<TrialView> {
     return this.http.get<TrialView>('/api/me/contributor');
+  }
+
+  contributorProfile(): Observable<ContributorProfile> {
+    return this.http.get<ContributorProfile>('/api/me/contributor/profile');
+  }
+
+  saveContributorProfile(input: ContributorProfileInput): Observable<ContributorProfile> {
+    return this.http.put<ContributorProfile>('/api/me/contributor/profile', input);
   }
 
   openCampaigns(): Observable<CampaignView[]> {

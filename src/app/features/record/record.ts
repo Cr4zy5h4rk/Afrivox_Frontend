@@ -8,13 +8,21 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
+import { CatalogService, LanguageView } from '../../core/api/catalog.service';
 import {
+  AgeRange,
   CampaignView,
   ContributionService,
+  ContributorProfile,
+  Gender,
   PromptView,
   TrialView,
 } from '../../core/api/contribution.service';
@@ -28,6 +36,7 @@ type Phase =
   | 'loading'
   | 'failed'
   | 'consent'
+  | 'profile'
   | 'blocked'
   | 'empty'
   | 'pick'
@@ -62,7 +71,15 @@ const MIC_ERRORS: Record<string, TranslationKey> = {
  */
 @Component({
   selector: 'app-record',
-  imports: [MatButtonModule, MatProgressBarModule, RouterLink],
+  imports: [
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatProgressBarModule,
+    MatSelectModule,
+    ReactiveFormsModule,
+    RouterLink,
+  ],
   templateUrl: './record.html',
   styleUrl: './record.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -71,6 +88,21 @@ export class RecordPage implements OnInit, OnDestroy {
   protected readonly i18n = inject(I18nService);
   protected readonly outbox = inject(OutboxService);
   private readonly api = inject(ContributionService);
+  private readonly catalog = inject(CatalogService);
+
+  /** Questionnaire facultatif de la première visite : tout est optionnel, « Passer » compte comme une réponse. */
+  protected readonly profileForm = inject(FormBuilder).nonNullable.group({
+    ageRange: ['' as AgeRange | ''],
+    gender: ['' as Gender | ''],
+    country: [''],
+    region: [''],
+    otherLanguages: [[] as string[]],
+  });
+  protected readonly ageRanges: readonly AgeRange[] = ['R18_25', 'R26_35', 'R36_45', 'R46_60', 'R61_PLUS'];
+  protected readonly genders: readonly Gender[] = ['FEMALE', 'MALE', 'OTHER'];
+  protected readonly languages = signal<LanguageView[]>([]);
+  /** Réponses déjà données (null si le serveur ne les a pas renvoyées : on ne bloque alors rien). */
+  private readonly profile = signal<ContributorProfile | null>(null);
 
   protected readonly recorder = new AudioRecorder();
   protected readonly maxMs = MAX_MS;
@@ -122,10 +154,12 @@ export class RecordPage implements OnInit, OnDestroy {
       consents: this.api.consents(),
       campaigns: this.api.openCampaigns(),
       trial: this.api.trial().pipe(catchError(() => of(null))),
+      profile: this.api.contributorProfile().pipe(catchError(() => of(null))),
     }).subscribe({
-      next: ({ consents, campaigns, trial }) => {
+      next: ({ consents, campaigns, trial, profile }) => {
         this.campaigns.set(campaigns);
         this.trial.set(trial);
+        this.profile.set(profile);
         const consented = consents.some((c) => c.kind === 'COLLECTION' && c.revokedAt === null);
         if (!consented) {
           this.phase.set('consent');
@@ -149,6 +183,47 @@ export class RecordPage implements OnInit, OnDestroy {
         this.notice.set({ kind: 'error', ...toApiError(error) });
       },
     });
+  }
+
+  protected ageKey(range: AgeRange): TranslationKey {
+    return `age.${range}` as TranslationKey;
+  }
+
+  protected genderKey(gender: Gender): TranslationKey {
+    return `gender.${gender}` as TranslationKey;
+  }
+
+  private openProfile(): void {
+    this.phase.set('profile');
+    if (this.languages().length === 0) {
+      this.catalog.languages().subscribe({ next: (l) => this.languages.set(l), error: () => undefined });
+    }
+  }
+
+  /** Envoie les réponses ; sans aucune réponse, c'est « passer » et le questionnaire ne revient plus. */
+  protected saveProfile(skip: boolean): void {
+    if (this.busy()) return;
+    const value = this.profileForm.getRawValue();
+    this.busy.set(true);
+    this.api
+      .saveContributorProfile({
+        ageRange: skip || !value.ageRange ? null : value.ageRange,
+        gender: skip || !value.gender ? null : value.gender,
+        country: skip ? null : value.country.trim() || null,
+        region: skip ? null : value.region.trim() || null,
+        otherLanguages: skip ? [] : value.otherLanguages,
+      })
+      .subscribe({
+        next: (saved) => {
+          this.busy.set(false);
+          this.profile.set(saved);
+          this.proceed();
+        },
+        error: (error: unknown) => {
+          this.busy.set(false);
+          this.notice.set({ kind: 'error', ...toApiError(error) });
+        },
+      });
   }
 
   protected selectCampaign(campaign: CampaignView): void {
@@ -198,8 +273,11 @@ export class RecordPage implements OnInit, OnDestroy {
 
   private proceed(): void {
     const campaigns = this.campaigns();
+    const profile = this.profile();
     if (this.isBlocked(this.trial())) {
       this.phase.set('blocked');
+    } else if (profile && !profile.answered) {
+      this.openProfile();
     } else if (campaigns.length === 0) {
       this.phase.set('empty');
     } else if (campaigns.length === 1) {
