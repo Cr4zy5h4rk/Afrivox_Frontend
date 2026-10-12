@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>AfriVox</title>
+  <rect width="64" height="64" rx="14.1" fill="#fbf5ea"/>
+  <g transform="translate(2.992 5.016) scale(1.3492)">
+    <rect x="3" y="14" width="5" height="12" rx="2.5" fill="#d9a12a"/>
+    <rect x="11" y="7" width="5" height="26" rx="2.5" fill="#c4411a"/>
+    <rect x="19" y="2" width="5" height="36" rx="2.5" fill="#1e2a6b"/>
+    <rect x="27" y="9" width="5" height="22" rx="2.5" fill="#c4411a"/>
+    <rect x="35" y="15" width="5" height="10" rx="2.5" fill="#d9a12a"/>
+  </g>
+</svg>
