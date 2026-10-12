@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+import { toWav16k } from './wav-encoder';
 
 export interface RecordedClip {
   blob: Blob;
@@ -79,10 +80,17 @@ export class AudioRecorder {
     this.recorder.onstop = () => {
       const durationMs = performance.now() - this.startedAt;
       const type = this.recorder?.mimeType || mimeType || 'audio/webm';
-      const clip: RecordedClip = { blob: new Blob(this.chunks, { type }), durationMs, mimeType: type };
-      this.release();
-      this.finish?.(clip);
+      const original: RecordedClip = { blob: new Blob(this.chunks, { type }), durationMs, mimeType: type };
+      const done = this.finish;
       this.finish = null;
+      this.release();
+      // Conversion en WAV 16 kHz mono : le serveur peut alors mesurer l'audio (durée, niveau, saturation,
+      // silence) et les données sont uniformes. Si le navigateur ne sait pas, on envoie le fichier d'origine.
+      void toWav16k(original.blob).then((wav) => {
+        done?.(
+          wav ? { blob: wav.blob, durationMs: wav.durationMs, mimeType: 'audio/wav' } : original,
+        );
+      });
     };
 
     this.watchLevel();
