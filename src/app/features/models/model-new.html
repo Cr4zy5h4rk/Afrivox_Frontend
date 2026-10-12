@@ -114,6 +114,32 @@
       }
     }
 
+    @if (primary()) {
+      <section class="usage" aria-labelledby="usage-title">
+        <h2 id="usage-title">{{ i18n.t('modelnew.usageTitle') }}</h2>
+        <p class="muted small">{{ i18n.t('modelnew.usageIntro') }}</p>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>{{ i18n.t('modelnew.usage') }}</mat-label>
+          <mat-select formControlName="usage" required>
+            @for (kind of usageOptions; track kind) {
+              <mat-option [value]="kind" [disabled]="!usageAllowed(kind)">{{ i18n.t(licenseKey(kind)) }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>{{ i18n.t('modelnew.usageHint') }}</mat-hint>
+        </mat-form-field>
+        @if (notPurchased().length > 0) {
+          <p class="form-error" role="alert">
+            {{ i18n.t('modelnew.notPurchased') }}
+            @for (v of notPurchased(); track v.id; let last = $last) {
+              <a [routerLink]="['/datasets', v.slug]">{{ displayVersion(v) }}</a>@if (!last) {, }
+            }
+          </p>
+        } @else if (ceiling(); as c) {
+          <p class="muted small">{{ i18n.t('modelnew.ceiling', { usage: i18n.t(licenseKey(c)) }) }}</p>
+        }
+      </section>
+    }
+
     <mat-form-field appearance="outline">
       <mat-label>{{ i18n.t('modelnew.description') }}</mat-label>
       <textarea matInput formControlName="description" rows="5" maxlength="1000"></textarea>

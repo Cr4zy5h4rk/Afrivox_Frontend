@@ -338,6 +338,17 @@
                 <dt>{{ i18n.t('model.license') }}</dt>
                 <dd>{{ m.license || i18n.t('common.none') }}</dd>
               </div>
+              <div>
+                <dt>{{ i18n.t('model.usage') }}</dt>
+                <dd>
+                  @if (m.usage) {
+                    {{ i18n.t(usageKey(m.usage)) }}
+                    <span class="muted small">{{ i18n.t('model.usageNote') }}</span>
+                  } @else {
+                    {{ i18n.t('model.usageUnknown') }}
+                  }
+                </dd>
+              </div>
               @if (m.sha256) {
                 <div>
                   <dt>{{ i18n.t('model.sha256') }}</dt>

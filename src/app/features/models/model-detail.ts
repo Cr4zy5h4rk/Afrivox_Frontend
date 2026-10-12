@@ -253,4 +253,9 @@ export class ModelDetailPage implements OnInit {
   protected taskKey(task: MlTask): TranslationKey {
     return `task.${task}`;
   }
+
+  /** Libellé d'un usage (prototype, recherche, commercial). */
+  protected usageKey(usage: 'PROTOTYPE' | 'RESEARCH' | 'COMMERCIAL'): TranslationKey {
+    return `license.${usage}`;
+  }
 }

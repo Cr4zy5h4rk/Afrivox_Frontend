@@ -168,6 +168,8 @@ export interface ModelSummary {
   trainedOnVersion: string | null;
   otherDatasets: DatasetRef[];
   bestWer: number | null;
+  /** Usage déclaré, borné par les licences d'achat des datasets d'entraînement ; `null` si non précisé. */
+  usage: LicenseKind | null;
 }
 
 export interface EvaluationRow {
@@ -251,6 +253,8 @@ export interface NewModel {
   trainedOnVersionId: number | null;
   /** Autres versions utilisées ; le serveur exige un dataset principal pour en accepter. */
   otherVersionIds: number[];
+  /** Usage accordé au modèle : obligatoire dès qu'un dataset est cité, plafonné par vos licences d'achat. */
+  usage: LicenseKind | null;
 }
 
 /** Catalogue public (`/api/public/**`, sans connexion) et publication de modèles (`/api/me/models`). */

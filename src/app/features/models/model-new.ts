@@ -26,7 +26,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { Observable, catchError, debounceTime, distinctUntilChanged, of, startWith, switchMap } from 'rxjs';
-import { CatalogService, LanguageView, MlTask, VersionOption } from '../../core/api/catalog.service';
+import { CatalogService, LanguageView, LicenseKind, MlTask, VersionOption } from '../../core/api/catalog.service';
+import { Purchase, PurchaseService } from '../../core/api/purchase.service';
 import { ApiError, toApiError } from '../../core/api-error';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { TranslationKey } from '../../core/i18n/translations';
@@ -42,6 +43,9 @@ function httpsUrl(control: AbstractControl): ValidationErrors | null {
     return { https: true };
   }
 }
+
+/** Ordre des usages : prototype < recherche < commercial (le même que le serveur, `LicenseInheritance`). */
+const USAGE_RANK: Record<LicenseKind, number> = { PROTOTYPE: 0, RESEARCH: 1, COMMERCIAL: 2 };
 
 /** Formulaire de publication d'un modèle (développeurs et admin). */
 @Component({
@@ -63,6 +67,7 @@ function httpsUrl(control: AbstractControl): ValidationErrors | null {
 export class ModelNewPage implements OnInit {
   protected readonly i18n = inject(I18nService);
   private readonly catalog = inject(CatalogService);
+  private readonly purchaseApi = inject(PurchaseService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -95,7 +100,50 @@ export class ModelNewPage implements OnInit {
     license: ['', Validators.maxLength(60)],
     url: ['', [Validators.maxLength(300), httpsUrl]],
     sha256: ['', Validators.pattern(/^\s*([0-9a-fA-F]{64})?\s*$/)],
+    /** Usage accordé au modèle ('' = non choisi). Obligatoire dès qu'un dataset est cité. */
+    usage: ['' as LicenseKind | ''],
   });
+
+  // ---- Héritage de licence -----------------------------------------------------------------------------------
+  /** Mes achats : servent à calculer à l'avance le plafond (le serveur revérifie à la publication). */
+  private readonly purchases = signal<Purchase[]>([]);
+  protected readonly usageOptions: readonly LicenseKind[] = ['PROTOTYPE', 'RESEARCH', 'COMMERCIAL'];
+
+  private readonly selected = computed(() => {
+    const list = [this.primary(), ...this.others()];
+    return list.filter((v): v is VersionOption => v !== null);
+  });
+
+  /** Datasets cités que je n'ai pas achetés (un achat gratuit suffit pour le plan Starter). */
+  protected readonly notPurchased = computed(() =>
+    this.selected().filter(
+      (v) => !this.purchases().some((p) => p.datasetSlug === v.slug && p.versionLabel === v.version),
+    ),
+  );
+
+  /** La plus restrictive de mes licences sur les datasets cités ; `null` si aucun n'est cité ou si l'un manque. */
+  protected readonly ceiling = computed<LicenseKind | null>(() => {
+    const chosen = this.selected();
+    if (chosen.length === 0 || this.notPurchased().length > 0) return null;
+    const ranks = chosen.map((v) =>
+      Math.max(
+        ...this.purchases()
+          .filter((p) => p.datasetSlug === v.slug && p.versionLabel === v.version)
+          .map((p) => USAGE_RANK[p.license]),
+      ),
+    );
+    const lowest = Math.min(...ranks);
+    return this.usageOptions.find((k) => USAGE_RANK[k] === lowest) ?? null;
+  });
+
+  protected usageAllowed(kind: LicenseKind): boolean {
+    const ceiling = this.ceiling();
+    return ceiling === null || USAGE_RANK[kind] <= USAGE_RANK[ceiling];
+  }
+
+  protected licenseKey(kind: LicenseKind): TranslationKey {
+    return `license.${kind}` as TranslationKey;
+  }
 
   /** Identifiants SPDX des licences les plus courantes ; la saisie libre reste possible pour les autres. */
   protected readonly commonLicenses = [
@@ -123,6 +171,7 @@ export class ModelNewPage implements OnInit {
 
   ngOnInit(): void {
     this.catalog.languages().subscribe({ next: (l) => this.languages.set(l), error: () => undefined });
+    this.purchaseApi.mine().subscribe({ next: (list) => this.purchases.set(list), error: () => undefined });
     this.bindSearch(this.primarySearch, this.primaryResults);
     this.bindSearch(this.otherSearch, this.otherResults);
 
@@ -198,11 +247,28 @@ export class ModelNewPage implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
+    const { usage, ...rest } = this.form.getRawValue();
+    // Contrôles évidents côté navigateur ; le serveur revérifie tout à la publication.
+    if (this.selected().length > 0) {
+      if (usage === '') {
+        this.error.set({ key: 'error.usagerequired' });
+        return;
+      }
+      if (this.notPurchased().length > 0) {
+        this.error.set({ key: 'error.licensenotheld' });
+        return;
+      }
+      if (!this.usageAllowed(usage)) {
+        this.error.set({ key: 'error.licenseinheritance' });
+        return;
+      }
+    }
     this.loading.set(true);
     this.error.set(null);
     this.catalog
       .publishModel({
-        ...this.form.getRawValue(),
+        ...rest,
+        usage: usage === '' ? null : usage,
         trainedOnVersionId: this.primary()?.id ?? null,
         otherVersionIds: this.others().map((v) => v.id),
       })
