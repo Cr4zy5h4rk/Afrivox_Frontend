@@ -62,6 +62,11 @@ const SERVER_KEYS: Partial<Record<string, TranslationKey>> = {
   'error.usernotfound': 'error.usernotfound',
   'error.balancenegative': 'error.balancenegative',
   'error.campaignnotfound': 'error.campaignnotfound',
+  'error.invalidname': 'error.invalidname',
+  'error.invalidscopes': 'error.invalidscopes',
+  'error.invalidexpiry': 'error.invalidexpiry',
+  'error.toomanykeys': 'error.toomanykeys',
+  'error.keynotfound': 'error.keynotfound',
 };
 
 /**

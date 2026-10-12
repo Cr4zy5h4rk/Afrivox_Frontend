@@ -87,6 +87,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/purchases/purchases').then((m) => m.PurchasesPage),
   },
   {
+    path: 'api-keys',
+    title: "Clés d'API · AfriVox",
+    canActivate: [authGuard, roleGuard('ROLE_DEVELOPER', 'ROLE_ORGANIZATION')],
+    loadComponent: () => import('./features/api-keys/api-keys').then((m) => m.ApiKeysPage),
+  },
+  {
     path: 'profile',
     title: 'Mon profil · AfriVox',
     canActivate: [authGuard],

@@ -1,0 +1,137 @@
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ i18n.t('apikeys.title') }}</h1>
+    <p>{{ i18n.t('apikeys.subtitle') }}</p>
+  </div>
+</section>
+
+<div class="container wrap">
+  <div aria-live="polite">
+    @if (error(); as e) {
+      <p class="form-error" role="alert">{{ i18n.t(e.key, e.params) }}</p>
+    }
+  </div>
+
+  @if (created(); as c) {
+    <section class="card created" aria-labelledby="created-title">
+      <h2 id="created-title">{{ i18n.t('apikeys.created.title') }}</h2>
+      <p class="warning">{{ i18n.t('apikeys.created.warning') }}</p>
+      <div class="secret">
+        <code>{{ c.secret }}</code>
+        <button mat-flat-button type="button" (click)="copy(c.secret)">
+          {{ i18n.t(copied() ? 'dsx.copied' : 'dsx.copy') }}
+        </button>
+      </div>
+      <button mat-stroked-button type="button" (click)="dismissCreated()">{{ i18n.t('apikeys.created.done') }}</button>
+    </section>
+  }
+
+  <section class="card block" aria-labelledby="new-title">
+    <h2 id="new-title">{{ i18n.t('apikeys.new.title') }}</h2>
+    <form [formGroup]="form" (ngSubmit)="create()" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('apikeys.new.name') }}</mat-label>
+        <input matInput formControlName="name" maxlength="60" autocomplete="off" />
+        <mat-hint>{{ i18n.t('apikeys.new.nameHint') }}</mat-hint>
+        @if (form.controls.name.invalid) {
+          <mat-error>{{ i18n.t('error.invalidname') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <fieldset class="scopes">
+        <legend>{{ i18n.t('apikeys.new.scopes') }}</legend>
+        <mat-checkbox formControlName="download">
+          <span class="scope-name">{{ i18n.t(scopeLabel('DOWNLOAD')) }}</span>
+          <span class="muted small">{{ i18n.t(scopeHint('DOWNLOAD')) }}</span>
+        </mat-checkbox>
+        <mat-checkbox formControlName="evaluate">
+          <span class="scope-name">{{ i18n.t(scopeLabel('EVALUATE')) }}</span>
+          <span class="muted small">{{ i18n.t(scopeHint('EVALUATE')) }}</span>
+        </mat-checkbox>
+        <mat-checkbox formControlName="publish">
+          <span class="scope-name">{{ i18n.t(scopeLabel('PUBLISH')) }}</span>
+          <span class="muted small">{{ i18n.t(scopeHint('PUBLISH')) }}</span>
+        </mat-checkbox>
+      </fieldset>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('apikeys.new.expiry') }}</mat-label>
+        <mat-select formControlName="expiresInDays">
+          @for (days of expiryChoices; track days) {
+            <mat-option [value]="days">{{ expiryLabel(days) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="actions">
+        <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('apikeys.new.submit') }}</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="block" aria-labelledby="list-title">
+    <h2 id="list-title">{{ i18n.t('apikeys.list.title') }}</h2>
+    @switch (state()) {
+      @case ('loading') {
+        <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+      }
+      @case ('failed') {
+        <p class="form-error" role="alert">{{ i18n.t('common.error') }}</p>
+        <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+      }
+      @default {
+        @if (keys().length === 0) {
+          <p class="muted">{{ i18n.t('apikeys.list.empty') }}</p>
+        } @else {
+          <ul class="list">
+            @for (k of keys(); track k.id) {
+              <li class="card item" [class.inactive]="!k.active">
+                <div class="head">
+                  <h3>{{ k.name }}</h3>
+                  <span class="badge" [class.off]="!k.active">
+                    {{ k.revokedAt ? i18n.t('apikeys.status.revoked') : k.active ? i18n.t('apikeys.status.active') : i18n.t('apikeys.status.expired') }}
+                  </span>
+                </div>
+                <p class="meta"><code>{{ k.prefix }}…</code></p>
+                <p class="meta muted small">
+                  @for (s of k.scopes; track s; let last = $last) {
+                    {{ i18n.t(scopeLabel(s)) }}@if (!last) {, }
+                  }
+                </p>
+                <p class="meta muted small">
+                  {{ i18n.t('apikeys.list.created', { date: i18n.date(k.createdAt) }) }}
+                  ·
+                  {{ k.lastUsedAt ? i18n.t('apikeys.list.lastUsed', { date: i18n.date(k.lastUsedAt) }) : i18n.t('apikeys.list.neverUsed') }}
+                  @if (k.expiresAt) {
+                    · {{ i18n.t('apikeys.list.expires', { date: i18n.date(k.expiresAt) }) }}
+                  }
+                </p>
+                @if (!k.revokedAt) {
+                  <div class="actions">
+                    @if (confirming() === k.id) {
+                      <button mat-flat-button type="button" class="danger" [disabled]="busy()" (click)="revoke(k.id)">
+                        {{ i18n.t('apikeys.revoke.confirm') }}
+                      </button>
+                      <button mat-button type="button" (click)="confirming.set(null)">{{ i18n.t('apikeys.revoke.cancel') }}</button>
+                    } @else {
+                      <button mat-stroked-button type="button" (click)="askRevoke(k.id)">{{ i18n.t('apikeys.revoke') }}</button>
+                    }
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  </section>
+
+  <section class="card block" aria-labelledby="ex-title">
+    <h2 id="ex-title">{{ i18n.t('apikeys.ex.title') }}</h2>
+    <p class="muted small">{{ i18n.t('apikeys.ex.note') }}</p>
+    <div class="code-box">
+      <pre><code>{{ examples() }}</code></pre>
+      <button mat-stroked-button type="button" (click)="copy(examples())">{{ i18n.t('dsx.copy') }}</button>
+    </div>
+  </section>
+</div>

@@ -35,6 +35,9 @@
               <div class="account-panel" role="menu">
                 <a role="menuitem" routerLink="/dashboard">{{ i18n.t('nav.dashboard') }}</a>
                 <a role="menuitem" routerLink="/profile">{{ i18n.t('nav.profile') }}</a>
+                @if (auth.hasRole('ROLE_DEVELOPER') || auth.hasRole('ROLE_ORGANIZATION')) {
+                  <a role="menuitem" routerLink="/api-keys">{{ i18n.t('nav.apikeys') }}</a>
+                }
                 <button role="menuitem" type="button" (click)="auth.logout()">
                   {{ i18n.t('nav.logout') }}
                 </button>

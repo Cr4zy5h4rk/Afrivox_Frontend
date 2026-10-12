@@ -64,6 +64,9 @@ export class HomePage {
     if (this.auth.hasRole('ROLE_DEVELOPER') || this.auth.hasRole('ROLE_ADMIN')) {
       list.push({ title: 'dash.models.title', body: 'dash.models.body', link: '/models/new' });
     }
+    if (this.auth.hasRole('ROLE_DEVELOPER') || this.auth.hasRole('ROLE_ORGANIZATION')) {
+      list.push({ title: 'dash.apikeys.title', body: 'dash.apikeys.body', link: '/api-keys' });
+    }
     if (this.auth.hasRole('ROLE_ORGANIZATION')) {
       list.push({ title: 'dash.org.title', body: 'dash.org.body', link: '/requests' });
     }
