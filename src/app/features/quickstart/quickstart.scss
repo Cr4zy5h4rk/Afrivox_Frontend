@@ -1,0 +1,83 @@
+.wrap {
+  display: grid;
+  gap: 1.5rem;
+  max-inline-size: 52rem;
+  padding-block: 1.5rem 3rem;
+}
+
+.intro h1 {
+  margin: 0 0 0.5rem;
+}
+
+.lead {
+  margin: 0;
+  color: var(--afv-muted);
+}
+
+.steps {
+  display: grid;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.step {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem;
+
+  h2,
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    color: var(--afv-muted);
+  }
+
+  ul {
+    margin: 0;
+    padding-inline-start: 1.25rem;
+    display: grid;
+    gap: 0.4rem;
+  }
+}
+
+.steps > .step h2::before {
+  counter-increment: step;
+  content: counter(step) '. ';
+}
+
+.note {
+  color: var(--afv-muted);
+  font-size: 0.9rem;
+}
+
+.code-box {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+
+  pre {
+    inline-size: 100%;
+    margin: 0;
+    padding: 1rem;
+    border-radius: 10px;
+    overflow-x: auto;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    // Le code reste de gauche à droite, même en lecture droite à gauche
+    direction: ltr;
+    text-align: left;
+  }
+
+  code {
+    font-size: inherit;
+  }
+}

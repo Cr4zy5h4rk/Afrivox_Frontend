@@ -45,6 +45,11 @@ export const routes: Routes = [
       import('./features/leaderboard/leaderboard').then((m) => m.LeaderboardPage),
   },
   {
+    path: 'quickstart',
+    title: 'Démarrage rapide · AfriVox',
+    loadComponent: () => import('./features/quickstart/quickstart').then((m) => m.QuickstartPage),
+  },
+  {
     path: 'login',
     title: 'Connexion · AfriVox',
     canActivate: [guestGuard],

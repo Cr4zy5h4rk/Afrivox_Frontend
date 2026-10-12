@@ -1,0 +1,109 @@
+<div class="container wrap">
+  <header class="intro">
+    <h1>{{ i18n.t('quickstart.title') }}</h1>
+    <p class="lead">{{ i18n.t('quickstart.subtitle') }}</p>
+  </header>
+
+  <ol class="steps">
+    <li class="card step">
+      <h2>{{ i18n.t('quickstart.s1.title') }}</h2>
+      <p>{{ i18n.t('quickstart.s1.body') }}</p>
+      @if (!auth.isAuthenticated()) {
+        <p><a mat-flat-button routerLink="/register">{{ i18n.t('nav.register') }}</a></p>
+      }
+    </li>
+
+    <li class="card step">
+      <h2>{{ i18n.t('quickstart.s2.title') }}</h2>
+      <p>{{ i18n.t('quickstart.s2.body') }}</p>
+      <p><a mat-stroked-button routerLink="/datasets">{{ i18n.t('nav.datasets') }}</a></p>
+    </li>
+
+    <li class="card step">
+      <h2>{{ i18n.t('quickstart.s3.title') }}</h2>
+      <p>{{ i18n.t('quickstart.s3.body') }}</p>
+      @if (auth.hasRole('ROLE_DEVELOPER') || auth.hasRole('ROLE_ORGANIZATION')) {
+        <p><a mat-stroked-button routerLink="/api-keys">{{ i18n.t('nav.apikeys') }}</a></p>
+      }
+      <h3>{{ i18n.t('quickstart.s3.install') }}</h3>
+      <div class="code-box">
+        <pre><code>{{ install }}</code></pre>
+        <button mat-button type="button" (click)="copy('install', install)">
+          {{ copied() === 'install' ? i18n.t('quickstart.copied') : i18n.t('quickstart.copy') }}
+        </button>
+      </div>
+      <div class="code-box">
+        <pre><code>{{ setup() }}</code></pre>
+        <button mat-button type="button" (click)="copy('setup', setup())">
+          {{ copied() === 'setup' ? i18n.t('quickstart.copied') : i18n.t('quickstart.copy') }}
+        </button>
+      </div>
+    </li>
+
+    <li class="card step">
+      <h2>{{ i18n.t('quickstart.s4.title') }}</h2>
+      <p>{{ i18n.t('quickstart.s4.body') }}</p>
+      @for (s of download(); track s.titleKey) {
+        <h3>{{ i18n.t(s.titleKey) }}</h3>
+        <div class="code-box">
+          <pre><code>{{ s.code }}</code></pre>
+          <button mat-button type="button" (click)="copy('dl-' + s.titleKey, s.code)">
+            {{ copied() === 'dl-' + s.titleKey ? i18n.t('quickstart.copied') : i18n.t('quickstart.copy') }}
+          </button>
+        </div>
+      }
+      <p class="note">{{ i18n.t('quickstart.s4.note') }}</p>
+    </li>
+
+    <li class="card step">
+      <h2>{{ i18n.t('quickstart.s5.title') }}</h2>
+      <p>{{ i18n.t('quickstart.s5.body') }}</p>
+      @for (s of evaluate(); track s.titleKey) {
+        <h3>{{ i18n.t(s.titleKey) }}</h3>
+        <div class="code-box">
+          <pre><code>{{ s.code }}</code></pre>
+          <button mat-button type="button" (click)="copy('ev-' + s.titleKey, s.code)">
+            {{ copied() === 'ev-' + s.titleKey ? i18n.t('quickstart.copied') : i18n.t('quickstart.copy') }}
+          </button>
+        </div>
+      }
+      <p class="note">{{ i18n.t('quickstart.s5.note') }}</p>
+      <p><a mat-stroked-button routerLink="/leaderboard">{{ i18n.t('nav.leaderboard') }}</a></p>
+    </li>
+
+    <li class="card step">
+      <h2>{{ i18n.t('quickstart.s6.title') }}</h2>
+      <p>{{ i18n.t('quickstart.s6.body') }}</p>
+      @for (s of publish(); track s.titleKey) {
+        <h3>{{ i18n.t(s.titleKey) }}</h3>
+        <div class="code-box">
+          <pre><code>{{ s.code }}</code></pre>
+          <button mat-button type="button" (click)="copy('pub-' + s.titleKey, s.code)">
+            {{ copied() === 'pub-' + s.titleKey ? i18n.t('quickstart.copied') : i18n.t('quickstart.copy') }}
+          </button>
+        </div>
+      }
+      <p class="note">{{ i18n.t('quickstart.s6.note') }}</p>
+    </li>
+  </ol>
+
+  <section class="card step">
+    <h2>{{ i18n.t('quickstart.python.title') }}</h2>
+    <div class="code-box">
+      <pre><code>{{ python }}</code></pre>
+      <button mat-button type="button" (click)="copy('py', python)">
+        {{ copied() === 'py' ? i18n.t('quickstart.copied') : i18n.t('quickstart.copy') }}
+      </button>
+    </div>
+  </section>
+
+  <section class="card step">
+    <h2>{{ i18n.t('quickstart.rules.title') }}</h2>
+    <ul>
+      <li>{{ i18n.t('quickstart.rules.https') }}</li>
+      <li>{{ i18n.t('quickstart.rules.scopes') }}</li>
+      <li>{{ i18n.t('quickstart.rules.limits') }}</li>
+      <li>{{ i18n.t('quickstart.rules.errors') }}</li>
+    </ul>
+  </section>
+</div>
