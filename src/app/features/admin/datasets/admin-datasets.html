@@ -136,6 +136,9 @@
         <div class="head">
           <h3>{{ d.title }} <span class="code">{{ d.slug }}</span></h3>
           <span class="badge accent">{{ i18n.t(planKey(d.plan)) }}</span>
+          @if (d.previewAudio) {
+            <span class="badge gold">{{ i18n.t('admindata.previewAudioOn') }}</span>
+          }
         </div>
         <p class="meta muted">
           {{ d.languageName ?? i18n.t('common.none') }}
@@ -248,6 +251,8 @@
                 </mat-select>
               </mat-form-field>
             </div>
+            <mat-checkbox formControlName="previewAudio">{{ i18n.t('admindata.previewAudio') }}</mat-checkbox>
+            <p class="muted">{{ i18n.t('admindata.previewAudioHint') }}</p>
             <div class="actions">
               <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('admindata.saveEdit') }}</button>
             </div>

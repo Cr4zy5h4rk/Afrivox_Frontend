@@ -1,5 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { ApiError, toApiError } from '../../core/api-error';
@@ -51,6 +60,19 @@ export class DatasetDetailPage implements OnInit {
   protected readonly previewState = signal<'idle' | 'loading' | 'ready' | 'failed'>('idle');
   protected readonly copied = signal(false);
 
+  // ---- Clips audio de l'échantillon (interrupteur du dataset) ----
+  /** URL d'objet du clip déjà chargé, par identifiant de ligne. */
+  protected readonly clips = signal<Record<number, string>>({});
+  protected readonly clipLoading = signal<number | null>(null);
+  protected readonly clipFailed = signal<number | null>(null);
+  protected readonly hasAudio = computed(() => (this.preview() ?? []).some((r) => r.audio));
+  private readonly destroyRef = inject(DestroyRef);
+
+  constructor() {
+    // Les URL d'objet gardent le clip en mémoire : on les libère à la fermeture de la page.
+    this.destroyRef.onDestroy(() => this.releaseClips());
+  }
+
   /** Hauteur relative des barres de l'histogramme (la tranche la plus fournie vaut 100 %). */
   protected readonly histogramMax = computed(() =>
     Math.max(1, ...(this.tech()?.stats.durationHistogram ?? []).map((b) => b.count)),
@@ -100,6 +122,7 @@ export class DatasetDetailPage implements OnInit {
     this.techVersion.set(label);
     this.preview.set(null);
     this.previewState.set('idle');
+    this.releaseClips();
     this.loadTechnical();
     if (this.tab() === 'viewer') this.loadPreview();
   }
@@ -127,6 +150,30 @@ export class DatasetDetailPage implements OnInit {
       },
       error: () => this.previewState.set('failed'),
     });
+  }
+
+  /** Charge le clip d'une ligne de l'échantillon (une seule fois) ; le lecteur apparaît quand il est prêt. */
+  protected listen(row: PreviewRow): void {
+    if (this.clips()[row.id] || this.clipLoading() !== null) return;
+    this.clipLoading.set(row.id);
+    this.clipFailed.set(null);
+    this.catalog.previewAudio(this.slug(), row.id, this.techVersion() ?? undefined).subscribe({
+      next: (blob) => {
+        this.clips.update((current) => ({ ...current, [row.id]: URL.createObjectURL(blob) }));
+        this.clipLoading.set(null);
+      },
+      error: () => {
+        this.clipFailed.set(row.id);
+        this.clipLoading.set(null);
+      },
+    });
+  }
+
+  private releaseClips(): void {
+    Object.values(this.clips()).forEach((url) => URL.revokeObjectURL(url));
+    this.clips.set({});
+    this.clipLoading.set(null);
+    this.clipFailed.set(null);
   }
 
   protected async copy(text: string): Promise<void> {

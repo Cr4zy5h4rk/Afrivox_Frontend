@@ -315,7 +315,13 @@ export class AdminService {
   /** Modifie la fiche (titre, description, domaine, formule) ; l'adresse (slug) et la langue ne changent plus. */
   updateDataset(
     id: number,
-    change: { title: string; description: string | null; domain: string | null; plan: DatasetPlanKind },
+    change: {
+      title: string;
+      description: string | null;
+      domain: string | null;
+      plan: DatasetPlanKind;
+      previewAudio: boolean;
+    },
   ): Observable<unknown> {
     return this.http.patch(`/api/datasets/${id}`, { id, ...change });
   }
@@ -505,6 +511,8 @@ export interface AdminDatasetRow {
   description: string | null;
   domain: string | null;
   plan: DatasetPlanKind;
+  /** Quelques clips de l'aperçu sont écoutables par les comptes connectés. */
+  previewAudio: boolean;
   languageId: number | null;
   languageName: string | null;
   versions: AdminVersionRow[];

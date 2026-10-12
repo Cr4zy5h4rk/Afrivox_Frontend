@@ -126,6 +126,8 @@ export interface PreviewRow {
   durationMs: number;
   text: string;
   split: string;
+  /** Un clip est écoutable pour cette ligne (interrupteur du dataset actif, ligne de l'échantillon). */
+  audio: boolean;
 }
 
 export interface DatasetDetail {
@@ -287,10 +289,21 @@ export class CatalogService {
     });
   }
 
-  /** Premières lignes (texte et durée, sans audio) ; exige un compte connecté. */
+  /** Premières lignes (texte et durée) ; exige un compte connecté. `audio` marque les lignes à clip écoutable. */
   preview(slug: string, version?: string): Observable<PreviewRow[]> {
     return this.http.get<PreviewRow[]>(`/api/catalog/datasets/${encodeURIComponent(slug)}/preview`, {
       params: toParams({ version }),
+    });
+  }
+
+  /**
+   * Un clip de l'échantillon. Récupéré en blob (et non via `<audio src>`) pour que le jeton de connexion
+   * accompagne la requête ; l'appelant crée l'URL d'objet et la libère.
+   */
+  previewAudio(slug: string, id: number, version?: string): Observable<Blob> {
+    return this.http.get(`/api/catalog/datasets/${encodeURIComponent(slug)}/preview/${id}/audio`, {
+      params: toParams({ version }),
+      responseType: 'blob',
     });
   }
 

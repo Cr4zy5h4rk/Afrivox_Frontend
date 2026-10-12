@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -33,7 +34,7 @@ interface Notice {
  */
 @Component({
   selector: 'app-admin-datasets',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [ReactiveFormsModule, MatButtonModule, MatCheckboxModule, MatFormFieldModule, MatInputModule, MatSelectModule],
   templateUrl: './admin-datasets.html',
   styleUrl: './admin-datasets.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -92,6 +93,7 @@ export class AdminDatasetsSection implements OnInit {
     description: ['', Validators.maxLength(1000)],
     domain: ['', Validators.maxLength(80)],
     plan: ['STARTER' as DatasetPlanKind, Validators.required],
+    previewAudio: [false],
   });
 
   ngOnInit(): void {
@@ -211,6 +213,7 @@ export class AdminDatasetsSection implements OnInit {
       description: dataset.description ?? '',
       domain: dataset.domain ?? '',
       plan: dataset.plan,
+      previewAudio: dataset.previewAudio,
     });
   }
 
@@ -226,6 +229,7 @@ export class AdminDatasetsSection implements OnInit {
         description: value.description.trim() || null,
         domain: value.domain.trim() || null,
         plan: value.plan,
+        previewAudio: value.previewAudio ?? false,
       }),
       () => this.editingFor.set(null),
     );

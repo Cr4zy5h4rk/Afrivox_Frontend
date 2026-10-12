@@ -214,6 +214,9 @@
                                 <th>{{ c }}</th>
                               }
                               <th>{{ i18n.t('dsx.split') }}</th>
+                              @if (hasAudio()) {
+                                <th>{{ i18n.t('dsx.listen') }}</th>
+                              }
                             </tr>
                           </thead>
                           <tbody>
@@ -225,12 +228,34 @@
                                 <td class="num">{{ i18n.n(r.durationMs) }}</td>
                                 <td class="text-cell">{{ r.text || i18n.t('viewer.masked') }}</td>
                                 <td><code>{{ r.split }}</code></td>
+                                @if (hasAudio()) {
+                                  <td class="listen">
+                                    @if (clips()[r.id]; as url) {
+                                      <audio controls preload="auto" [src]="url" [attr.aria-label]="i18n.t('dsx.listenRow', { id: r.id })"></audio>
+                                    } @else if (r.audio) {
+                                      <button
+                                        mat-stroked-button
+                                        type="button"
+                                        [disabled]="clipLoading() !== null"
+                                        (click)="listen(r)"
+                                      >
+                                        {{ i18n.t(clipLoading() === r.id ? 'common.loading' : 'dsx.play') }}
+                                      </button>
+                                      @if (clipFailed() === r.id) {
+                                        <span class="form-error" role="alert">{{ i18n.t('dsx.clipFailed') }}</span>
+                                      }
+                                    }
+                                  </td>
+                                }
                               </tr>
                             }
                           </tbody>
                         </table>
                       </div>
                       <p class="muted small">{{ i18n.t('dsx.viewerNote', { n: rows.length, total: i18n.n(t.stats.recordings) }) }}</p>
+                      @if (hasAudio()) {
+                        <p class="muted small">{{ i18n.t('dsx.listenNote') }}</p>
+                      }
                     }
                   </section>
                 }
