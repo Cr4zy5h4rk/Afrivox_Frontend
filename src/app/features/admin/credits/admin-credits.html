@@ -1,0 +1,101 @@
+<section>
+  <h2>{{ i18n.t('admincredits.title') }}</h2>
+  <p class="muted">{{ i18n.t('admincredits.hint') }}</p>
+
+  <div aria-live="polite">
+    @if (notice(); as n) {
+      <p class="notice" [class.ok]="n.ok" [attr.role]="n.ok ? 'status' : 'alert'">{{ i18n.t(n.text) }}</p>
+    }
+  </div>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+    }
+    @case ('failed') {
+      <p class="form-error" role="alert">{{ i18n.t('common.error') }}</p>
+      <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
+    }
+    @default {
+      <h3>{{ i18n.t('admincredits.rates') }}</h3>
+      <form class="rates" [formGroup]="rateForm" (ngSubmit)="saveRates()" novalidate>
+        @for (r of rates(); track r.kind) {
+          <mat-form-field appearance="outline">
+            <mat-label>{{ i18n.t(rateLabel(r.kind)) }}</mat-label>
+            <input matInput type="number" min="0" [max]="maxRate" step="1" [formControlName]="r.kind" />
+            @if (r.updatedAt) {
+              <mat-hint>
+                {{ i18n.t('admincredits.updated', { date: i18n.date(r.updatedAt), by: r.updatedBy ?? '—' }) }}
+              </mat-hint>
+            }
+            @if (rateForm.controls[r.kind].invalid) {
+              <mat-error>{{ i18n.t('admincredits.rateRange', { max: maxRate }) }}</mat-error>
+            }
+          </mat-form-field>
+        }
+        <div class="actions">
+          <button mat-flat-button type="submit" [disabled]="busy()">{{ i18n.t('admincredits.save') }}</button>
+        </div>
+      </form>
+      <p class="muted">{{ i18n.t('admincredits.campaignHint') }}</p>
+
+      <h3>{{ i18n.t('admincredits.adjust.title') }}</h3>
+      <p class="muted">{{ i18n.t('admincredits.adjust.hint') }}</p>
+      <form class="adjust" [formGroup]="adjustForm" (ngSubmit)="adjust()" novalidate>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('admincredits.adjust.login') }}</mat-label>
+          <input matInput formControlName="login" maxlength="50" autocomplete="off" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('admincredits.adjust.amount') }}</mat-label>
+          <input matInput type="number" step="1" formControlName="amount" />
+          <mat-hint>{{ i18n.t('admincredits.adjust.amountHint') }}</mat-hint>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('admincredits.adjust.note') }}</mat-label>
+          <input matInput formControlName="note" maxlength="140" />
+        </mat-form-field>
+        <div class="actions">
+          <button mat-stroked-button type="submit" [disabled]="busy()">{{ i18n.t('admincredits.adjust.submit') }}</button>
+        </div>
+      </form>
+
+      <h3>{{ i18n.t('admincredits.history') }}</h3>
+      @if (history().length === 0) {
+        <p class="muted">{{ i18n.t('admincredits.history.empty') }}</p>
+      } @else {
+        <ul class="history">
+          @for (h of history(); track h.id) {
+            <li>
+              <strong>{{ i18n.t(rateLabel(h.kind)) }}</strong>
+              <span>
+                {{ h.oldAmount === null ? i18n.t('admincredits.global') : h.oldAmount }}
+                →
+                {{ h.newAmount === null ? i18n.t('admincredits.global') : h.newAmount }}
+              </span>
+              <span class="muted">
+                {{ scopeLabel(h.scope) }} · {{ h.changedBy ?? '—' }} · {{ i18n.date(h.changedAt) }}
+              </span>
+            </li>
+          }
+        </ul>
+        @if (historyPages() > 1) {
+          <nav class="pager" [attr.aria-label]="i18n.t('adminusers.pages')">
+            <button mat-stroked-button type="button" [disabled]="historyPage() === 0" (click)="goToHistory(historyPage() - 1)">
+              {{ i18n.t('adminusers.prev') }}
+            </button>
+            <span>{{ historyPage() + 1 }} / {{ historyPages() }}</span>
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="historyPage() + 1 >= historyPages()"
+              (click)="goToHistory(historyPage() + 1)"
+            >
+              {{ i18n.t('adminusers.next') }}
+            </button>
+          </nav>
+        }
+      }
+    }
+  }
+</section>

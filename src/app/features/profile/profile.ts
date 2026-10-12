@@ -10,10 +10,13 @@ import {
   ContributorStatus,
   TrialView,
 } from '../../core/api/contribution.service';
+import { CreditReason, CreditService, CreditSummary, CreditTransaction } from '../../core/api/credit.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { TranslationKey } from '../../core/i18n/translations';
 import { ContributorProfileForm } from './contributor-profile-form';
+
+const CREDIT_PAGE_SIZE = 10;
 
 /** Rôles affichés en pastilles (ROLE_USER est implicite et n'apporte rien). */
 const ROLE_LABELS: Record<string, TranslationKey> = {
@@ -41,7 +44,12 @@ export class ProfilePage implements OnInit {
   protected readonly auth = inject(AuthService);
   private readonly api = inject(ContributionService);
   private readonly catalog = inject(CatalogService);
+  private readonly creditApi = inject(CreditService);
 
+  /** Solde et gains (calculés par le serveur à partir du registre) ; `null` si indisponible. */
+  protected readonly credits = signal<CreditSummary | null>(null);
+  protected readonly creditHistory = signal<CreditTransaction[]>([]);
+  protected readonly creditTotal = signal(0);
   protected readonly state = signal<'loading' | 'ready' | 'failed'>('loading');
   protected readonly profile = signal<ContributorProfile | null>(null);
   protected readonly trial = signal<TrialView | null>(null);
@@ -92,16 +100,38 @@ export class ProfilePage implements OnInit {
       consents: this.api.consents(),
       trial: this.api.trial().pipe(catchError(() => of(null))),
       languages: this.catalog.languages().pipe(catchError(() => of([] as LanguageView[]))),
+      credits: this.creditApi.summary().pipe(catchError(() => of(null))),
+      history: this.creditApi
+        .history(0, CREDIT_PAGE_SIZE)
+        .pipe(catchError(() => of({ items: [] as CreditTransaction[], total: 0 }))),
     }).subscribe({
-      next: ({ profile, consents, trial, languages }) => {
+      next: ({ profile, consents, trial, languages, credits, history }) => {
         this.profile.set(profile);
         this.consents.set(consents);
         this.trial.set(trial);
         this.languages.set(languages);
+        this.credits.set(credits);
+        this.creditHistory.set(history.items);
+        this.creditTotal.set(history.total);
         this.state.set('ready');
       },
       error: () => this.state.set('failed'),
     });
+  }
+
+  /** Charge les mouvements suivants et les ajoute à la suite de ceux déjà affichés. */
+  protected moreCredits(): void {
+    const page = Math.floor(this.creditHistory().length / CREDIT_PAGE_SIZE);
+    this.creditApi.history(page, CREDIT_PAGE_SIZE).subscribe({
+      next: ({ items, total }) => {
+        this.creditHistory.update((current) => [...current, ...items]);
+        this.creditTotal.set(total);
+      },
+    });
+  }
+
+  protected reasonKey(reason: CreditReason): TranslationKey {
+    return `credit.reason.${reason}` as TranslationKey;
   }
 
   protected statusKey(status: ContributorStatus): TranslationKey {

@@ -81,6 +81,16 @@
       type="button"
       role="tab"
       class="tab"
+      [class.active]="tab() === 'credits'"
+      [attr.aria-selected]="tab() === 'credits'"
+      (click)="setTab('credits')"
+    >
+      {{ i18n.t('admin.tab.credits') }}
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="tab"
       [class.active]="tab() === 'moderation'"
       [attr.aria-selected]="tab() === 'moderation'"
       (click)="setTab('moderation')"
@@ -105,6 +115,8 @@
     <app-admin-contributors />
   } @else if (tab() === 'leaks') {
     <app-admin-leaks />
+  } @else if (tab() === 'credits') {
+    <app-admin-credits />
   } @else if (tab() === 'moderation') {
     <app-admin-moderation />
   } @else if (tab() === 'languages') {
@@ -337,6 +349,25 @@
           </mat-form-field>
         </div>
 
+        <h4 class="sub">{{ i18n.t('admin.camp.credits') }} <span class="muted">({{ i18n.t('admin.camp.optional') }})</span></h4>
+        <p class="muted">{{ i18n.t('admin.camp.creditsHint') }}</p>
+        <div class="two">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ i18n.t('admincredits.kind.VALIDATED_RECORDING') }}</mat-label>
+            <input matInput type="number" min="0" [max]="maxCreditRate" step="1" formControlName="creditValidatedRecording" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ i18n.t('admincredits.kind.REVIEW_AGREED') }}</mat-label>
+            <input matInput type="number" min="0" [max]="maxCreditRate" step="1" formControlName="creditReviewAgreed" />
+          </mat-form-field>
+        </div>
+        <div class="two">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ i18n.t('admincredits.kind.TRAP_CORRECT') }}</mat-label>
+            <input matInput type="number" min="0" [max]="maxCreditRate" step="1" formControlName="creditTrapCorrect" />
+          </mat-form-field>
+        </div>
+
         <h4 class="sub">{{ i18n.t('admin.camp.sectionSentences') }} <span class="muted">({{ i18n.t('admin.camp.optional') }})</span></h4>
         <mat-form-field appearance="outline">
           <mat-label>{{ i18n.t('admin.camp.promptsLabel', { max: maxPerBatch }) }}</mat-label>
@@ -427,6 +458,10 @@
               @if (c.targetSentences) {
                 · {{ i18n.t('admin.camp.target') }} : {{ i18n.n(c.targetSentences) }}
               }
+              @if (c.creditValidatedRecording !== null || c.creditReviewAgreed !== null || c.creditTrapCorrect !== null) {
+                · {{ i18n.t('admin.camp.ownRates') }}
+                {{ c.creditValidatedRecording ?? '—' }} / {{ c.creditReviewAgreed ?? '—' }} / {{ c.creditTrapCorrect ?? '—' }}
+              }
             </p>
             @if (c.description) {
               <p class="desc">{{ c.description }}</p>
@@ -515,6 +550,24 @@
                   <mat-form-field appearance="outline">
                     <mat-label>{{ i18n.t('admin.camp.target') }}</mat-label>
                     <input matInput type="number" min="1" formControlName="targetSentences" />
+                  </mat-form-field>
+                </div>
+                <h4 class="sub">{{ i18n.t('admin.camp.credits') }}</h4>
+                <p class="muted">{{ i18n.t('admin.camp.creditsHint') }}</p>
+                <div class="two">
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ i18n.t('admincredits.kind.VALIDATED_RECORDING') }}</mat-label>
+                    <input matInput type="number" min="0" [max]="maxCreditRate" step="1" formControlName="creditValidatedRecording" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ i18n.t('admincredits.kind.REVIEW_AGREED') }}</mat-label>
+                    <input matInput type="number" min="0" [max]="maxCreditRate" step="1" formControlName="creditReviewAgreed" />
+                  </mat-form-field>
+                </div>
+                <div class="two">
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{ i18n.t('admincredits.kind.TRAP_CORRECT') }}</mat-label>
+                    <input matInput type="number" min="0" [max]="maxCreditRate" step="1" formControlName="creditTrapCorrect" />
                   </mat-form-field>
                 </div>
                 <div class="actions">

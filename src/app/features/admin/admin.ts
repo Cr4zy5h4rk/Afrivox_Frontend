@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { Observable } from 'rxjs';
+import { Observable, switchMap } from 'rxjs';
 import {
   AdminCampaignRow,
   AdminLanguage,
@@ -17,9 +17,11 @@ import {
   REQUEST_FLOW,
   RequestStatus,
 } from '../../core/api/admin.service';
+import { CreditService, MAX_CREDIT_RATE } from '../../core/api/credit.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { TranslationKey } from '../../core/i18n/translations';
 import { AdminContributorsSection } from './contributors/admin-contributors';
+import { AdminCreditsSection } from './credits/admin-credits';
 import { AdminDatasetsSection } from './datasets/admin-datasets';
 import { AdminLanguagesSection } from './languages/admin-languages';
 import { AdminLeaksSection } from './leaks/admin-leaks';
@@ -35,6 +37,7 @@ type Tab =
   | 'users'
   | 'contributors'
   | 'leaks'
+  | 'credits'
   | 'moderation';
 
 /** Taille maximale d'un fichier de phrases importé (lu en mémoire dans le navigateur). */
@@ -59,6 +62,7 @@ interface Notice {
   selector: 'app-admin',
   imports: [
     AdminContributorsSection,
+    AdminCreditsSection,
     AdminDatasetsSection,
     AdminLanguagesSection,
     AdminLeaksSection,
@@ -78,6 +82,8 @@ interface Notice {
 export class AdminPage implements OnInit {
   protected readonly i18n = inject(I18nService);
   private readonly admin = inject(AdminService);
+  private readonly credits = inject(CreditService);
+  protected readonly maxCreditRate = MAX_CREDIT_RATE;
 
   protected readonly tab = signal<Tab>('requests');
   protected readonly loading = signal(true);
@@ -135,6 +141,10 @@ export class AdminPage implements OnInit {
     targetSentences: [null as number | null, [Validators.min(1), Validators.max(100000)]],
     languageId: [null as number | null, Validators.required],
     sentences: [''],
+    // Tarifs de crédits propres à la campagne ; vide = tarif global
+    creditValidatedRecording: [null as number | null, [Validators.min(0), Validators.max(MAX_CREDIT_RATE)]],
+    creditReviewAgreed: [null as number | null, [Validators.min(0), Validators.max(MAX_CREDIT_RATE)]],
+    creditTrapCorrect: [null as number | null, [Validators.min(0), Validators.max(MAX_CREDIT_RATE)]],
   });
 
   protected readonly promptsForm = inject(FormBuilder).nonNullable.group({
@@ -156,6 +166,9 @@ export class AdminPage implements OnInit {
     description: ['', Validators.maxLength(1000)],
     domain: ['', Validators.maxLength(80)],
     targetSentences: [null as number | null, [Validators.min(1), Validators.max(100000)]],
+    creditValidatedRecording: [null as number | null, [Validators.min(0), Validators.max(MAX_CREDIT_RATE)]],
+    creditReviewAgreed: [null as number | null, [Validators.min(0), Validators.max(MAX_CREDIT_RATE)]],
+    creditTrapCorrect: [null as number | null, [Validators.min(0), Validators.max(MAX_CREDIT_RATE)]],
   });
 
   ngOnInit(): void {
@@ -320,6 +333,9 @@ export class AdminPage implements OnInit {
       description: c.description ?? '',
       domain: c.domain ?? '',
       targetSentences: c.targetSentences,
+      creditValidatedRecording: c.creditValidatedRecording,
+      creditReviewAgreed: c.creditReviewAgreed,
+      creditTrapCorrect: c.creditTrapCorrect,
     });
   }
 
@@ -330,12 +346,24 @@ export class AdminPage implements OnInit {
     }
     const value = this.editCampaignForm.getRawValue();
     this.run(
-      this.admin.updateCampaign(c.id, {
-        title: value.title.trim(),
-        description: value.description.trim() || null,
-        domain: value.domain.trim() || null,
-        targetSentences: value.targetSentences,
-      }),
+      this.admin
+        .updateCampaign(c.id, {
+          title: value.title.trim(),
+          description: value.description.trim() || null,
+          domain: value.domain.trim() || null,
+          targetSentences: value.targetSentences,
+        })
+        // Les tarifs passent par un appel dédié : un PATCH ignore les valeurs nulles, il ne pourrait pas
+        // ramener un tarif au tarif global.
+        .pipe(
+          switchMap(() =>
+            this.credits.setCampaignRates(c.id, {
+              validatedRecording: value.creditValidatedRecording,
+              reviewAgreed: value.creditReviewAgreed,
+              trapCorrect: value.creditTrapCorrect,
+            }),
+          ),
+        ),
       () => {
         this.editingCampaign.set(null);
         this.loadCampaigns();

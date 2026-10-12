@@ -214,3 +214,41 @@ dl {
     padding: 1.15rem;
   }
 }
+
+// ----- Crédits -----
+.balance {
+  font-size: 1.75rem;
+  font-weight: 750;
+  line-height: 1.1;
+}
+
+.credits-sub {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+}
+
+.credit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  inline-size: 100%;
+  display: grid;
+  gap: 0.5rem;
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.1rem 0.75rem;
+    padding-block-end: 0.5rem;
+    border-block-end: 1px solid var(--afv-line);
+  }
+
+  .when {
+    grid-column: 1 / -1;
+    font-size: 0.8rem;
+  }
+
+  .neg {
+    color: #7c2410;
+  }
+}

@@ -79,6 +79,9 @@
               <span class="muted">
                 {{ i18n.t('record.progress', { done: c.recordedByMe, total: c.totalPrompts }) }}
               </span>
+              @if (c.creditsPerRecording > 0) {
+                <span class="chip">{{ i18n.t('record.credits', { n: i18n.n(c.creditsPerRecording) }) }}</span>
+              }
             </button>
           </li>
         }

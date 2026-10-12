@@ -56,6 +56,12 @@ const SERVER_KEYS: Partial<Record<string, TranslationKey>> = {
   'error.invalidlanguage': 'error.invalidlanguage',
   'error.triallimit': 'error.triallimit',
   'error.contributorsuspended': 'error.contributorsuspended',
+  'error.invalidrate': 'error.invalidrate',
+  'error.invalidamount': 'error.invalidamount',
+  'error.invalidnote': 'error.invalidnote',
+  'error.usernotfound': 'error.usernotfound',
+  'error.balancenegative': 'error.balancenegative',
+  'error.campaignnotfound': 'error.campaignnotfound',
 };
 
 /**

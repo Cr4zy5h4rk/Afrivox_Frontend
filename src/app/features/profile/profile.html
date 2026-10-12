@@ -103,6 +103,40 @@
             </section>
           }
 
+          @if (isContributor() && credits(); as c) {
+            <section class="card block">
+              <h2>{{ i18n.t('profile.credits.title') }}</h2>
+              <p class="balance">{{ i18n.t('profile.credits.balance', { n: i18n.n(c.balance) }) }}</p>
+              <p class="muted">{{ i18n.t('profile.credits.fromRecordings', { n: i18n.n(c.earnedFromRecordings) }) }}</p>
+              <p class="muted">{{ i18n.t('profile.credits.fromReviews', { n: i18n.n(c.earnedFromReviews) }) }}</p>
+              <p class="muted">{{ i18n.t('profile.credits.soon') }}</p>
+              <h3 class="credits-sub">{{ i18n.t('profile.credits.history') }}</h3>
+              @if (creditHistory().length === 0) {
+                <p class="muted">{{ i18n.t('profile.credits.empty') }}</p>
+              } @else {
+                <ul class="credit-list">
+                  @for (t of creditHistory(); track t.id) {
+                    <li>
+                      <span class="reason">
+                        {{ i18n.t(reasonKey(t.reason)) }}
+                        @if (t.note) {
+                          <span class="muted"> · {{ t.note }}</span>
+                        }
+                      </span>
+                      <strong [class.neg]="t.amount < 0">{{ t.amount > 0 ? '+' : '' }}{{ i18n.n(t.amount) }}</strong>
+                      <span class="muted when">{{ i18n.date(t.createdAt) }}</span>
+                    </li>
+                  }
+                </ul>
+                @if (creditHistory().length < creditTotal()) {
+                  <button mat-stroked-button type="button" (click)="moreCredits()">
+                    {{ i18n.t('profile.credits.more') }}
+                  </button>
+                }
+              }
+            </section>
+          }
+
           @if (isContributor()) {
             <section class="card block">
               <header class="block-head">

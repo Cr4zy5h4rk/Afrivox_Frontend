@@ -92,6 +92,10 @@ export interface AdminCampaignRow {
   recordingsSubmitted: number;
   recordingsValidated: number;
   recordingsRejected: number;
+  /** Tarifs de crédits propres à la campagne (`null` = tarif global). */
+  creditValidatedRecording: number | null;
+  creditReviewAgreed: number | null;
+  creditTrapCorrect: number | null;
 }
 
 export interface AdminCampaignFilter {
@@ -114,6 +118,9 @@ export interface NewCampaign {
   kind: CampaignKind;
   targetSentences: number | null;
   languageId: number;
+  creditValidatedRecording: number | null;
+  creditReviewAgreed: number | null;
+  creditTrapCorrect: number | null;
 }
 
 /**
@@ -199,6 +206,9 @@ export class AdminService {
       kind: input.kind,
       status: 'DRAFT' satisfies CampaignStatus,
       targetSentences: input.targetSentences,
+      creditValidatedRecording: input.creditValidatedRecording,
+      creditReviewAgreed: input.creditReviewAgreed,
+      creditTrapCorrect: input.creditTrapCorrect,
       createdAt: new Date().toISOString(),
       language: { id: input.languageId },
     });

@@ -24,6 +24,8 @@ export interface CampaignView {
   direction: 'LTR' | 'RTL' | null;
   totalPrompts: number;
   recordedByMe: number;
+  /** Crédits promis par enregistrement validé (tarif de la campagne ou tarif global). */
+  creditsPerRecording: number;
 }
 
 export interface PromptView {
