@@ -1,112 +1,122 @@
-# AfriVox — frontend
+# AfriVox : frontend
 
-Application Angular 22 (composants autonomes, signaux, PWA) de la plateforme AfriVox. Le backend est dans `../AfriVox` (voir son README pour l'API et l'authentification).
+Application web de la plateforme AfriVox : enregistrement et validation de phrases dans des langues africaines, catalogue de datasets, Model Hub et classement public.
+
+Angular 22, composants autonomes, signaux, Angular Material, application web progressive (PWA). L'API est dans le dépôt `AfriVox` (backend).
+
+## Sommaire
+
+1. [Démarrage](#démarrage)
+2. [Pages](#pages)
+3. [Architecture](#architecture)
+4. [Authentification](#authentification)
+5. [Langues et sens de lecture](#langues-et-sens-de-lecture)
+6. [Enregistrement audio](#enregistrement-audio)
+7. [Identité visuelle](#identité-visuelle)
+8. [PWA](#pwa)
+9. [Déploiement](#déploiement)
+10. [Licences](#licences)
 
 ## Démarrage
 
+Prérequis : Node.js et npm. Le backend doit tourner sur `http://localhost:8080` (profil `dev`).
+
 ```bash
 npm install
-npm start          # http://localhost:4200, les appels /api sont relayés vers http://localhost:8080
-npm run build      # build de production dans dist/afrivox-web (service worker actif)
-npm test           # tests unitaires (Vitest)
+npm start          # http://localhost:4200, les appels /api sont relayés vers le backend (proxy.conf.json)
+npm run build      # build de production dans dist/afrivox-web, service worker actif
 ```
 
-Le backend doit tourner en profil `dev` (cookie de rafraîchissement sans attribut `Secure` en HTTP local). Il faut aussi un compte administrateur ou une inscription préalable : `/register` est ouvert.
+Le micro n'est utilisable qu'en HTTPS ou sur `localhost`.
+
+## Pages
+
+Toutes les pages sont chargées à la demande. Les routes protégées sont vérifiées par des gardes ; le serveur revérifie les droits de chaque appel.
+
+| Route | Accès | Contenu |
+| --- | --- | --- |
+| `/` | public | Accueil : chiffres en direct, usages, fonctionnement, langues, datasets. |
+| `/datasets`, `/datasets/:slug` | public | Catalogue et fiche d'un dataset : fiche, statistiques, aperçu, fichiers, modèles, achat. |
+| `/models`, `/models/:id` | public | Model Hub et fiche d'un modèle : évaluations, licence, commentaires. |
+| `/leaderboard` | public | Classement par WER, par catégorie de tâche et par langue. |
+| `/quickstart` | public | Démarrage rapide : compte, clé d'API, téléchargement, classement. |
+| `/login`, `/register` | visiteurs | Connexion et inscription (rôle, consentement). |
+| `/dashboard` | connecté | Espace personnel selon le rôle. |
+| `/record` | contributeur, admin | Enregistrement des phrases d'une campagne. |
+| `/validate` | contributeur, admin | Relecture des enregistrements des autres. |
+| `/profile` | connecté | Compte, informations déclarées, consentement, crédits. |
+| `/notifications` | connecté | Réponses et commentaires sur mes modèles. |
+| `/models/new` | développeur, admin | Publication d'un modèle. |
+| `/purchases` | développeur, organisation, admin | Mes achats et téléchargements. |
+| `/api-keys` | développeur, organisation | Création et révocation de clés d'API. |
+| `/requests` | organisation, admin | Demandes de datasets sur mesure. |
+| `/admin` | admin | Utilisateurs, campagnes, datasets, demandes, contributeurs, crédits, modération, qualité, traçabilité. |
+
+Aucun chiffre n'est écrit en dur : les statistiques viennent de `/api/public/**` et s'affichent « — » ou 0 sans données.
 
 ## Architecture
 
 ```
 src/app/
-  core/
-    auth/            session (jeton en mémoire), intercepteur HTTP, gardes de routes
-    i18n/            traduction à l'exécution (fr, en) et sens de lecture
-    api-error.ts     erreurs HTTP -> clés de traduction
-    consent.service.ts
-    api/             appels de l'espace contributeur (campagnes, phrases, envoi, consentements)
-    audio/           enregistreur du micro, file d'envoi hors ligne (IndexedDB)
-    ui/              logo (barres d'onde)
-  features/
-    auth/login, auth/register
-    home/            accueil : accroche, bouton d'enregistrement selon le rôle
-    record/          écran d'enregistrement (/record)
+├── core/
+│   ├── auth/       session (jeton en mémoire), intercepteur HTTP, gardes de routes
+│   ├── api/        services d'accès à l'API (catalogue, contribution, validation, achats…)
+│   ├── audio/      enregistreur du micro, encodeur WAV, file d'envoi hors ligne
+│   ├── i18n/       traduction à l'exécution (fr, en) et sens de lecture
+│   └── ui/         composants communs (logo, bandeau)
+├── features/       une page ou un ensemble de pages par dossier
+│   ├── landing, datasets, models, leaderboard, quickstart
+│   ├── auth, home, profile, notifications
+│   ├── record, validate
+│   ├── purchases, api-keys, requests
+│   └── admin
+└── app.routes.ts   routes et gardes
 ```
 
-### Pages (6 octobre 2026)
+Les textes sont dans `core/i18n/translations*.ts`. Le style global et les jetons de couleur sont dans `src/styles.scss`.
 
-| Route                | Accès                    | Contenu                                                                                         |
-| -------------------- | ------------------------ | ----------------------------------------------------------------------------------------------- |
-| `/`                  | public                   | accueil : accroche, chiffres en direct, trois usages, fonctionnement, langues, datasets         |
-| `/datasets`, `/datasets/:slug` | public         | catalogue (recherche, filtres langue et offre, pagination) et fiche (versions, détails, appel à contribuer) |
-| `/models`, `/models/:id` | public               | Model Hub (recherche, filtres tâche et langue) et fiche (évaluations, dataset d'entraînement)    |
-| `/leaderboard`       | public                   | classement par WER, filtrable par langue                                                        |
-| `/models/new`        | développeur, admin       | publication d'un modèle (lien https uniquement)                                                 |
-| `/login`, `/register`| visiteurs                | panneau de marque + formulaire                                                                  |
-| `/dashboard`         | connecté                 | espace personnel : actions selon les rôles                                                      |
-| `/record`            | contributeur, admin      | écran d'enregistrement                                                                          |
+## Authentification
 
-Toutes les données publiques viennent de `/api/public/**` (voir `CatalogService`). **Aucun chiffre n'est écrit dans le front** : sans données, les compteurs affichent « — » ou 0 et les listes montrent un état vide avec un appel à l'action. Les liens externes saisis par les utilisateurs s'ouvrent avec `rel="noopener noreferrer nofollow"`.
-
-Limites : le téléchargement d'un dataset n'est pas encore branché (bouton désactivé, texte « bientôt »), les filtres ne sont pas dans l'URL, la demande de dataset des organisations et l'administration sont annoncées « bientôt disponible ».
-
-### Identité visuelle
-
-**Thème clair uniquement** (depuis le 6 octobre : le mode sombre automatique a été retiré).
-
-Définie dans `src/styles.scss` (Material fournit la base, les couleurs de marque la remplacent, en clair et en sombre) :
-
-- **Fond** gris très clair `#f6f7fb`, cartes blanches, texte encre `#121633`. **Indigo** `#1e2a6b` (structure : bandeaux, titres), **terracotta** `#c4411a` (actions), **vert** `#1f7a55` (réussite), **ocre** `#d9a12a` (accent). Tout est défini en jetons CSS `--afv-*` dans `src/styles.scss` et reporté sur les jetons Material.
-- Signature : fin bandeau de triangles (`.afv-band`, inspiré des tissus bogolan), logo en barres d'onde (`app-brand-mark`), polices du système (sans empattement).
-- Pas de police ni d'icône externe (hors ligne) ; les icônes sont des SVG intégrés. `prefers-reduced-motion` est respecté.
-
-### Écran d'enregistrement (`/record`, rôles contributeur et admin)
-
-1. **Consentement de collecte** (`GET/POST /api/consents`) s'il n'est pas actif : sans lui le serveur refuse l'envoi (403).
-2. **Campagne** : une seule ouverte, elle est choisie d'office ; sinon liste. Progression `x / y` calculée par le serveur.
-3. **Boucle** : phrase (sens de lecture et langue de la campagne), micro, onde en direct, durée (1 à 30 s, arrêt automatique), réécoute, envoi ou « refaire ».
-4. **Hors ligne** : sans réseau, l'audio est gardé dans IndexedDB (`OutboxService`) et envoyé au retour de la connexion ou à la prochaine ouverture. 400/409 suppriment l'élément en attente ; 401/403 le gardent.
-5. Erreurs micro traduites : refusé, absent, **HTTPS requis**, navigateur non pris en charge.
-
-Choix : suppression du bruit désactivée (signal brut pour l'entraînement, le contrôle qualité mesure le bruit) ; format choisi selon le navigateur (webm, ogg, mp4), vérifié côté serveur par le contenu.
-
-Limites : le micro n'est pas utilisable en HTTP hors `localhost` ; pas encore de retrait de consentement dans l'interface ; non testé avec un vrai micro ni sur iOS Safari.
-
-### Authentification
-
-- Le **jeton d'accès** (15 min) reste en mémoire uniquement, jamais dans `localStorage`.
-- Le **jeton de rafraîchissement** est un cookie `HttpOnly` posé par le serveur : le code JavaScript ne le voit pas.
-- Au démarrage, `provideAppInitializer` appelle `POST /api/authenticate/refresh` pour retrouver la session.
-- Sur une réponse 401, l'intercepteur tente **un seul** rafraîchissement, rejoue la requête, sinon renvoie vers `/login`.
-- Les rafraîchissements simultanés partagent le même appel (« single-flight ») : le serveur révoque la session si un ancien cookie est rejoué.
+- Le **jeton d'accès** (15 minutes) reste en mémoire, jamais dans `localStorage`.
+- Le **jeton de rafraîchissement** est un cookie `HttpOnly` posé par le serveur, invisible du JavaScript.
+- Au démarrage, `POST /api/authenticate/refresh` retrouve la session.
+- Sur une réponse 401, l'intercepteur tente **un seul** rafraîchissement partagé entre les requêtes simultanées, rejoue la requête, sinon renvoie vers `/login`.
 - `returnUrl` n'est accepté que s'il commence par `/` (pas de redirection ouverte).
 
-### Inscription
+## Langues et sens de lecture
 
-Rôle au choix (contributeur, développeur, organisation) et consentement. La version du consentement est lue sur `GET /api/consent/current` et renvoyée telle quelle ; le bouton reste inactif tant qu'elle n'est pas chargée.
+`I18nService` traduit à l'exécution (français, anglais) sans recharger la page et met à jour `<html lang>` et `<html dir>`.
 
-**Le texte juridique du consentement n'est pas encore rédigé** : la case ne renvoie pour l'instant vers aucune page.
+Pour ajouter une langue : ajouter un dictionnaire dans `translations.ts` (le compilateur exige les mêmes clés que le français) puis une entrée dans `LANGUAGES`, avec `dir: 'rtl'` si elle s'écrit de droite à gauche. Les styles utilisent des propriétés logiques (`margin-inline`, `padding-inline`) pour suivre le sens de lecture.
 
-### Langues et sens de lecture
+## Enregistrement audio
 
-`I18nService` traduit à l'exécution (fr, en) et met à jour `<html lang>` et `<html dir>`. Pour ajouter une langue : ajouter un dictionnaire dans `translations.ts` (le compilateur exige les mêmes clés que le français) et une entrée dans `LANGUAGES` avec `dir: 'rtl'` si elle s'écrit de droite à gauche. Les styles utilisent des propriétés logiques (`margin-inline`, `padding-inline`) pour que la mise en page suive le sens de lecture.
+- Enregistrement au micro avec onde en direct, durée de 1 à 30 s, réécoute avant envoi.
+- Chaque enregistrement est converti en **WAV 16 kHz mono** dans le navigateur avant l'envoi (repli sur le fichier d'origine si la conversion échoue).
+- **Hors ligne** : sans réseau, l'audio est gardé dans IndexedDB et envoyé au retour de la connexion.
+- La suppression de bruit du navigateur est désactivée : le signal brut est conservé pour l'entraînement ; le contrôle qualité mesure le bruit côté serveur.
 
-### PWA
+## Identité visuelle
 
-`@angular/pwa` : manifeste, icônes et service worker (actif seulement en build de production). Les appels `/api` sont exclus de la navigation gérée par le service worker (`ngsw-config.json`) et ne sont jamais mis en cache.
+Thème clair, défini en jetons CSS `--afv-*` dans `src/styles.scss` et reporté sur les jetons Angular Material.
+
+| Rôle | Couleur |
+| --- | --- |
+| Structure (bandeaux, titres) | indigo `#1e2a6b` |
+| Actions | terracotta `#c4411a` |
+| Réussite | vert `#1f7a55` |
+| Accent | ocre `#d9a12a` |
+
+Police du système, icônes SVG intégrées, aucune ressource externe chargée. `prefers-reduced-motion` est respecté.
+
+## PWA
+
+`@angular/pwa` : manifeste, icônes et service worker (actif seulement en build de production). Les appels `/api` ne sont jamais mis en cache.
+
+## Déploiement
+
+En production, nginx sert le contenu de `dist/afrivox-web` et redirige `/api` vers le backend, sur un seul domaine en HTTPS. La pile complète (images Docker, nginx, certificats) est décrite dans `AfriVox/deploy/README.md`.
 
 ## Licences
 
-Angular, Angular Material, CDK, RxJS : MIT / Apache 2.0 (à reporter dans l'inventaire des licences du projet). Aucune police ni ressource externe n'est chargée : police système, pas d'icônes en police.
-
-## État
-
-- Build de production : OK.
-- Tests : `auth.service.spec.ts` écrit, **non exécuté**.
-- Pas encore testé de bout en bout avec le backend.
-
-## Reste à faire
-
-1. Texte du consentement et conditions d'utilisation (page dédiée).
-2. Réinitialisation du mot de passe (le backend l'expose déjà ; nécessite un SMTP).
-3. ~~Écran d'enregistrement~~ fait (voir ci-dessus). Reste : validation par les pairs, retrait de consentement, historique « mes enregistrements ».
-4. Catalogue de datasets, demandes des organisations.
-5. Déploiement : nginx sert ce build et redirige `/api` vers Spring.
+Toutes les dépendances livrées sont sous licence permissive (Angular, Angular Material, CDK : MIT ; RxJS : Apache 2.0). L'inventaire du projet est dans `AfriVox/LICENSES-THIRD-PARTY.md`.
