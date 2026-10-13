@@ -384,6 +384,11 @@ export const frSite = {
     'Modèles classés par taux d’erreur de mots (WER) sur des jeux de test. Plus il est bas, mieux c’est.',
   'leaderboard.empty.title': 'Le classement est vide',
   'leaderboard.empty.body': 'Il se remplit dès qu’un modèle est évalué sur un jeu de test.',
+  'leaderboard.tasks': 'Catégorie de tâche',
+  'leaderboard.legend': 'Barre : WER de 0 à 100 %, plus elle est courte, meilleur est le modèle.',
+  'leaderboard.unmeasured.title': 'Catégorie pas encore classée',
+  'leaderboard.unmeasured.body':
+    'Le classement ne mesure aujourd’hui que la reconnaissance vocale (WER). Les modèles de cette catégorie sont publiés dans le Model Hub, sans score comparable.',
 
   // Publication d'un modèle
   'modelnew.title': 'Publier un modèle',
@@ -1271,6 +1276,11 @@ export const enSite: Record<keyof typeof frSite, string> = {
     'Models ranked by word error rate (WER) on test sets. Lower is better.',
   'leaderboard.empty.title': 'The leaderboard is empty',
   'leaderboard.empty.body': 'It fills up as soon as a model is evaluated on a test set.',
+  'leaderboard.tasks': 'Task category',
+  'leaderboard.legend': 'Bar: WER from 0 to 100 %, the shorter it is, the better the model.',
+  'leaderboard.unmeasured.title': 'Category not ranked yet',
+  'leaderboard.unmeasured.body':
+    'The leaderboard currently measures speech recognition only (WER). Models in this category are published in the Model Hub, without a comparable score.',
 
   'modelnew.title': 'Publish a model',
   'modelnew.subtitle': 'List your model: it will be visible to everyone in the Model Hub.',

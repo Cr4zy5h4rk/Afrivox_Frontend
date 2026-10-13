@@ -1,7 +1,25 @@
-<section class="page-hero">
+<section class="page-hero lb-hero">
   <div class="container">
+    <span class="kicker">WER · CER</span>
     <h1>{{ i18n.t('leaderboard.title') }}</h1>
     <p>{{ i18n.t('leaderboard.subtitle') }}</p>
+
+    <div class="tabs" role="tablist" [attr.aria-label]="i18n.t('leaderboard.tasks')">
+      @for (tab of tabs(); track tab.task) {
+        <button
+          type="button"
+          role="tab"
+          class="tab"
+          aria-controls="lb-panel"
+          [class.active]="tab.task === task()"
+          [attr.aria-selected]="tab.task === task()"
+          (click)="setTask(tab.task)"
+        >
+          {{ i18n.t(taskKey(tab.task)) }}
+          <span class="count">{{ tab.measured ? tab.count : i18n.t('common.none') }}</span>
+        </button>
+      }
+    </div>
   </div>
 </section>
 
@@ -18,64 +36,96 @@
     </div>
   </form>
 
-  <div class="results" aria-live="polite">
+  <div id="lb-panel" class="results" role="tabpanel" aria-live="polite">
     @if (failed()) {
       <div class="empty" role="alert">
         <h3>{{ i18n.t('common.error') }}</h3>
         <button mat-flat-button type="button" (click)="load()">{{ i18n.t('common.retry') }}</button>
       </div>
-    } @else if (rows(); as list) {
-      @if (list.length === 0) {
-        <div class="empty">
-          <h3>{{ i18n.t('leaderboard.empty.title') }}</h3>
-          <p>{{ i18n.t('leaderboard.empty.body') }}</p>
-          <a mat-flat-button routerLink="/models">{{ i18n.t('nav.models') }}</a>
-        </div>
-      } @else {
-        <div class="card table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>{{ i18n.t('col.rank') }}</th>
-                <th>{{ i18n.t('col.model') }}</th>
-                <th>{{ i18n.t('model.task') }}</th>
-                <th>{{ i18n.t('model.language') }}</th>
-                <th>{{ i18n.t('col.wer') }}</th>
-                <th>{{ i18n.t('col.cer') }}</th>
-                <th>{{ i18n.t('col.testset') }}</th>
-                <th>{{ i18n.t('col.date') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (r of list; track $index) {
-                <tr>
-                  <td class="num rank">{{ $index + 1 }}</td>
-                  <td>
-                    <a [routerLink]="['/models', r.modelId]">{{ r.modelName }}</a>
-                  </td>
-                  <td>{{ i18n.t(taskKey(r.task)) }}</td>
-                  <td>{{ r.languageName || i18n.t('common.none') }}</td>
-                  <td class="num">
-                    <strong>{{ r.wer !== null ? i18n.n(r.wer, 1) + ' %' : i18n.t('common.none') }}</strong>
-                  </td>
-                  <td class="num">{{ r.cer !== null ? i18n.n(r.cer, 1) + ' %' : i18n.t('common.none') }}</td>
-                  <td>
-                    @if (r.testSetDataset) {
-                      <a [routerLink]="['/datasets', r.testSetDataset]">{{ r.testSetDataset }}</a>
-                      {{ r.testSetVersion }}
-                    } @else {
-                      {{ i18n.t('common.none') }}
-                    }
-                  </td>
-                  <td>{{ i18n.date(r.submittedAt) }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-    } @else {
+    } @else if (!measured()) {
+      <div class="empty">
+        <h3>{{ i18n.t('leaderboard.unmeasured.title') }}</h3>
+        <p>{{ i18n.t('leaderboard.unmeasured.body') }}</p>
+        <a mat-flat-button routerLink="/models">{{ i18n.t('nav.models') }}</a>
+      </div>
+    } @else if (rows() === null) {
       <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+    } @else if (visible().length === 0) {
+      <div class="empty">
+        <h3>{{ i18n.t('leaderboard.empty.title') }}</h3>
+        <p>{{ i18n.t('leaderboard.empty.body') }}</p>
+        <a mat-flat-button routerLink="/models">{{ i18n.t('nav.models') }}</a>
+      </div>
+    } @else {
+      <ol class="podium">
+        @for (r of podium(); track r.modelId; let i = $index) {
+          <li class="pod" [attr.data-rank]="i + 1">
+            <span class="medal" aria-hidden="true">{{ i + 1 }}</span>
+            <a class="name" [routerLink]="['/models', r.modelId]">{{ r.modelName }}</a>
+            <span class="meta">{{ r.languageName || i18n.t('common.none') }}</span>
+            @if (r.wer !== null) {
+              <span class="big">
+                {{ i18n.n(r.wer, 1) }}<small> % {{ i18n.t('col.wer') }}</small>
+              </span>
+              <span class="bar" aria-hidden="true">
+                <span class="fill" [attr.data-level]="level(r.wer)" [style.width.%]="barWidth(r.wer)"></span>
+              </span>
+            }
+            <span class="meta">
+              {{ i18n.t('col.cer') }}
+              {{ r.cer !== null ? i18n.n(r.cer, 1) + ' %' : i18n.t('common.none') }}
+            </span>
+          </li>
+        }
+      </ol>
+
+      <div class="card table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('col.rank') }}</th>
+              <th>{{ i18n.t('col.model') }}</th>
+              <th>{{ i18n.t('model.language') }}</th>
+              <th>{{ i18n.t('col.wer') }}</th>
+              <th>{{ i18n.t('col.cer') }}</th>
+              <th>{{ i18n.t('col.testset') }}</th>
+              <th>{{ i18n.t('col.date') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of visible(); track r.modelId; let i = $index) {
+              <tr>
+                <td class="num rank" [attr.data-rank]="i + 1">{{ i + 1 }}</td>
+                <td>
+                  <a [routerLink]="['/models', r.modelId]">{{ r.modelName }}</a>
+                </td>
+                <td>{{ r.languageName || i18n.t('common.none') }}</td>
+                <td class="wer-cell">
+                  @if (r.wer !== null) {
+                    <strong class="mono">{{ i18n.n(r.wer, 1) }} %</strong>
+                    <span class="bar" aria-hidden="true">
+                      <span class="fill" [attr.data-level]="level(r.wer)" [style.width.%]="barWidth(r.wer)"></span>
+                    </span>
+                  } @else {
+                    {{ i18n.t('common.none') }}
+                  }
+                </td>
+                <td class="num mono">{{ r.cer !== null ? i18n.n(r.cer, 1) + ' %' : i18n.t('common.none') }}</td>
+                <td>
+                  @if (r.testSetDataset) {
+                    <a [routerLink]="['/datasets', r.testSetDataset]">{{ r.testSetDataset }}</a>
+                    <span class="mono">{{ r.testSetVersion }}</span>
+                  } @else {
+                    {{ i18n.t('common.none') }}
+                  }
+                </td>
+                <td>{{ i18n.date(r.submittedAt) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="legend muted">{{ i18n.t('leaderboard.legend') }}</p>
     }
   </div>
 </div>
