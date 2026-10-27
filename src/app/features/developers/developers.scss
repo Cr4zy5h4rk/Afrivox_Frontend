@@ -1,0 +1,55 @@
+.hero-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.25rem;
+
+  a {
+    --mat-button-filled-container-height: 48px;
+  }
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 14rem;
+  padding-block: 0.6rem;
+}
+
+.results {
+  padding-block-end: 2rem;
+}
+
+.count {
+  margin-block: 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+.dim {
+  opacity: 0.55;
+  transition: opacity 0.15s ease;
+}
+
+h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.desc {
+  margin: 0;
+  color: var(--afv-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: auto 0 0;
+  padding-block-start: 0.6rem;
+  border-block-start: 1px solid var(--afv-line);
+  font-size: 0.88rem;
+}

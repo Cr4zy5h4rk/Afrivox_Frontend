@@ -1,0 +1,82 @@
+<section class="page-hero">
+  <div class="container hero-row">
+    <div>
+      <h1>{{ i18n.t('projects.title') }}</h1>
+      <p>{{ i18n.t('projects.subtitle') }}</p>
+    </div>
+    @if (canPublish()) {
+      <a mat-flat-button routerLink="/projects/new">{{ i18n.t('projects.publish') }}</a>
+    }
+  </div>
+</section>
+
+<div class="container">
+  <form class="toolbar" role="search" (submit)="$event.preventDefault()">
+    <div class="field grow">
+      <label for="pj-q">{{ i18n.t('projects.search') }}</label>
+      <input id="pj-q" type="search" [value]="filters().q" (input)="setQuery($event)" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="pj-lang">{{ i18n.t('filter.language') }}</label>
+      <select id="pj-lang" (change)="setLanguage($event)">
+        <option value="">{{ i18n.t('filter.all') }}</option>
+        @for (l of languages(); track l.code) {
+          <option [value]="l.code" [selected]="filters().language === l.code">{{ l.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="pj-tag">{{ i18n.t('projects.tag') }}</label>
+      <input id="pj-tag" type="search" [value]="filters().tag" (input)="setTag($event)" autocomplete="off" />
+    </div>
+  </form>
+
+  <div class="results" aria-live="polite">
+    @if (failed()) {
+      <div class="empty" role="alert">
+        <h3>{{ i18n.t('common.error') }}</h3>
+        <button mat-flat-button type="button" (click)="retry()">{{ i18n.t('common.retry') }}</button>
+      </div>
+    } @else if (result(); as r) {
+      <p class="count muted">{{ i18n.t('projects.count', { count: i18n.n(r.total) }) }}</p>
+      @if (r.items.length === 0) {
+        <div class="empty">
+          <h3>{{ i18n.t('projects.empty.title') }}</h3>
+          <p>{{ i18n.t('projects.empty.body') }}</p>
+          @if (canPublish()) {
+            <a mat-flat-button routerLink="/projects/new">{{ i18n.t('projects.publish') }}</a>
+          } @else if (!auth.isAuthenticated()) {
+            <a mat-flat-button routerLink="/register">{{ i18n.t('nav.register') }}</a>
+          }
+        </div>
+      } @else {
+        <div class="grid" [class.dim]="loading()">
+          @for (p of r.items; track p.id) {
+            <article class="card project">
+              <a class="project-link" [routerLink]="['/projects', p.id]">
+                @if (p.languageName) {
+                  <span class="badge accent">{{ p.languageName }}</span>
+                }
+                <h3>{{ p.title }}</h3>
+                <p class="desc">{{ p.summary }}</p>
+              </a>
+              @if (p.tags.length > 0) {
+                <ul class="tags" [attr.aria-label]="i18n.t('projects.tag')">
+                  @for (t of p.tags; track t) {
+                    <li>
+                      <button type="button" class="tag" (click)="pickTag(t)">{{ t }}</button>
+                    </li>
+                  }
+                </ul>
+              }
+              <p class="meta muted">{{ i18n.t('projects.by', { name: p.ownerName }) }}</p>
+            </article>
+          }
+        </div>
+        <app-pager [page]="r.page" [pages]="r.pages" (pageChange)="setPage($event)" />
+      }
+    } @else {
+      <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+    }
+  </div>
+</div>

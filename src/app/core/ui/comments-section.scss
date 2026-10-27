@@ -1,0 +1,92 @@
+.comment-form {
+  display: grid;
+  gap: 0.5rem;
+  margin-block: 1rem;
+
+  textarea {
+    width: 100%;
+    padding: 0.6rem;
+    font: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+}
+
+.comment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.comment-count {
+  margin-block: 1.25rem 0.5rem;
+  font-size: 1rem;
+}
+
+.comments {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.comment-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: baseline;
+}
+
+.comment-body {
+  margin: 0.25rem 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-inline-start: auto;
+}
+
+.comment-tools {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.link-button.plain {
+  margin-inline-start: 0;
+}
+
+.reply-form {
+  margin-block: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 8px;
+
+  label {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  select {
+    padding: 0.4rem;
+    font: inherit;
+  }
+}
+
+.comments.replies {
+  margin: 0.75rem 0 0;
+  padding-inline-start: 1rem;
+  border-inline-start: 2px solid rgba(128, 128, 128, 0.3);
+}

@@ -2,7 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-export type NotificationType = 'MODEL_COMMENT' | 'COMMENT_REPLY';
+export type NotificationType =
+  | 'MODEL_COMMENT'
+  | 'COMMENT_REPLY'
+  | 'PROJECT_COMMENT'
+  | 'PROJECT_REPLY'
+  | 'CONTACT_REQUEST'
+  | 'CONTACT_ACCEPTED';
 export type ReportReason = 'SPAM' | 'ABUSE' | 'OFF_TOPIC' | 'OTHER';
 
 export interface NotificationView {
@@ -11,6 +17,8 @@ export interface NotificationView {
   actorName: string | null;
   modelId: number | null;
   modelName: string | null;
+  projectId: number | null;
+  projectName: string | null;
   createdAt: string;
   read: boolean;
 }
@@ -23,8 +31,11 @@ export interface NotificationList {
 /** Un commentaire signalé, tel que la file de modération l'affiche. */
 export interface ReportedComment {
   commentId: number;
-  modelId: number;
+  /** Un commentaire porte sur un modèle ou sur un projet : l'un des deux est renseigné. */
+  modelId: number | null;
   modelName: string | null;
+  projectId: number | null;
+  projectName: string | null;
   authorName: string;
   body: string;
   createdAt: string;

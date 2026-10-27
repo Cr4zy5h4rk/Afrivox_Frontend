@@ -5,7 +5,7 @@ import { CommunityService, NotificationView } from '../../core/api/community.ser
 import { I18nService } from '../../core/i18n/i18n.service';
 import { TranslationKey } from '../../core/i18n/translations';
 
-/** Notifications de la communauté : commentaires sur mes modèles et réponses à mes commentaires. */
+/** Notifications de la communauté : commentaires et réponses (modèles, projets) et demandes de contact. */
 @Component({
   selector: 'app-notifications',
   imports: [MatButtonModule, RouterLink],
@@ -34,6 +34,10 @@ export class NotificationsPage implements OnInit {
 
   protected text(n: NotificationView): string {
     const key = `notif.${n.type}` as TranslationKey;
-    return this.i18n.t(key, { actor: n.actorName ?? '?', model: n.modelName ?? '?' });
+    return this.i18n.t(key, {
+      actor: n.actorName ?? '?',
+      model: n.modelName ?? '?',
+      project: n.projectName ?? '?',
+    });
   }
 }

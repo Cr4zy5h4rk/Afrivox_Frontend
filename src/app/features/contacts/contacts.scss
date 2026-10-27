@@ -1,0 +1,53 @@
+.body {
+  padding-block: 1.5rem 3rem;
+  display: grid;
+  gap: 2rem;
+}
+
+.block h2 {
+  margin-block: 0 0.75rem;
+}
+
+.requests {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.request {
+  padding: 1.25rem;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  align-items: baseline;
+}
+
+.message {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.how {
+  margin: 0.25rem 0;
+}
+
+.contact {
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-block-start: 0.5rem;
+}
+
+.small {
+  font-size: 0.85rem;
+}

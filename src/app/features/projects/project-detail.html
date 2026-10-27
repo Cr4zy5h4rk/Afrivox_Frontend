@@ -1,0 +1,98 @@
+@switch (state()) {
+  @case ('loading') {
+    <div class="container section"><p class="muted" role="status">{{ i18n.t('common.loading') }}</p></div>
+  }
+  @case ('notfound') {
+    <div class="container section">
+      <div class="empty">
+        <h3>{{ i18n.t('project.notfound') }}</h3>
+        <a mat-flat-button routerLink="/projects">{{ i18n.t('project.back') }}</a>
+      </div>
+    </div>
+  }
+  @case ('failed') {
+    <div class="container section"><p class="form-error" role="alert">{{ i18n.t('common.error') }}</p></div>
+  }
+  @default {
+    @if (project(); as p) {
+      <section class="page-hero">
+        <div class="container">
+          <a class="back" routerLink="/projects">← {{ i18n.t('project.back') }}</a>
+          @if (p.languageName) {
+            <div class="badges"><span class="badge on-dark">{{ p.languageName }}</span></div>
+          }
+          <h1>{{ p.title }}</h1>
+          <p>{{ i18n.t('projects.by', { name: p.ownerName }) }} · {{ i18n.t('project.published', { date: i18n.date(p.createdAt) }) }}</p>
+        </div>
+      </section>
+
+      <div class="container layout">
+        <div class="main">
+          <section class="card block">
+            <p class="prose">{{ p.summary }}</p>
+            @if (p.tags.length > 0) {
+              <ul class="tags" [attr.aria-label]="i18n.t('projects.tag')">
+                @for (t of p.tags; track t) {
+                  <li class="tag">{{ t }}</li>
+                }
+              </ul>
+            }
+          </section>
+
+          <section class="card block" id="community">
+            <app-comments-section kind="project" [targetId]="p.id" [returnUrl]="'/projects/' + p.id" />
+          </section>
+        </div>
+
+        <aside class="side">
+          <section class="card block">
+            <h3>{{ i18n.t('dataset.facts') }}</h3>
+            <dl class="facts">
+              <div>
+                <dt>{{ i18n.t('project.author') }}</dt>
+                <dd>
+                  @if (p.ownerPublic) {
+                    <a [routerLink]="['/developers', p.ownerId]">{{ p.ownerName }}</a>
+                  } @else {
+                    {{ p.ownerName }}
+                  }
+                </dd>
+              </div>
+              @if (p.modelId !== null) {
+                <div>
+                  <dt>{{ i18n.t('project.model') }}</dt>
+                  <dd>
+                    <a [routerLink]="['/models', p.modelId]">{{ p.modelName }}</a>
+                  </dd>
+                </div>
+              }
+            </dl>
+
+            @if (p.repoUrl || p.demoUrl) {
+              <div class="links">
+                @if (p.repoUrl) {
+                  <a mat-flat-button [href]="p.repoUrl" target="_blank" rel="noopener noreferrer nofollow">{{ i18n.t('project.repo') }}</a>
+                }
+                @if (p.demoUrl) {
+                  <a mat-stroked-button [href]="p.demoUrl" target="_blank" rel="noopener noreferrer nofollow">{{ i18n.t('project.demo') }}</a>
+                }
+              </div>
+              <p class="muted small">{{ i18n.t('project.external') }}</p>
+            }
+
+            @if (p.mine) {
+              <div class="links">
+                <a mat-stroked-button [routerLink]="['/projects', p.id, 'edit']">{{ i18n.t('project.edit') }}</a>
+              </div>
+            }
+            @if (p.canDelete) {
+              <div class="links">
+                <button mat-button type="button" (click)="remove(p)">{{ i18n.t('project.delete') }}</button>
+              </div>
+            }
+          </section>
+        </aside>
+      </div>
+    }
+  }
+}

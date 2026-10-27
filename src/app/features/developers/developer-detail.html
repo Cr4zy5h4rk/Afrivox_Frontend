@@ -1,0 +1,113 @@
+@switch (state()) {
+  @case ('loading') {
+    <div class="container section"><p class="muted" role="status">{{ i18n.t('common.loading') }}</p></div>
+  }
+  @case ('notfound') {
+    <div class="container section">
+      <div class="empty">
+        <h3>{{ i18n.t('developer.notfound') }}</h3>
+        <a mat-flat-button routerLink="/developers">{{ i18n.t('developers.title') }}</a>
+      </div>
+    </div>
+  }
+  @case ('failed') {
+    <div class="container section"><p class="form-error" role="alert">{{ i18n.t('common.error') }}</p></div>
+  }
+  @default {
+    @if (profile(); as p) {
+      <section class="page-hero">
+        <div class="container">
+          <a class="back" routerLink="/developers">← {{ i18n.t('developers.title') }}</a>
+          @if (p.openToWork) {
+            <div class="badges"><span class="badge on-dark">{{ i18n.t('developer.open') }}</span></div>
+          }
+          <h1>{{ p.name }}</h1>
+          @if (p.bio) {
+            <p class="bio">{{ p.bio }}</p>
+          }
+          @if (p.profileUrl) {
+            <p>
+              <a class="ext" [href]="p.profileUrl" target="_blank" rel="noopener noreferrer nofollow">{{ i18n.t('developer.link') }} ↗</a>
+            </p>
+          }
+        </div>
+      </section>
+
+      <div class="container layout">
+        <div class="main">
+          <section class="block">
+            <h2>{{ i18n.t('developer.projects') }}</h2>
+            @if (p.projects.length === 0) {
+              <p class="muted">{{ i18n.t('developer.noProjects') }}</p>
+            } @else {
+              <div class="grid">
+                @for (pr of p.projects; track pr.id) {
+                  <a class="card card-link" [routerLink]="['/projects', pr.id]">
+                    @if (pr.languageName) {
+                      <span class="badge accent">{{ pr.languageName }}</span>
+                    }
+                    <h3>{{ pr.title }}</h3>
+                    <p class="desc">{{ pr.summary }}</p>
+                  </a>
+                }
+              </div>
+            }
+          </section>
+
+          <section class="block">
+            <h2>{{ i18n.t('developer.models') }}</h2>
+            @if (p.models.length === 0) {
+              <p class="muted">{{ i18n.t('developer.noModels') }}</p>
+            } @else {
+              <div class="grid">
+                @for (m of p.models; track m.id) {
+                  <app-model-card [model]="m" />
+                }
+              </div>
+            }
+          </section>
+        </div>
+
+        @if (p.openToWork) {
+          <aside class="side">
+            <section class="card block contact">
+              <h3>{{ i18n.t('developer.contact.title') }}</h3>
+              @if (!auth.isAuthenticated()) {
+                <p>
+                  <a routerLink="/login" [queryParams]="{ returnUrl: '/developers/' + p.id }">{{ i18n.t('developer.contact.signin') }}</a>
+                </p>
+              } @else if (!canContact()) {
+                <p class="muted">{{ i18n.t('developer.contact.onlyOrg') }}</p>
+              } @else if (sent()) {
+                <p role="status">{{ i18n.t('developer.contact.sent') }}</p>
+              } @else {
+                <p class="muted small">{{ i18n.t('developer.contact.intro') }}</p>
+                <form class="contact-form" (submit)="$event.preventDefault(); send()">
+                  <label>
+                    <span>{{ i18n.t('developer.contact.message') }}</span>
+                    <textarea
+                      rows="6"
+                      maxlength="1000"
+                      [value]="message()"
+                      (input)="message.set($any($event.target).value)"
+                    ></textarea>
+                  </label>
+                  <label>
+                    <span>{{ i18n.t('developer.contact.how') }}</span>
+                    <input type="text" maxlength="120" autocomplete="off" [value]="how()" (input)="how.set($any($event.target).value)" />
+                  </label>
+                  @if (error(); as err) {
+                    <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+                  }
+                  <button mat-flat-button type="submit" [disabled]="sending() || message().trim() === '' || how().trim() === ''">
+                    {{ sending() ? i18n.t('developer.contact.sending') : i18n.t('developer.contact.send') }}
+                  </button>
+                </form>
+              }
+            </section>
+          </aside>
+        }
+      </div>
+    }
+  }
+}

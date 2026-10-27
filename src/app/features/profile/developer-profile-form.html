@@ -1,0 +1,62 @@
+@switch (state()) {
+  @case ('loading') {
+    <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+  }
+  @case ('failed') {
+    <p class="form-error" role="alert">{{ i18n.t('common.error') }}</p>
+  }
+  @default {
+    <form class="form-column" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('devprofile.name') }}</mat-label>
+        <input matInput formControlName="displayName" maxlength="80" autocomplete="off" />
+        @if (form.controls.displayName.touched && form.controls.displayName.invalid) {
+          <mat-error>{{ i18n.t('error.invalidname') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('devprofile.bio') }}</mat-label>
+        <textarea matInput formControlName="bio" rows="4" maxlength="300"></textarea>
+        <mat-hint align="end">{{ form.controls.bio.value.length }}/300</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('devprofile.url') }}</mat-label>
+        <input matInput type="url" formControlName="profileUrl" maxlength="300" autocomplete="off" />
+        @if (form.controls.profileUrl.touched && form.controls.profileUrl.hasError('https')) {
+          <mat-error>{{ i18n.t('validation.https') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <label class="check">
+        <input type="checkbox" formControlName="publicProfile" (change)="onPublicChange()" />
+        <span>{{ i18n.t('devprofile.public') }}</span>
+      </label>
+
+      <label class="check" [class.disabled]="!form.controls.publicProfile.value">
+        <input type="checkbox" formControlName="openToWork" />
+        <span>
+          {{ i18n.t('devprofile.open') }}
+          @if (!form.controls.publicProfile.value) {
+            <small class="muted">({{ i18n.t('devprofile.openNeedsPublic') }})</small>
+          }
+        </span>
+      </label>
+
+      @if (error(); as err) {
+        <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+      }
+
+      <div class="actions">
+        @if (saved()) {
+          <span class="muted" role="status">{{ i18n.t('devprofile.saved') }}</span>
+        }
+        @if (profileId() !== null && form.controls.publicProfile.value && !form.dirty) {
+          <a mat-stroked-button [routerLink]="['/developers', profileId()]">{{ i18n.t('devprofile.view') }}</a>
+        }
+        <button mat-flat-button type="submit" [disabled]="saving()">{{ i18n.t('devprofile.save') }}</button>
+      </div>
+    </form>
+  }
+}

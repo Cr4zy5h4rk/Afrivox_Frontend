@@ -17,6 +17,10 @@
             <li [class.unread]="!n.read">
               @if (n.modelId !== null) {
                 <a [routerLink]="['/models', n.modelId]" fragment="community">{{ text(n) }}</a>
+              } @else if (n.projectId !== null) {
+                <a [routerLink]="['/projects', n.projectId]" fragment="community">{{ text(n) }}</a>
+              } @else if (n.type === 'CONTACT_REQUEST' || n.type === 'CONTACT_ACCEPTED') {
+                <a routerLink="/contacts">{{ text(n) }}</a>
               } @else {
                 <span>{{ text(n) }}</span>
               }

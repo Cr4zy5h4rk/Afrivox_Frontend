@@ -39,6 +39,40 @@ export const routes: Routes = [
     loadComponent: () => import('./features/models/model-detail').then((m) => m.ModelDetailPage),
   },
   {
+    path: 'projects',
+    title: 'Projets · AfriVox',
+    loadComponent: () => import('./features/projects/projects').then((m) => m.ProjectsPage),
+  },
+  {
+    // Avant `projects/:id` pour que « new » ne soit pas pris pour un identifiant
+    path: 'projects/new',
+    title: 'Publier un projet · AfriVox',
+    canActivate: [authGuard, roleGuard('ROLE_DEVELOPER', 'ROLE_ADMIN')],
+    loadComponent: () => import('./features/projects/project-form').then((m) => m.ProjectFormPage),
+  },
+  {
+    path: 'projects/:id/edit',
+    title: 'Modifier le projet · AfriVox',
+    canActivate: [authGuard, roleGuard('ROLE_DEVELOPER', 'ROLE_ADMIN')],
+    loadComponent: () => import('./features/projects/project-form').then((m) => m.ProjectFormPage),
+  },
+  {
+    path: 'projects/:id',
+    title: 'Projet · AfriVox',
+    loadComponent: () => import('./features/projects/project-detail').then((m) => m.ProjectDetailPage),
+  },
+  {
+    path: 'developers',
+    title: 'Développeurs · AfriVox',
+    loadComponent: () => import('./features/developers/developers').then((m) => m.DevelopersPage),
+  },
+  {
+    path: 'developers/:id',
+    title: 'Développeur · AfriVox',
+    loadComponent: () =>
+      import('./features/developers/developer-detail').then((m) => m.DeveloperDetailPage),
+  },
+  {
     path: 'leaderboard',
     title: 'Classement · AfriVox',
     loadComponent: () =>
@@ -102,6 +136,12 @@ export const routes: Routes = [
     title: 'Mon profil · AfriVox',
     canActivate: [authGuard],
     loadComponent: () => import('./features/profile/profile').then((m) => m.ProfilePage),
+  },
+  {
+    path: 'contacts',
+    title: 'Mes contacts · AfriVox',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/contacts/contacts').then((m) => m.ContactsPage),
   },
   {
     path: 'notifications',

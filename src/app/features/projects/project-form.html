@@ -1,0 +1,90 @@
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ editing() ? i18n.t('projectnew.editTitle') : i18n.t('projectnew.title') }}</h1>
+    <p>{{ i18n.t('projectnew.subtitle') }}</p>
+  </div>
+</section>
+
+<div class="container wrap">
+  @if (notFound()) {
+    <div class="empty">
+      <h3>{{ i18n.t('project.notfound') }}</h3>
+      <a mat-flat-button routerLink="/projects">{{ i18n.t('project.back') }}</a>
+    </div>
+  } @else {
+    <form class="card form form-column" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('projectnew.name') }}</mat-label>
+        <input matInput formControlName="title" maxlength="120" />
+        @if (form.controls.title.touched && form.controls.title.invalid) {
+          <mat-error>{{ i18n.t('error.invalidtitle') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ i18n.t('projectnew.summary') }}</mat-label>
+        <textarea matInput formControlName="summary" rows="6" maxlength="1000"></textarea>
+        @if (form.controls.summary.touched && form.controls.summary.invalid) {
+          <mat-error>{{ i18n.t('error.invalidsummary') }}</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="two">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('projectnew.repo') }}</mat-label>
+          <input matInput type="url" formControlName="repoUrl" maxlength="300" autocomplete="off" />
+          @if (form.controls.repoUrl.touched && form.controls.repoUrl.hasError('https')) {
+            <mat-error>{{ i18n.t('validation.https') }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('projectnew.demo') }}</mat-label>
+          <input matInput type="url" formControlName="demoUrl" maxlength="300" autocomplete="off" />
+          @if (form.controls.demoUrl.touched && form.controls.demoUrl.hasError('https')) {
+            <mat-error>{{ i18n.t('validation.https') }}</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <div class="two">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('projectnew.language') }}</mat-label>
+          <mat-select formControlName="languageCode">
+            <mat-option value="">{{ i18n.t('projectnew.languageNone') }}</mat-option>
+            @for (l of languages(); track l.code) {
+              <mat-option [value]="l.code">{{ l.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>{{ i18n.t('projectnew.model') }}</mat-label>
+          <mat-select formControlName="modelId">
+            <mat-option [value]="null">{{ i18n.t('projectnew.modelNone') }}</mat-option>
+            @for (m of models(); track m.id) {
+              <mat-option [value]="m.id">{{ m.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ i18n.t('projectnew.tags') }}</mat-label>
+        <input matInput formControlName="tags" maxlength="120" autocomplete="off" />
+        <mat-hint>{{ i18n.t('projectnew.tagsHint') }}</mat-hint>
+      </mat-form-field>
+
+      @if (error(); as err) {
+        <p class="form-error" role="alert">{{ i18n.t(err.key, err.params) }}</p>
+      }
+
+      <div class="actions">
+        <a mat-stroked-button routerLink="/projects">{{ i18n.t('modelnew.cancel') }}</a>
+        <button mat-flat-button type="submit" [disabled]="loading()">
+          {{ loading() ? i18n.t('projectnew.saving') : editing() ? i18n.t('projectnew.update') : i18n.t('projectnew.save') }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

@@ -62,6 +62,14 @@
               <p class="muted">{{ i18n.t('profile.nonContributor') }}</p>
             </section>
           }
+
+          @if (isDeveloper()) {
+            <section class="card block" id="public-profile">
+              <h2>{{ i18n.t('devprofile.title') }}</h2>
+              <p class="muted">{{ i18n.t('devprofile.intro') }}</p>
+              <app-developer-profile-form />
+            </section>
+          }
         </div>
 
         <aside class="side">

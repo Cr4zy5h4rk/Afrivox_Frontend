@@ -1,0 +1,59 @@
+<section class="page-hero">
+  <div class="container hero-row">
+    <div>
+      <h1>{{ i18n.t('developers.title') }}</h1>
+      <p>{{ i18n.t('developers.subtitle') }}</p>
+    </div>
+    @if (canHaveProfile()) {
+      <a mat-flat-button routerLink="/profile" fragment="public-profile">{{ i18n.t('developers.settings') }}</a>
+    }
+  </div>
+</section>
+
+<div class="container">
+  <form class="toolbar" role="search" (submit)="$event.preventDefault()">
+    <div class="field grow">
+      <label for="dv-q">{{ i18n.t('developers.search') }}</label>
+      <input id="dv-q" type="search" [value]="filters().q" (input)="setQuery($event)" autocomplete="off" />
+    </div>
+    <label class="check">
+      <input type="checkbox" [checked]="filters().openToWork" (change)="setOpen($event)" />
+      {{ i18n.t('developers.openOnly') }}
+    </label>
+  </form>
+
+  <div class="results" aria-live="polite">
+    @if (failed()) {
+      <div class="empty" role="alert">
+        <h3>{{ i18n.t('common.error') }}</h3>
+        <button mat-flat-button type="button" (click)="retry()">{{ i18n.t('common.retry') }}</button>
+      </div>
+    } @else if (result(); as r) {
+      <p class="count muted">{{ i18n.t('developers.count', { count: i18n.n(r.total) }) }}</p>
+      @if (r.items.length === 0) {
+        <div class="empty">
+          <h3>{{ i18n.t('developers.empty.title') }}</h3>
+          <p>{{ i18n.t('developers.empty.body') }}</p>
+        </div>
+      } @else {
+        <div class="grid" [class.dim]="loading()">
+          @for (d of r.items; track d.id) {
+            <a class="card card-link" [routerLink]="['/developers', d.id]">
+              @if (d.openToWork) {
+                <span class="badge accent">{{ i18n.t('developer.open') }}</span>
+              }
+              <h3>{{ d.name }}</h3>
+              @if (d.bio) {
+                <p class="desc">{{ d.bio }}</p>
+              }
+              <p class="meta muted">{{ i18n.t('developers.stats', { models: d.models, projects: d.projects }) }}</p>
+            </a>
+          }
+        </div>
+        <app-pager [page]="r.page" [pages]="r.pages" (pageChange)="setPage($event)" />
+      }
+    } @else {
+      <p class="muted" role="status">{{ i18n.t('common.loading') }}</p>
+    }
+  </div>
+</div>

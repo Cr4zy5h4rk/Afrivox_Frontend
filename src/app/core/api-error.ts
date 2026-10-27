@@ -76,6 +76,19 @@ const SERVER_KEYS: Partial<Record<string, TranslationKey>> = {
   'error.invalidexpiry': 'error.invalidexpiry',
   'error.toomanykeys': 'error.toomanykeys',
   'error.keynotfound': 'error.keynotfound',
+  'error.invalidtitle': 'error.invalidtitle',
+  'error.invalidsummary': 'error.invalidsummary',
+  'error.invalidtag': 'error.invalidtag',
+  'error.toomanytags': 'error.toomanytags',
+  'error.toomanyprojects': 'error.toomanyprojects',
+  'error.projectnotfound': 'error.projectnotfound',
+  'error.invalidbio': 'error.invalidbio',
+  'error.invalidmessage': 'error.invalidmessage',
+  'error.invalidcontact': 'error.invalidcontact',
+  'error.recipientunavailable': 'error.recipientunavailable',
+  'error.selfcontact': 'error.selfcontact',
+  'error.alreadypending': 'error.alreadypending',
+  'error.alreadyanswered': 'error.alreadyanswered',
 };
 
 /**

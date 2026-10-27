@@ -15,6 +15,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { TranslationKey } from '../../core/i18n/translations';
 import { ContributorProfileForm } from './contributor-profile-form';
+import { DeveloperProfileForm } from './developer-profile-form';
 
 const CREDIT_PAGE_SIZE = 10;
 
@@ -34,7 +35,7 @@ const ROLE_LABELS: Record<string, TranslationKey> = {
  */
 @Component({
   selector: 'app-profile',
-  imports: [ContributorProfileForm, MatButtonModule],
+  imports: [ContributorProfileForm, DeveloperProfileForm, MatButtonModule],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -61,6 +62,10 @@ export class ProfilePage implements OnInit {
   /** Seuls les contributeurs (et l'admin, qui peut enregistrer) ont des informations déclarées et un consentement. */
   protected readonly isContributor = computed(
     () => this.auth.hasRole('ROLE_CONTRIBUTOR') || this.auth.hasRole('ROLE_ADMIN'),
+  );
+  /** Le profil public (annuaire, projets, contact) concerne les développeurs et l'admin. */
+  protected readonly isDeveloper = computed(
+    () => this.auth.hasRole('ROLE_DEVELOPER') || this.auth.hasRole('ROLE_ADMIN'),
   );
   protected readonly activeConsent = computed(
     () => this.consents().find((c) => c.kind === 'COLLECTION' && c.revokedAt === null) ?? null,
