@@ -6,12 +6,13 @@ import { ApiError, toApiError } from '../../core/api-error';
 import { DeveloperProfile, HubService } from '../../core/api/hub.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { Avatar } from '../../core/ui/avatar';
 import { ModelCard } from '../../core/ui/model-card';
 
 /** Profil public d'un développeur : présentation, modèles, projets et, pour une organisation, demande de contact. */
 @Component({
   selector: 'app-developer-detail',
-  imports: [MatButtonModule, RouterLink, ModelCard],
+  imports: [MatButtonModule, RouterLink, ModelCard, Avatar],
   templateUrl: './developer-detail.html',
   styleUrl: './developer-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

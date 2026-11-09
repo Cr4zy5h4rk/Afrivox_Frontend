@@ -22,7 +22,14 @@
             <div class="badges"><span class="badge on-dark">{{ p.languageName }}</span></div>
           }
           <h1>{{ p.title }}</h1>
-          <p>{{ i18n.t('projects.by', { name: p.ownerName }) }} · {{ i18n.t('project.published', { date: i18n.date(p.createdAt) }) }}</p>
+          <div class="byline">
+            <app-avatar [name]="p.ownerName" [size]="32" />
+            <span>
+              {{ i18n.t('projects.by', { name: p.ownerName }) }}
+              <span class="sep" aria-hidden="true">·</span>
+              {{ i18n.t('project.published', { date: i18n.date(p.createdAt) }) }}
+            </span>
+          </div>
         </div>
       </section>
 
@@ -45,6 +52,21 @@
         </div>
 
         <aside class="side">
+          @if (p.repoUrl || p.demoUrl) {
+            <section class="card block">
+              <h3>{{ i18n.t('project.links') }}</h3>
+              <div class="links">
+                @if (p.repoUrl) {
+                  <a mat-flat-button [href]="p.repoUrl" target="_blank" rel="noopener noreferrer nofollow">{{ i18n.t('project.repo') }} ↗</a>
+                }
+                @if (p.demoUrl) {
+                  <a mat-stroked-button [href]="p.demoUrl" target="_blank" rel="noopener noreferrer nofollow">{{ i18n.t('project.demo') }} ↗</a>
+                }
+              </div>
+              <p class="note">{{ i18n.t('project.external') }}</p>
+            </section>
+          }
+
           <section class="card block">
             <h3>{{ i18n.t('dataset.facts') }}</h3>
             <dl class="facts">
@@ -58,6 +80,12 @@
                   }
                 </dd>
               </div>
+              @if (p.languageName) {
+                <div>
+                  <dt>{{ i18n.t('projectnew.language') }}</dt>
+                  <dd>{{ p.languageName }}</dd>
+                </div>
+              }
               @if (p.modelId !== null) {
                 <div>
                   <dt>{{ i18n.t('project.model') }}</dt>
@@ -66,31 +94,26 @@
                   </dd>
                 </div>
               }
+              <div>
+                <dt>{{ i18n.t('project.updated') }}</dt>
+                <dd>{{ i18n.date(p.updatedAt) }}</dd>
+              </div>
             </dl>
-
-            @if (p.repoUrl || p.demoUrl) {
-              <div class="links">
-                @if (p.repoUrl) {
-                  <a mat-flat-button [href]="p.repoUrl" target="_blank" rel="noopener noreferrer nofollow">{{ i18n.t('project.repo') }}</a>
-                }
-                @if (p.demoUrl) {
-                  <a mat-stroked-button [href]="p.demoUrl" target="_blank" rel="noopener noreferrer nofollow">{{ i18n.t('project.demo') }}</a>
-                }
-              </div>
-              <p class="muted small">{{ i18n.t('project.external') }}</p>
-            }
-
-            @if (p.mine) {
-              <div class="links">
-                <a mat-stroked-button [routerLink]="['/projects', p.id, 'edit']">{{ i18n.t('project.edit') }}</a>
-              </div>
-            }
-            @if (p.canDelete) {
-              <div class="links">
-                <button mat-button type="button" (click)="remove(p)">{{ i18n.t('project.delete') }}</button>
-              </div>
-            }
           </section>
+
+          @if (p.mine || p.canDelete) {
+            <section class="card block manage">
+              <h3>{{ i18n.t('project.manage') }}</h3>
+              <div class="links">
+                @if (p.mine) {
+                  <a mat-stroked-button [routerLink]="['/projects', p.id, 'edit']">{{ i18n.t('project.edit') }}</a>
+                }
+                @if (p.canDelete) {
+                  <button mat-button type="button" class="danger" (click)="remove(p)">{{ i18n.t('project.delete') }}</button>
+                }
+              </div>
+            </section>
+          }
         </aside>
       </div>
     }

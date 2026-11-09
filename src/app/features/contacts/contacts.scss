@@ -1,11 +1,38 @@
 .body {
-  padding-block: 1.5rem 3rem;
+  padding-block: 1.75rem 3rem;
   display: grid;
-  gap: 2rem;
+  gap: 2.25rem;
 }
 
-.block h2 {
-  margin-block: 0 0.75rem;
+.section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-block-end: 1rem;
+  font-size: 1.35rem;
+
+  .count {
+    padding: 0.05rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: var(--afv-brand-50);
+    color: var(--afv-brand);
+
+    &.alert {
+      background: var(--afv-gold-50);
+      color: #7a5600;
+    }
+  }
+}
+
+.empty-line {
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px dashed var(--afv-line);
+  border-radius: var(--afv-radius);
+  background: var(--afv-surface);
 }
 
 .requests {
@@ -17,27 +44,56 @@
 }
 
 .request {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
   padding: 1.25rem;
+
+  // Demande à traiter : mise en avant discrète
+  &.pending {
+    border-color: var(--afv-gold);
+    box-shadow:
+      0 0 0 3px var(--afv-gold-50),
+      var(--afv-shadow);
+  }
 }
 
 .head {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 0.75rem;
-  align-items: baseline;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+
+  .date {
+    margin-inline-start: auto;
+    font-size: 0.82rem;
+  }
 }
 
 .message {
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border-inline-start: 3px solid var(--afv-line);
+  background: var(--afv-bg);
+  border-radius: 0 10px 10px 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  line-height: 1.6;
 }
 
 .how {
-  margin: 0.25rem 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
+  align-items: baseline;
 }
 
 .contact {
+  padding: 0.1rem 0.6rem;
+  border-radius: 8px;
+  background: var(--afv-brand-50);
+  color: var(--afv-brand);
   overflow-wrap: anywhere;
 }
 
@@ -45,9 +101,18 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
-  margin-block-start: 0.5rem;
+  margin-block-start: 1rem;
 }
 
-.small {
+.hint {
+  margin: 0.75rem 0 0;
   font-size: 0.85rem;
+  color: var(--afv-green);
+  font-weight: 600;
+}
+
+@media (max-width: 36rem) {
+  .request {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

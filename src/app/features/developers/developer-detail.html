@@ -18,46 +18,60 @@
       <section class="page-hero">
         <div class="container">
           <a class="back" routerLink="/developers">← {{ i18n.t('developers.title') }}</a>
-          @if (p.openToWork) {
-            <div class="badges"><span class="badge on-dark">{{ i18n.t('developer.open') }}</span></div>
-          }
-          <h1>{{ p.name }}</h1>
-          @if (p.bio) {
-            <p class="bio">{{ p.bio }}</p>
-          }
-          @if (p.profileUrl) {
-            <p>
-              <a class="ext" [href]="p.profileUrl" target="_blank" rel="noopener noreferrer nofollow">{{ i18n.t('developer.link') }} ↗</a>
-            </p>
-          }
+          <div class="identity">
+            <app-avatar class="big" [name]="p.name" [size]="84" />
+            <div class="who">
+              <h1>{{ p.name }}</h1>
+              @if (p.openToWork) {
+                <span class="open"><span class="dot" aria-hidden="true"></span>{{ i18n.t('developer.open') }}</span>
+              }
+              @if (p.bio) {
+                <p class="bio">{{ p.bio }}</p>
+              }
+              @if (p.profileUrl) {
+                <a class="ext" [href]="p.profileUrl" target="_blank" rel="noopener noreferrer nofollow">{{ i18n.t('developer.link') }} ↗</a>
+              }
+            </div>
+          </div>
         </div>
       </section>
 
       <div class="container layout">
         <div class="main">
-          <section class="block">
-            <h2>{{ i18n.t('developer.projects') }}</h2>
+          <section>
+            <h2 class="section-title">
+              {{ i18n.t('developer.projects') }}
+              <span class="count">{{ p.projects.length }}</span>
+            </h2>
             @if (p.projects.length === 0) {
-              <p class="muted">{{ i18n.t('developer.noProjects') }}</p>
+              <p class="muted empty-line">{{ i18n.t('developer.noProjects') }}</p>
             } @else {
               <div class="grid">
                 @for (pr of p.projects; track pr.id) {
-                  <a class="card card-link" [routerLink]="['/projects', pr.id]">
-                    @if (pr.languageName) {
-                      <span class="badge accent">{{ pr.languageName }}</span>
-                    }
-                    <h3>{{ pr.title }}</h3>
+                  <article class="card item">
+                    <div class="top">
+                      @if (pr.languageName) {
+                        <span class="badge accent">{{ pr.languageName }}</span>
+                      }
+                      <span class="date muted">{{ i18n.date(pr.createdAt) }}</span>
+                    </div>
+                    <h3>
+                      <a class="stretch" [routerLink]="['/projects', pr.id]">{{ pr.title }}</a>
+                    </h3>
                     <p class="desc">{{ pr.summary }}</p>
-                  </a>
+                  </article>
                 }
               </div>
             }
           </section>
 
-          <section class="block">
-            <h2>{{ i18n.t('developer.models') }}</h2>
+          <section>
+            <h2 class="section-title">
+              {{ i18n.t('developer.models') }}
+              <span class="count">{{ p.models.length }}</span>
+            </h2>
             @if (p.models.length === 0) {
-              <p class="muted">{{ i18n.t('developer.noModels') }}</p>
+              <p class="muted empty-line">{{ i18n.t('developer.noModels') }}</p>
             } @else {
               <div class="grid">
                 @for (m of p.models; track m.id) {
@@ -70,16 +84,16 @@
 
         @if (p.openToWork) {
           <aside class="side">
-            <section class="card block contact">
+            <section class="card contact">
               <h3>{{ i18n.t('developer.contact.title') }}</h3>
               @if (!auth.isAuthenticated()) {
-                <p>
-                  <a routerLink="/login" [queryParams]="{ returnUrl: '/developers/' + p.id }">{{ i18n.t('developer.contact.signin') }}</a>
-                </p>
+                <p class="muted">{{ i18n.t('developer.contact.intro') }}</p>
+                <a mat-flat-button routerLink="/login" [queryParams]="{ returnUrl: '/developers/' + p.id }">{{ i18n.t('nav.login') }}</a>
+                <p class="hint">{{ i18n.t('developer.contact.signin') }}</p>
               } @else if (!canContact()) {
                 <p class="muted">{{ i18n.t('developer.contact.onlyOrg') }}</p>
               } @else if (sent()) {
-                <p role="status">{{ i18n.t('developer.contact.sent') }}</p>
+                <p class="success" role="status">✓ {{ i18n.t('developer.contact.sent') }}</p>
               } @else {
                 <p class="muted small">{{ i18n.t('developer.contact.intro') }}</p>
                 <form class="contact-form" (submit)="$event.preventDefault(); send()">
@@ -91,6 +105,7 @@
                       [value]="message()"
                       (input)="message.set($any($event.target).value)"
                     ></textarea>
+                    <span class="counter">{{ message().length }}/1000</span>
                   </label>
                   <label>
                     <span>{{ i18n.t('developer.contact.how') }}</span>

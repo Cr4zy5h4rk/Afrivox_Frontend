@@ -7,6 +7,7 @@ import { CatalogService, LanguageView, PageView } from '../../core/api/catalog.s
 import { HubService, ProjectView } from '../../core/api/hub.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { Avatar } from '../../core/ui/avatar';
 import { Pager } from '../../core/ui/pager';
 
 interface Filters {
@@ -21,7 +22,7 @@ const PAGE_SIZE = 12;
 /** Hub des développeurs : liste publique des projets, avec recherche, langue et étiquette. */
 @Component({
   selector: 'app-projects',
-  imports: [MatButtonModule, RouterLink, Pager],
+  imports: [MatButtonModule, RouterLink, Pager, Avatar],
   templateUrl: './projects.html',
   styleUrl: './projects.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -27,13 +27,14 @@
   </p>
 }
 
-<h3 class="comment-count">{{ i18n.t('community.count', { n: commentTotal() }) }}</h3>
+<h3 class="comment-count">{{ i18n.t(commentTotal() === 1 ? 'community.count.one' : 'community.count.other', { n: commentTotal() }) }}</h3>
 @if (comments().length === 0) {
   <p class="muted">{{ i18n.t('community.empty') }}</p>
 } @else {
   <ul class="comments">
     @for (c of comments(); track c.id) {
       <li class="comment">
+        <app-avatar [name]="c.authorName" [size]="36" />
         <div class="comment-head">
           <strong>{{ c.authorName }}</strong>
           @if (c.mine) {
@@ -120,6 +121,7 @@
           <ul class="comments replies" [attr.aria-label]="i18n.t('community.replies', { n: c.replies.length })">
             @for (r of c.replies; track r.id) {
               <li class="comment">
+                <app-avatar [name]="r.authorName" [size]="28" />
                 <div class="comment-head">
                   <strong>{{ r.authorName }}</strong>
                   @if (r.mine) {

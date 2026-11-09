@@ -11,11 +11,11 @@
 }
 
 .results {
-  padding-block-end: 2rem;
+  padding-block-end: 2.5rem;
 }
 
 .count {
-  margin-block: 0 0.75rem;
+  margin-block: 0 0.85rem;
   font-size: 0.9rem;
 }
 
@@ -24,29 +24,64 @@
   transition: opacity 0.15s ease;
 }
 
+// Carte entière cliquable (lien étiré), les étiquettes restent des boutons à part
 .project {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
   padding: 1.25rem;
-}
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 
-.project-link {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  color: inherit;
-  text-decoration: none;
+  &:hover,
+  &:focus-within {
+    transform: translateY(-2px);
+    border-color: var(--afv-brand);
+    box-shadow: 0 8px 24px rgb(18 22 51 / 10%);
+  }
 
   h3 {
     margin: 0;
+    font-size: 1.15rem;
     overflow-wrap: anywhere;
   }
+}
 
-  &:hover h3,
-  &:focus-visible h3 {
-    text-decoration: underline;
+.stretch {
+  color: inherit;
+  text-decoration: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
   }
+
+  &:focus-visible {
+    outline: none;
+
+    &::after {
+      outline: 2px solid var(--afv-brand);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-block-size: 1.6rem;
+}
+
+.date {
+  margin-inline-start: auto;
+  font-size: 0.8rem;
 }
 
 .desc {
@@ -60,6 +95,8 @@
 }
 
 .tags {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
@@ -70,24 +107,45 @@
 
 .tag {
   font: inherit;
-  font-size: 0.8rem;
-  padding: 0.1rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.12rem 0.6rem;
   border-radius: 999px;
   border: 1px solid var(--afv-line);
-  background: transparent;
+  background: var(--afv-bg);
   color: var(--afv-muted);
   cursor: pointer;
 
   &:hover,
   &:focus-visible {
     border-color: var(--afv-brand);
+    background: var(--afv-brand-50);
     color: var(--afv-brand);
   }
 }
 
-.meta {
-  margin: auto 0 0;
-  padding-block-start: 0.6rem;
+.by {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-block-start: auto;
+  padding-block-start: 0.85rem;
   border-block-start: 1px solid var(--afv-line);
   font-size: 0.88rem;
+
+  .who {
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .badge {
+    max-inline-size: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

@@ -7,6 +7,7 @@ import { PageView } from '../../core/api/catalog.service';
 import { DeveloperSummary, HubService } from '../../core/api/hub.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { Avatar } from '../../core/ui/avatar';
 import { Pager } from '../../core/ui/pager';
 
 interface Filters {
@@ -20,7 +21,7 @@ const PAGE_SIZE = 12;
 /** Annuaire public : seuls les développeurs qui ont rendu leur profil public y figurent. */
 @Component({
   selector: 'app-developers',
-  imports: [MatButtonModule, RouterLink, Pager],
+  imports: [MatButtonModule, RouterLink, Pager, Avatar],
   templateUrl: './developers.html',
   styleUrl: './developers.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

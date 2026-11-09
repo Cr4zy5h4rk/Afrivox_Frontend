@@ -7,6 +7,7 @@
   }
   @default {
     <form class="form-column" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <h3 class="group">{{ i18n.t('devprofile.sectionIdentity') }}</h3>
       <mat-form-field appearance="outline">
         <mat-label>{{ i18n.t('devprofile.name') }}</mat-label>
         <input matInput formControlName="displayName" maxlength="80" autocomplete="off" />
@@ -29,6 +30,7 @@
         }
       </mat-form-field>
 
+      <h3 class="group">{{ i18n.t('devprofile.sectionVisibility') }}</h3>
       <label class="check">
         <input type="checkbox" formControlName="publicProfile" (change)="onPublicChange()" />
         <span>{{ i18n.t('devprofile.public') }}</span>

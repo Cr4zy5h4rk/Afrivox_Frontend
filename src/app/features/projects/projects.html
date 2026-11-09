@@ -38,7 +38,7 @@
         <button mat-flat-button type="button" (click)="retry()">{{ i18n.t('common.retry') }}</button>
       </div>
     } @else if (result(); as r) {
-      <p class="count muted">{{ i18n.t('projects.count', { count: i18n.n(r.total) }) }}</p>
+      <p class="count muted">{{ i18n.t(r.total === 1 ? 'projects.count.one' : 'projects.count.other', { count: i18n.n(r.total) }) }}</p>
       @if (r.items.length === 0) {
         <div class="empty">
           <h3>{{ i18n.t('projects.empty.title') }}</h3>
@@ -53,13 +53,16 @@
         <div class="grid" [class.dim]="loading()">
           @for (p of r.items; track p.id) {
             <article class="card project">
-              <a class="project-link" [routerLink]="['/projects', p.id]">
+              <div class="top">
                 @if (p.languageName) {
                   <span class="badge accent">{{ p.languageName }}</span>
                 }
-                <h3>{{ p.title }}</h3>
-                <p class="desc">{{ p.summary }}</p>
-              </a>
+                <span class="date muted">{{ i18n.date(p.createdAt) }}</span>
+              </div>
+              <h3>
+                <a class="stretch" [routerLink]="['/projects', p.id]">{{ p.title }}</a>
+              </h3>
+              <p class="desc">{{ p.summary }}</p>
               @if (p.tags.length > 0) {
                 <ul class="tags" [attr.aria-label]="i18n.t('projects.tag')">
                   @for (t of p.tags; track t) {
@@ -69,7 +72,13 @@
                   }
                 </ul>
               }
-              <p class="meta muted">{{ i18n.t('projects.by', { name: p.ownerName }) }}</p>
+              <footer class="by">
+                <app-avatar [name]="p.ownerName" [size]="28" />
+                <span class="who">{{ p.ownerName }}</span>
+                @if (p.modelName) {
+                  <span class="badge gray" [title]="i18n.t('project.model')">{{ p.modelName }}</span>
+                }
+              </footer>
             </article>
           }
         </div>

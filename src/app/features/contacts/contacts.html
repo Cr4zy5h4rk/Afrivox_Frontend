@@ -22,36 +22,43 @@
       }
 
       <section class="block">
-        <h2>{{ i18n.t('contacts.received') }}</h2>
+        <h2 class="section-title">
+          {{ i18n.t('contacts.received') }}
+          @if (pending() > 0) {
+            <span class="count alert">{{ i18n.t('contacts.pending', { n: pending() }) }}</span>
+          }
+        </h2>
         @if (received().length === 0) {
-          <p class="muted">{{ i18n.t('contacts.empty.received') }}</p>
+          <p class="empty-line muted">{{ i18n.t('contacts.empty.received') }}</p>
         } @else {
           <ul class="requests">
             @for (r of received(); track r.id) {
-              <li class="card request">
-                <div class="head">
-                  <strong>{{ i18n.t('contacts.from', { name: r.senderName }) }}</strong>
-                  <span class="muted">{{ i18n.date(r.createdAt) }}</span>
-                  <span [class]="'badge ' + (r.status === 'PENDING' ? 'gold' : r.status === 'ACCEPTED' ? 'green' : '')">
-                    {{ i18n.t(statusKey(r.status)) }}
-                  </span>
-                </div>
-                <p class="message">{{ r.message }}</p>
-                <p class="how">
-                  <span class="muted">{{ i18n.t('contacts.how') }}</span> <strong class="contact">{{ r.contact }}</strong>
-                </p>
-                @if (r.status === 'PENDING') {
-                  <div class="actions">
-                    <button mat-button type="button" [disabled]="busy() !== null" (click)="answer(r, false)">
-                      {{ i18n.t('contacts.decline') }}
-                    </button>
-                    <button mat-flat-button type="button" [disabled]="busy() !== null" (click)="answer(r, true)">
-                      {{ i18n.t('contacts.accept') }}
-                    </button>
+              <li class="card request" [class.pending]="r.status === 'PENDING'">
+                <app-avatar [name]="r.senderName" [size]="44" />
+                <div class="content">
+                  <div class="head">
+                    <strong>{{ i18n.t('contacts.from', { name: r.senderName }) }}</strong>
+                    <span [class]="'badge ' + tone(r.status)">{{ i18n.t(statusKey(r.status)) }}</span>
+                    <span class="date muted">{{ i18n.date(r.createdAt) }}</span>
                   </div>
-                } @else if (r.status === 'ACCEPTED') {
-                  <p class="muted small">{{ i18n.t('contacts.acceptedHint') }}</p>
-                }
+                  <blockquote class="message">{{ r.message }}</blockquote>
+                  <p class="how">
+                    <span class="muted">{{ i18n.t('contacts.how') }}</span>
+                    <strong class="contact">{{ r.contact }}</strong>
+                  </p>
+                  @if (r.status === 'PENDING') {
+                    <div class="actions">
+                      <button mat-button type="button" [disabled]="busy() !== null" (click)="answer(r, false)">
+                        {{ i18n.t('contacts.decline') }}
+                      </button>
+                      <button mat-flat-button type="button" [disabled]="busy() !== null" (click)="answer(r, true)">
+                        {{ i18n.t('contacts.accept') }}
+                      </button>
+                    </div>
+                  } @else if (r.status === 'ACCEPTED') {
+                    <p class="hint">{{ i18n.t('contacts.acceptedHint') }}</p>
+                  }
+                </div>
               </li>
             }
           </ul>
@@ -59,26 +66,27 @@
       </section>
 
       <section class="block">
-        <h2>{{ i18n.t('contacts.sent') }}</h2>
+        <h2 class="section-title">{{ i18n.t('contacts.sent') }}</h2>
         @if (sent().length === 0) {
-          <p class="muted">{{ i18n.t('contacts.empty.sent') }}</p>
+          <p class="empty-line muted">{{ i18n.t('contacts.empty.sent') }}</p>
         } @else {
           <ul class="requests">
             @for (s of sent(); track s.id) {
               <li class="card request">
-                <div class="head">
-                  <strong>
-                    <a [routerLink]="['/developers', s.recipientId]">{{ i18n.t('contacts.to', { name: s.recipientName }) }}</a>
-                  </strong>
-                  <span class="muted">{{ i18n.date(s.createdAt) }}</span>
-                  <span [class]="'badge ' + (s.status === 'PENDING' ? 'gold' : s.status === 'ACCEPTED' ? 'green' : '')">
-                    {{ i18n.t(statusKey(s.status)) }}
-                  </span>
+                <app-avatar [name]="s.recipientName" [size]="44" />
+                <div class="content">
+                  <div class="head">
+                    <strong>
+                      <a [routerLink]="['/developers', s.recipientId]">{{ i18n.t('contacts.to', { name: s.recipientName }) }}</a>
+                    </strong>
+                    <span [class]="'badge ' + tone(s.status)">{{ i18n.t(statusKey(s.status)) }}</span>
+                    <span class="date muted">{{ i18n.date(s.createdAt) }}</span>
+                  </div>
+                  <blockquote class="message">{{ s.message }}</blockquote>
+                  @if (s.status === 'ACCEPTED') {
+                    <p class="hint">{{ i18n.t('contacts.sentAccepted') }}</p>
+                  }
                 </div>
-                <p class="message">{{ s.message }}</p>
-                @if (s.status === 'ACCEPTED') {
-                  <p class="muted small">{{ i18n.t('contacts.sentAccepted') }}</p>
-                }
               </li>
             }
           </ul>

@@ -13,6 +13,7 @@
     </div>
   } @else {
     <form class="card form form-column" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <h2 class="group">{{ i18n.t('projectnew.sectionAbout') }}</h2>
       <mat-form-field appearance="outline">
         <mat-label>{{ i18n.t('projectnew.name') }}</mat-label>
         <input matInput formControlName="title" maxlength="120" />
@@ -29,6 +30,7 @@
         }
       </mat-form-field>
 
+      <h2 class="group">{{ i18n.t('projectnew.sectionLinks') }}</h2>
       <div class="two">
         <mat-form-field appearance="outline">
           <mat-label>{{ i18n.t('projectnew.repo') }}</mat-label>
@@ -47,6 +49,7 @@
         </mat-form-field>
       </div>
 
+      <h2 class="group">{{ i18n.t('projectnew.sectionDiscover') }}</h2>
       <div class="two">
         <mat-form-field appearance="outline">
           <mat-label>{{ i18n.t('projectnew.language') }}</mat-label>

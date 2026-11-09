@@ -9,6 +9,7 @@ import { HubService } from '../api/hub.service';
 import { AuthService } from '../auth/auth.service';
 import { I18nService } from '../i18n/i18n.service';
 import { TranslationKey } from '../i18n/translations';
+import { Avatar } from './avatar';
 
 /**
  * Discussion publique d'un modèle ou d'un projet : commentaires lisibles sans compte, écrits par tout compte connecté,
@@ -16,7 +17,7 @@ import { TranslationKey } from '../i18n/translations';
  */
 @Component({
   selector: 'app-comments-section',
-  imports: [MatButtonModule, RouterLink],
+  imports: [MatButtonModule, RouterLink, Avatar],
   templateUrl: './comments-section.html',
   styleUrl: './comments-section.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

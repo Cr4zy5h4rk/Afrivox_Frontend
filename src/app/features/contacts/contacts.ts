@@ -5,6 +5,7 @@ import { ApiError, toApiError } from '../../core/api-error';
 import { ContactReceived, ContactSent, ContactStatus, HubService } from '../../core/api/hub.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { TranslationKey } from '../../core/i18n/translations';
+import { Avatar } from '../../core/ui/avatar';
 
 /**
  * Mes contacts : demandes reçues (que l'on accepte ou décline) et demandes envoyées. Le moyen de joindre l'expéditeur
@@ -12,7 +13,7 @@ import { TranslationKey } from '../../core/i18n/translations';
  */
 @Component({
   selector: 'app-contacts',
-  imports: [MatButtonModule, RouterLink],
+  imports: [MatButtonModule, RouterLink, Avatar],
   templateUrl: './contacts.html',
   styleUrl: './contacts.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,6 +65,15 @@ export class ContactsPage implements OnInit {
         this.error.set(toApiError(err));
       },
     });
+  }
+
+  /** Nombre de demandes reçues qui attendent une réponse (affiché dans le titre de la section). */
+  protected pending(): number {
+    return this.received().filter((r) => r.status === 'PENDING').length;
+  }
+
+  protected tone(status: ContactStatus): string {
+    return status === 'PENDING' ? 'gold' : status === 'ACCEPTED' ? 'green' : 'gray';
   }
 
   protected statusKey(status: ContactStatus): TranslationKey {

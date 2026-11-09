@@ -29,7 +29,7 @@
         <button mat-flat-button type="button" (click)="retry()">{{ i18n.t('common.retry') }}</button>
       </div>
     } @else if (result(); as r) {
-      <p class="count muted">{{ i18n.t('developers.count', { count: i18n.n(r.total) }) }}</p>
+      <p class="count muted">{{ i18n.t(r.total === 1 ? 'developers.count.one' : 'developers.count.other', { count: i18n.n(r.total) }) }}</p>
       @if (r.items.length === 0) {
         <div class="empty">
           <h3>{{ i18n.t('developers.empty.title') }}</h3>
@@ -38,16 +38,28 @@
       } @else {
         <div class="grid" [class.dim]="loading()">
           @for (d of r.items; track d.id) {
-            <a class="card card-link" [routerLink]="['/developers', d.id]">
-              @if (d.openToWork) {
-                <span class="badge accent">{{ i18n.t('developer.open') }}</span>
-              }
-              <h3>{{ d.name }}</h3>
+            <article class="card person">
+              <div class="id">
+                <app-avatar [name]="d.name" [size]="52" />
+                <div class="id-text">
+                  <h3>
+                    <a class="stretch" [routerLink]="['/developers', d.id]">{{ d.name }}</a>
+                  </h3>
+                  @if (d.openToWork) {
+                    <span class="open"><span class="dot" aria-hidden="true"></span>{{ i18n.t('developer.open') }}</span>
+                  }
+                </div>
+              </div>
               @if (d.bio) {
                 <p class="desc">{{ d.bio }}</p>
+              } @else {
+                <p class="desc muted">&nbsp;</p>
               }
-              <p class="meta muted">{{ i18n.t('developers.stats', { models: d.models, projects: d.projects }) }}</p>
-            </a>
+              <ul class="stats">
+                <li>{{ i18n.t(d.models === 1 ? 'developers.models.one' : 'developers.models.other', { n: d.models }) }}</li>
+                <li>{{ i18n.t(d.projects === 1 ? 'developers.projects.one' : 'developers.projects.other', { n: d.projects }) }}</li>
+              </ul>
+            </article>
           }
         </div>
         <app-pager [page]="r.page" [pages]="r.pages" (pageChange)="setPage($event)" />
